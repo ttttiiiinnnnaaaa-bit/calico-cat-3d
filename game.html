@@ -353,6 +353,8 @@
     }
 
     .swat-btn {
+      position: relative;
+      overflow: hidden;
       flex: 1;
       max-width: 240px;
       height: 50px;
@@ -369,11 +371,82 @@
       justify-content: center;
       gap: 6px;
       touch-action: manipulation;
-      transition: transform 0.08s ease;
+      transition: transform 0.08s ease, background 0.15s ease;
     }
 
-    .swat-btn:active {
+    .swat-btn.cooling {
+      background: #4e4239;
+      box-shadow: 0 6px 14px rgba(32, 22, 16, 0.25);
+      cursor: default;
+    }
+
+    .swat-cd-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(135deg, rgba(235, 125, 45, 0.58), rgba(198, 68, 34, 0.65));
+      pointer-events: none;
+    }
+
+    .swat-label {
+      position: relative;
+      z-index: 2;
+    }
+
+    .swat-btn:active:not(.cooling) {
       transform: scale(0.95);
+    }
+
+    /* ---------------- Difficulty Selector Pills ---------------- */
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-bottom: 8px;
+    }
+
+    .diff-btn {
+      border: 1.5px solid rgba(58, 38, 26, 0.14);
+      background: #fbf4ea;
+      color: var(--ink);
+      border-radius: 13px;
+      padding: 7px 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.25;
+      transition: all 0.14s ease;
+    }
+
+    .diff-btn span {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      margin-top: 2px;
+    }
+
+    .diff-btn.active {
+      background: linear-gradient(135deg, #2d221c, #49382e);
+      color: #fffaf3;
+      border-color: #2d221c;
+      box-shadow: 0 5px 12px rgba(45, 34, 28, 0.22);
+    }
+
+    .diff-btn.active span {
+      color: #ffd39a;
+    }
+
+    .diff-desc {
+      margin: 0 0 10px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: #f6eadb;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #5b3b24;
     }
 
     .hint-pill {
@@ -584,21 +657,33 @@
       }
 
       .modal-card {
-        padding: 15px 14px;
+        padding: 13px 13px;
       }
 
       .modal-card h1 {
-        font-size: 19px;
+        font-size: 18.5px;
       }
 
       .legend-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 6px;
-        margin-bottom: 11px;
+        margin-bottom: 9px;
       }
 
       .legend-box {
-        padding: 8px 9px;
+        padding: 7px 8px;
+        font-size: 10.5px;
+      }
+
+      .diff-btn {
+        padding: 6px 3px;
+        font-size: 11px;
+      }
+
+      .diff-desc {
+        font-size: 10.5px;
+        padding: 5px 8px;
+        margin-bottom: 8px;
       }
     }
   </style>
@@ -614,7 +699,7 @@
 
     <div class="hud-center">
       <div class="hud-pill">🏆 <span class="score-num" id="scoreVal">0</span></div>
-      <div class="hud-pill timer-pill" id="timerPill">⏱️ <strong id="timerVal">60</strong>s</div>
+      <div class="hud-pill timer-pill" id="timerPill">⏱️ <strong id="timerVal">30</strong>s</div>
       <div class="hud-pill hearts-pill" id="heartsVal">❤️❤️❤️</div>
     </div>
 
@@ -641,7 +726,10 @@
   <div class="hud-bottom hidden-bar" id="touchControls">
     <div class="hint-pill">螢幕下方滑動操控移動 · 放手立刻裝無辜！</div>
     <div class="bottom-action-row">
-      <button class="swat-btn" id="btnSwat" type="button">🐾 大力揮掌擊飛！</button>
+      <button class="swat-btn" id="btnSwat" type="button">
+        <span class="swat-cd-fill" id="swatCdFill"></span>
+        <span class="swat-label" id="swatLabel">🐾 大力揮掌擊飛！</span>
+      </button>
     </div>
   </div>
 
@@ -653,24 +741,29 @@
   <!-- Start Modal -->
   <div class="modal-backdrop hidden" id="startModal">
     <div class="modal-card">
-      <div class="modal-badge">😼 123 木頭貓 × 3D 桌邊物理破壞王</div>
+      <div class="modal-badge">😼 30 秒快節奏 × 123 木頭貓</div>
       <h1>3D 桌邊大推倒！貓咪搗蛋王 🐾</h1>
-      <p>
-        趁主人滑手機時，在 3D 大茶几把杯子、鬧鐘、花瓶通通推下桌摔碎！但警告亮起時務必<strong>放開手指裝乖</strong>！
-      </p>
+
+      <div class="diff-grid" id="startDiffGrid">
+        <button class="diff-btn" type="button" data-diff="easy">🟢 簡單<span>×1.0 · 3❤️</span></button>
+        <button class="diff-btn active" type="button" data-diff="normal">🟠 普通<span>×1.3 · 3❤️</span></button>
+        <button class="diff-btn" type="button" data-diff="hard">🔴 困難<span>×1.8 · 2❤️</span></button>
+      </div>
+      <div class="diff-desc" id="diffDesc">黃燈 0.85s 節奏緊湊 · 揮掌冷卻 0.65s · 分數 ×1.3</div>
+
       <div class="legend-grid">
         <div class="legend-box">
-          <strong>💥 推下桌得分（越重越大分！）</strong>
-          ☕ 杯 +10 · 🪴 盆栽 +20 · ⏰ 鬧鐘 +30<br />
-          📱 手機 +35 · 🏺 花瓶 +50 · 🐟 <b>爆氣雙倍</b>
+          <strong>💥 推下桌得分</strong>
+          ☕+10 🪴+20 ⏰+30<br />
+          📱+35 🏺+50 🐟<b>爆氣</b>
         </div>
         <div class="legend-box stealth">
-          <strong>👀 主人回頭看（放手裝無辜！）</strong>
-          ⚠️ 變紅時別動！三花貓會自動轉正面微笑<br />
-          😇 騙過主人 <b>+20</b> · 被抓包會扣 ❤️！
+          <strong>👀 主人回頭看</strong>
+          ⚠️ 變紅立刻放手微笑<br />
+          😇 騙過<b>+20</b> · 抓包扣❤️
         </div>
       </div>
-      <button class="btn-primary" id="btnStartGame">開始 60 秒搗蛋大作戰！</button>
+      <button class="btn-primary" id="btnStartGame">開始 30 秒搗蛋大作戰！</button>
       <a class="btn-secondary-link" href="./index.html">← 回 3D 三花貓互動展廳</a>
     </div>
   </div>
@@ -678,15 +771,20 @@
   <!-- Result Modal -->
   <div class="modal-backdrop hidden" id="resultModal">
     <div class="modal-card">
-      <div class="modal-badge" id="resultBadge">⏱️ 時間到！</div>
+      <div class="modal-badge" id="resultBadge">⏱️ 30 秒時間到！</div>
       <h1 id="resultTitle">三花貓把茶几清空啦！</h1>
       <p id="resultSub">主人回頭時那一臉無辜微笑是不是超級欠抱？</p>
       <div class="stats-row">
         <div class="stat-tile"><strong id="finalScore">0</strong><span>本局破壞分</span></div>
         <div class="stat-tile"><strong id="finalKnocked">0</strong><span>推落物品</span></div>
-        <div class="stat-tile"><strong id="finalBest">0</strong><span>最高紀錄</span></div>
+        <div class="stat-tile"><strong id="finalBest">0</strong><span>該難度最高</span></div>
       </div>
-      <button class="btn-primary" id="btnRestartGame">再搗蛋一次（60秒）🐾</button>
+      <div class="diff-grid" id="resultDiffGrid">
+        <button class="diff-btn" type="button" data-diff-result="easy">🟢 簡單<span>×1.0</span></button>
+        <button class="diff-btn active" type="button" data-diff-result="normal">🟠 普通<span>×1.3</span></button>
+        <button class="diff-btn" type="button" data-diff-result="hard">🔴 困難<span>×1.8</span></button>
+      </div>
+      <button class="btn-primary" id="btnRestartGame">再搗蛋一次（30秒）🐾</button>
       <a class="btn-secondary-link" href="./index.html">← 返回 3D 三花貓互動展廳</a>
     </div>
   </div>
@@ -695,8 +793,61 @@
     (function () {
       "use strict";
 
-      const BEST_KEY = "calico_table_best_v1";
-      const MATCH_DURATION = 60.0;
+      const MATCH_DURATION = 30.0;
+      const DIFFICULTIES = {
+        easy: {
+          id: "easy",
+          label: "🟢 簡單・撒嬌小貓",
+          hearts: 3,
+          scoreMult: 1.0,
+          safeMin: 4.5,
+          safeMax: 5.5,
+          warnDur: 1.30,
+          watchMin: 1.8,
+          watchMax: 2.2,
+          graceDur: 0.30,
+          swatCd: 0.35,
+          pushScale: 1.12,
+          massScale: 0.90,
+          bestKey: "calico_table_best_v2_easy",
+          desc: "黃燈 1.3s 很好反應 · 揮掌冷卻 0.35s · 3❤️ · 分數 ×1.0",
+        },
+        normal: {
+          id: "normal",
+          label: "🟠 普通・調皮搗蛋",
+          hearts: 3,
+          scoreMult: 1.3,
+          safeMin: 2.6,
+          safeMax: 3.8,
+          warnDur: 0.85,
+          watchMin: 1.9,
+          watchMax: 2.4,
+          graceDur: 0.24,
+          swatCd: 0.65,
+          pushScale: 0.95,
+          massScale: 1.08,
+          bestKey: "calico_table_best_v2_normal",
+          desc: "黃燈 0.85s 節奏緊湊 · 揮掌冷卻 0.65s · 3❤️ · 分數 ×1.3",
+        },
+        hard: {
+          id: "hard",
+          label: "🔴 困難・魔王拆家貓",
+          hearts: 2,
+          scoreMult: 1.8,
+          safeMin: 1.6,
+          safeMax: 2.7,
+          warnDur: 0.55,
+          watchMin: 1.8,
+          watchMax: 2.3,
+          graceDur: 0.20,
+          swatCd: 0.90,
+          pushScale: 0.82,
+          massScale: 1.24,
+          bestKey: "calico_table_best_v2_hard",
+          desc: "黃燈僅 0.55s 突襲！揮掌冷卻 0.9s · 2❤️ · 分數 ×1.8",
+        },
+      };
+
       const TABLE_W = 5.2;
       const TABLE_D = 4.0;
       const TABLE_HALF_W = TABLE_W * 0.5;
@@ -717,6 +868,10 @@
       const feverChipEl = document.getElementById("feverChip");
       const floatPopupEl = document.getElementById("floatPopup");
       const touchControlsEl = document.getElementById("touchControls");
+      const btnSwatEl = document.getElementById("btnSwat");
+      const swatCdFillEl = document.getElementById("swatCdFill");
+      const swatLabelEl = document.getElementById("swatLabel");
+      const diffDescEl = document.getElementById("diffDesc");
 
       const loaderModal = document.getElementById("loaderModal");
       const loaderText = document.getElementById("loaderText");
@@ -1271,10 +1426,11 @@
       }
 
       function spawnProp(forcedType = null, forcedX = null, forcedZ = null) {
+        const cfg = DIFFICULTIES[currentDiffId] || DIFFICULTIES.normal;
         let type = forcedType;
         if (!type) {
           const r = Math.random();
-          if (hearts < 3 && r < 0.09) type = "heart";
+          if (hearts < cfg.hearts && r < 0.09) type = "heart";
           else if (r < 0.17) type = "fish";
           else if (r < 0.34) type = "vase";
           else if (r < 0.52) type = "phone";
@@ -1353,13 +1509,24 @@
       }
 
       // ---------------------------------------------------------------------
-      // 5. Game State Machine (60s Knock-Off + Owner Watching)
+      // 5. Game State Machine (30s Rounds, 3 Difficulty Tiers & Swat Cooldown)
       // ---------------------------------------------------------------------
-      let bestScore = parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0;
+      let currentDiffId = "normal";
+      function getBestFor(diffId) {
+        const c = DIFFICULTIES[diffId] || DIFFICULTIES.normal;
+        return parseInt(localStorage.getItem(c.bestKey) || "0", 10) || 0;
+      }
+      function setBestFor(diffId, val) {
+        const c = DIFFICULTIES[diffId] || DIFFICULTIES.normal;
+        try { localStorage.setItem(c.bestKey, String(val)); } catch (_) {}
+      }
+
+      let bestScore = getBestFor(currentDiffId);
       let gameState = "start"; // "start" | "playing" | "ended"
       let score = 0;
       let timeLeft = MATCH_DURATION;
-      let hearts = 3;
+      let lastCountSec = 6;
+      let hearts = DIFFICULTIES[currentDiffId].hearts;
       let combo = 0;
       let comboTimer = 0;
       let knockedCount = 0;
@@ -1367,7 +1534,7 @@
 
       // Owner Stealth State
       let ownerPhase = "safe"; // "safe" | "warning" | "watching"
-      let ownerTimer = 5.2;
+      let ownerTimer = 3.2;
       let watchElapsed = 0;
       let caughtThisWatch = false;
       let isInnocent = false;
@@ -1387,6 +1554,7 @@
       let trotPhase = 0;
       let swatAnim = 0;
       let swatCooldown = 0;
+      let swatCdTotal = DIFFICULTIES[currentDiffId].swatCd;
       let scareY = 0;
       let scareVelY = 0;
       let invulnTimer = 0;
@@ -1394,6 +1562,37 @@
       let popupTimer = null;
 
       const keys = { left: false, right: false, up: false, down: false };
+
+      function selectDifficulty(id) {
+        if (!DIFFICULTIES[id]) return;
+        currentDiffId = id;
+        const cfg = DIFFICULTIES[id];
+        bestScore = getBestFor(id);
+        diffDescEl.textContent = `${cfg.desc}（最高 ${bestScore} 分）`;
+        document.querySelectorAll("[data-diff]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.diff === id);
+        });
+        document.querySelectorAll("[data-diff-result]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.diffResult === id);
+        });
+        if (gameState !== "playing") {
+          hearts = cfg.hearts;
+          heartsValEl.textContent = "❤️".repeat(cfg.hearts);
+        }
+        gameAPI.difficulty = currentDiffId;
+        gameAPI.maxHearts = cfg.hearts;
+        gameAPI.bestScore = bestScore;
+      }
+
+      document.querySelectorAll("[data-diff]").forEach((btn) => {
+        btn.addEventListener("click", () => selectDifficulty(btn.dataset.diff));
+      });
+      document.querySelectorAll("[data-diff-result]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          selectDifficulty(btn.dataset.diffResult);
+          document.getElementById("finalBest").textContent = String(bestScore);
+        });
+      });
 
       function showPopup(text, variant) {
         floatPopupEl.textContent = text;
@@ -1413,22 +1612,23 @@
       }
 
       function setOwnerPhaseInternal(phase) {
+        const cfg = DIFFICULTIES[currentDiffId] || DIFFICULTIES.normal;
         ownerPhase = phase;
         watchElapsed = 0;
         caughtThisWatch = false;
         if (phase === "safe") {
-          ownerTimer = THREE.MathUtils.randFloat(4.6, 6.4);
+          ownerTimer = THREE.MathUtils.randFloat(cfg.safeMin, cfg.safeMax);
           ownerBannerEl.textContent = "📱 主人滑手機中 · 快把東西推下桌！";
           ownerBannerEl.className = "owner-banner safe";
           isInnocent = false;
         } else if (phase === "warning") {
-          ownerTimer = 1.35;
+          ownerTimer = cfg.warnDur;
           ownerBannerEl.textContent = "⚠️ 主人好像聽到了！準備放手裝乖…";
           ownerBannerEl.className = "owner-banner warning";
           sfxWarningTick();
           isInnocent = false;
         } else {
-          ownerTimer = THREE.MathUtils.randFloat(2.0, 2.5);
+          ownerTimer = THREE.MathUtils.randFloat(cfg.watchMin, cfg.watchMax);
           ownerBannerEl.textContent = "👀 主人回頭看了！！完全定格裝無辜！";
           ownerBannerEl.className = "owner-banner watching";
           sfxWatchingStart();
@@ -1436,10 +1636,11 @@
       }
 
       function updateHUD() {
+        const cfg = DIFFICULTIES[currentDiffId] || DIFFICULTIES.normal;
         scoreValEl.textContent = String(score);
         timerValEl.textContent = String(Math.max(0, Math.ceil(timeLeft)));
-        timerPillEl.classList.toggle("urgent", gameState === "playing" && timeLeft <= 10.0);
-        heartsValEl.textContent = "❤️".repeat(hearts) + "🤍".repeat(Math.max(0, 3 - hearts));
+        timerPillEl.classList.toggle("urgent", gameState === "playing" && timeLeft <= 8.0);
+        heartsValEl.textContent = "❤️".repeat(hearts) + "🤍".repeat(Math.max(0, cfg.hearts - hearts));
 
         ownerBannerEl.classList.toggle("hidden-banner", gameState !== "playing");
         if (gameState === "playing" && ownerPhase === "watching") {
@@ -1467,7 +1668,20 @@
           feverChipEl.classList.remove("visible");
         }
 
+        if (swatCooldown > 0) {
+          const pct = Math.max(0, Math.min(100, (1 - swatCooldown / Math.max(0.1, swatCdTotal)) * 100));
+          btnSwatEl.classList.add("cooling");
+          swatCdFillEl.style.width = `${pct.toFixed(1)}%`;
+          swatLabelEl.textContent = `🐾 蓄力中 ${swatCooldown.toFixed(1)}s`;
+        } else {
+          btnSwatEl.classList.remove("cooling");
+          swatCdFillEl.style.width = "0%";
+          swatLabelEl.textContent = "🐾 大力揮掌擊飛！";
+        }
+
         gameAPI.state = gameState;
+        gameAPI.difficulty = currentDiffId;
+        gameAPI.maxHearts = cfg.hearts;
         gameAPI.score = score;
         gameAPI.bestScore = bestScore;
         gameAPI.timeLeft = Number(timeLeft.toFixed(1));
@@ -1476,6 +1690,7 @@
         gameAPI.knockedCount = knockedCount;
         gameAPI.ownerPhase = ownerPhase;
         gameAPI.isInnocent = isInnocent;
+        gameAPI.swatCooldown = Number(swatCooldown.toFixed(2));
       }
 
       function triggerCaught() {
@@ -1500,17 +1715,19 @@
 
       function performSwat() {
         if (gameState !== "playing" || swatCooldown > 0) return;
-        swatCooldown = 0.30;
+        const cfg = DIFFICULTIES[currentDiffId] || DIFFICULTIES.normal;
+        swatCdTotal = cfg.swatCd;
+        swatCooldown = cfg.swatCd;
         swatAnim = 1.0;
         sfxSwat();
 
-        if (ownerPhase === "watching" && watchElapsed > 0.25) {
+        if (ownerPhase === "watching" && watchElapsed > cfg.graceDur) {
           triggerCaught();
           return;
         }
 
         const radius = feverTimer > 0 ? 2.0 : 1.72;
-        const boost = feverTimer > 0 ? 9.8 : 7.6;
+        const boost = (feverTimer > 0 ? 9.8 : 7.6) * cfg.pushScale;
         let hitAny = false;
         props.forEach((p) => {
           if (p.state !== "table" || p.spec.collectible) return;
@@ -1524,26 +1741,29 @@
               nx = dx / d;
               nz = dz / d;
             } else {
-              // Push toward closest edge if directly overlapped
               const edgeX = TABLE_HALF_W - Math.abs(p.x);
               const edgeZ = TABLE_HALF_D - Math.abs(p.z);
               nx = edgeX <= edgeZ ? (p.x >= 0 ? 1 : -1) : 0;
               nz = edgeX <= edgeZ ? 0 : (p.z >= 0 ? 1 : -1);
             }
-            const spd = boost / Math.sqrt(p.spec.mass);
+            const spd = boost / Math.sqrt(p.spec.mass * cfg.massScale);
             p.vx += nx * spd;
             p.vz += nz * spd;
           }
         });
         if (hitAny) sfxPushTap();
+        updateHUD();
       }
 
       function startGame() {
         ensureAudio();
         clearProps();
+        const cfg = DIFFICULTIES[currentDiffId] || DIFFICULTIES.normal;
+        bestScore = getBestFor(currentDiffId);
         score = 0;
         timeLeft = MATCH_DURATION;
-        hearts = 3;
+        lastCountSec = 6;
+        hearts = cfg.hearts;
         combo = 0;
         comboTimer = 0;
         knockedCount = 0;
@@ -1560,6 +1780,7 @@
         catVelX = 0;
         catVelZ = 0;
         swatAnim = 0;
+        swatCdTotal = cfg.swatCd;
         swatCooldown = 0;
         scareY = 0;
         scareVelY = 0;
@@ -1590,6 +1811,7 @@
       }
 
       function endGame(reason) {
+        const cfg = DIFFICULTIES[currentDiffId] || DIFFICULTIES.normal;
         gameState = "ended";
         clearProps();
         catRoot.visible = true;
@@ -1604,29 +1826,32 @@
 
         if (score > bestScore) {
           bestScore = score;
-          try { localStorage.setItem(BEST_KEY, String(bestScore)); } catch (_) {}
+          setBestFor(currentDiffId, bestScore);
         }
 
         const badge = document.getElementById("resultBadge");
         const title = document.getElementById("resultTitle");
         const sub = document.getElementById("resultSub");
         if (reason === "caught") {
-          badge.textContent = "👀 被主人發現太多次啦！";
+          badge.textContent = `${cfg.label} · 👀 被抓包啦！`;
           title.textContent = "三花貓被抱下茶几囉～";
-          sub.textContent = "警告變紅時記得馬上「放開手指」定格微笑裝無辜！";
+          sub.textContent = "警告亮起時記得馬上放手定格裝無辜，或挑戰較穩的節奏！";
         } else if (score >= bestScore && score > 0) {
-          badge.textContent = "🏆 刷新搗蛋王最高紀錄！";
-          title.textContent = "傳奇茶几清潔貓誕生！";
-          sub.textContent = `60 秒內狂推落 ${knockedCount} 件物品，主人完全拿妳沒轍！`;
+          badge.textContent = `${cfg.label} · 🏆 新紀錄！`;
+          title.textContent = "30 秒傳奇茶几清潔貓！";
+          sub.textContent = `短短 30 秒狂推落 ${knockedCount} 件物品，快切換更高難度試試！`;
         } else {
-          badge.textContent = "⏱️ 60 秒時間到！";
-          title.textContent = "茶几已經一半空啦！";
-          sub.textContent = "多撿桌面上的 🐟 小魚乾觸發雙倍威力＋靠「🐾 揮掌」一口氣清空整排！";
+          badge.textContent = `${cfg.label} · ⏱️ 30 秒時間到！`;
+          title.textContent = "茶几清得超級過癮！";
+          sub.textContent = "看準揮掌冷卻條把整排一次掃下桌，分數會瞬間狂飆喔！";
         }
 
         document.getElementById("finalScore").textContent = String(score);
         document.getElementById("finalKnocked").textContent = String(knockedCount);
         document.getElementById("finalBest").textContent = String(bestScore);
+        document.querySelectorAll("[data-diff-result]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.diffResult === currentDiffId);
+        });
         resultModal.classList.remove("hidden");
         updateHUD();
       }
@@ -1784,10 +2009,17 @@
         const isPortrait = window.innerWidth / Math.max(1, window.innerHeight) < 0.98;
 
         if (gameState === "playing") {
+          const cfg = DIFFICULTIES[currentDiffId] || DIFFICULTIES.normal;
           timeLeft -= dt;
           if (timeLeft <= 0) {
             timeLeft = 0;
             endGame("time");
+          } else {
+            const cSec = Math.ceil(timeLeft);
+            if (cSec >= 1 && cSec <= 5 && cSec < lastCountSec) {
+              lastCountSec = cSec;
+              tone(cSec === 1 ? 880 : 660, 0.08, "sine", 0.08);
+            }
           }
 
           if (feverTimer > 0) feverTimer = Math.max(0, feverTimer - dt);
@@ -1814,7 +2046,7 @@
             } else {
               // Finished watching without catching cat!
               if (!caughtThisWatch) {
-                const bonus = 20 * getMult();
+                const bonus = Math.round(20 * getMult() * cfg.scoreMult);
                 score += bonus;
                 showPopup(`😇 演技滿分沒被發現！+${bonus}`, "innocent");
                 sfxInnocentPass();
@@ -1851,7 +2083,7 @@
 
           // Owner Watching stealth check!
           if (ownerPhase === "watching") {
-            if (isMoving && watchElapsed > 0.28) {
+            if (isMoving && watchElapsed > cfg.graceDur) {
               triggerCaught();
             } else if (!isMoving) {
               isInnocent = true;
@@ -1927,14 +2159,14 @@
                 if (p.spec.collectible) {
                   if (p.type === "fish") {
                     feverTimer = 4.5;
-                    const pts = p.spec.pts * getMult();
+                    const pts = Math.round(p.spec.pts * getMult() * cfg.scoreMult);
                     score += pts;
                     showPopup(`${p.spec.msg} +${pts}`, "fever");
                     sfxFever();
                     spawnBurst(p.x, p.y + 0.3, p.z, p.spec.burst, 16);
                   } else {
-                    hearts = Math.min(3, hearts + 1);
-                    const pts = p.spec.pts * getMult();
+                    hearts = Math.min(cfg.hearts, hearts + 1);
+                    const pts = Math.round(p.spec.pts * getMult() * cfg.scoreMult);
                     score += pts;
                     showPopup(p.spec.msg, "good");
                     sfxInnocentPass();
@@ -1950,7 +2182,7 @@
                   const overlap = touchDist - dist;
                   p.x += nx * overlap * 0.85;
                   p.z += nz * overlap * 0.85;
-                  const pushSpd = ((feverTimer > 0 ? 7.2 : 5.2) + speedAbs * 0.45) / p.spec.mass;
+                  const pushSpd = (((feverTimer > 0 ? 7.2 : 5.2) + speedAbs * 0.45) * cfg.pushScale) / (p.spec.mass * cfg.massScale);
                   p.vx = Math.max(p.vx * 0.4, nx * pushSpd) + (nx * pushSpd * 0.65);
                   p.vz = Math.max(p.vz * 0.4, nz * pushSpd) + (nz * pushSpd * 0.65);
                   if (p.hitCooldown <= 0) {
@@ -2019,7 +2251,7 @@
                 combo += 1;
                 comboTimer = 4.6;
                 const mult = getMult();
-                const pts = p.spec.pts * mult;
+                const pts = Math.round(p.spec.pts * mult * cfg.scoreMult);
                 score += pts;
                 const big = p.spec.pts >= 35;
                 showPopup(`${p.spec.msg} +${pts}`, big ? "fever" : "good");
@@ -2094,15 +2326,19 @@
       const gameAPI = {
         loaded: false,
         state: gameState,
+        difficulty: currentDiffId,
+        maxHearts: DIFFICULTIES[currentDiffId].hearts,
         score: 0,
         bestScore,
         timeLeft: MATCH_DURATION,
-        hearts: 3,
+        hearts: DIFFICULTIES[currentDiffId].hearts,
         combo: 0,
         knockedCount: 0,
         ownerPhase,
         isInnocent: false,
+        swatCooldown: 0,
         startGame,
+        setDifficulty: selectDifficulty,
         moveCatTo: (x, z) => {
           catX = THREE.MathUtils.clamp(x, -CAT_LIM_X, CAT_LIM_X);
           catZ = THREE.MathUtils.clamp(z, -CAT_LIM_Z, CAT_LIM_Z);
@@ -2124,6 +2360,7 @@
         getItems: () => props.map((p) => ({ type: p.type, state: p.state, x: p.x, y: p.y, z: p.z })),
       };
       window.__CAT_GAME__ = gameAPI;
+      selectDifficulty(currentDiffId);
 
       loadCatAsset();
       requestAnimationFrame(tick);
