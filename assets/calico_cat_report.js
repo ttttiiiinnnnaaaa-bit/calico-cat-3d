@@ -19,9 +19,9 @@ window.CALICO_CAT_REPORT = {
     "materials_prefix_MAT": true
   },
   "total_objects": 19,
-  "total_vertices": 63886,
-  "total_faces": 64106,
-  "total_triangles": 127448,
+  "total_vertices": 63414,
+  "total_faces": 63642,
+  "total_triangles": 126488,
   "materials": [
     "MAT_Collar_Red",
     "MAT_Eye_Eyeliner",
@@ -57,12 +57,12 @@ window.CALICO_CAT_REPORT = {
   ],
   "dimensions_meters": {
     "width_x": 0.5344,
-    "depth_y": 0.5344,
-    "height_z": 0.4854,
+    "depth_y": 0.5296,
+    "height_z": 0.4595,
     "floor_z_min": 0.0
   },
-  "glb_size_bytes": 6998296,
-  "blend_size_bytes": 11707695,
+  "glb_size_bytes": 6977168,
+  "blend_size_bytes": 11763797,
   "meshes": [
     {
       "name": "SM_CalicoCat_Cushion",
@@ -71,23 +71,23 @@ window.CALICO_CAT_REPORT = {
     },
     {
       "name": "SM_CalicoCat_Body",
-      "vertices": 7954,
-      "triangles": 15904
+      "vertices": 11138,
+      "triangles": 22272
     },
     {
       "name": "SM_CalicoCat_Head",
-      "vertices": 10626,
-      "triangles": 21248
+      "vertices": 11138,
+      "triangles": 22272
     },
     {
       "name": "SM_CalicoCat_Ear_R",
-      "vertices": 1682,
-      "triangles": 3360
+      "vertices": 1906,
+      "triangles": 3808
     },
     {
       "name": "SM_CalicoCat_Ear_L",
-      "vertices": 1682,
-      "triangles": 3360
+      "vertices": 1906,
+      "triangles": 3808
     },
     {
       "name": "SM_CalicoCat_EarInner_R",
@@ -101,38 +101,38 @@ window.CALICO_CAT_REPORT = {
     },
     {
       "name": "SM_CalicoCat_Paw_FL",
-      "vertices": 4690,
-      "triangles": 9360
+      "vertices": 5014,
+      "triangles": 10008
     },
     {
       "name": "SM_CalicoCat_Paw_FR",
-      "vertices": 4690,
-      "triangles": 9360
+      "vertices": 5014,
+      "triangles": 10008
     },
     {
       "name": "SM_CalicoCat_Paw_BL",
-      "vertices": 4870,
-      "triangles": 9720
+      "vertices": 5438,
+      "triangles": 10856
     },
     {
       "name": "SM_CalicoCat_Paw_BR",
-      "vertices": 4870,
-      "triangles": 9720
+      "vertices": 5438,
+      "triangles": 10856
     },
     {
       "name": "SM_CalicoCat_Tail",
-      "vertices": 13458,
-      "triangles": 26912
+      "vertices": 6402,
+      "triangles": 12800
     },
     {
       "name": "SM_CalicoCat_Eye_R",
-      "vertices": 1778,
-      "triangles": 3524
+      "vertices": 2050,
+      "triangles": 4068
     },
     {
       "name": "SM_CalicoCat_Eye_L",
-      "vertices": 1778,
-      "triangles": 3524
+      "vertices": 2050,
+      "triangles": 4068
     },
     {
       "name": "SM_CalicoCat_Nose",
@@ -141,8 +141,8 @@ window.CALICO_CAT_REPORT = {
     },
     {
       "name": "SM_CalicoCat_Mouth",
-      "vertices": 208,
-      "triangles": 384
+      "vertices": 320,
+      "triangles": 592
     },
     {
       "name": "SM_CalicoCat_Whiskers",

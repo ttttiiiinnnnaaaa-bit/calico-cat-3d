@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>三花貓咪 2D → 3D 互動展廳 | Blender Skills</title>
   <link rel="icon" href="data:," />
   <script src="./libs/three.min.js"></script>
@@ -50,8 +50,9 @@
     .app-shell {
       display: flex;
       flex-direction: column;
-      width: 100vw;
+      width: 100%;
       height: 100vh;
+      height: 100dvh;
     }
 
     /* ---------------- Top Navigation Bar ---------------- */
@@ -949,6 +950,215 @@
       color: var(--ink-soft);
       padding: 0 10px;
     }
+
+    .show-sm {
+      display: none;
+    }
+
+    /* ---------------- Mobile & Tablet Responsive Layout ---------------- */
+    @media (max-width: 960px) {
+      .brand-title,
+      .meta-pill {
+        display: none;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .page-slide {
+        padding: 10px 12px 14px;
+        align-items: flex-start;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .page-inner {
+        height: auto;
+        gap: 12px;
+        padding-bottom: 10px;
+      }
+
+      .page-1-grid,
+      .page-2-grid,
+      .page-3-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .art-frame {
+        height: min(44dvh, 340px);
+        min-height: 230px;
+        padding: 14px;
+      }
+
+      .info-panel {
+        padding: 18px 16px;
+      }
+
+      .page-heading {
+        font-size: 22px;
+      }
+
+      .page-desc {
+        font-size: 13px;
+        margin-bottom: 12px;
+      }
+
+      .swatch-grid,
+      .trait-list {
+        gap: 7px;
+        margin-bottom: 12px;
+      }
+
+      .viewer-card {
+        height: min(48dvh, 420px);
+        min-height: 290px;
+      }
+
+      .viewer-hud-top {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+      }
+
+      .hud-pill {
+        padding: 4px 9px;
+        font-size: 10.5px;
+      }
+
+      .compare-header {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .compare-header h3 {
+        font-size: 14px;
+      }
+
+      .compare-header span {
+        white-space: nowrap;
+      }
+
+      .viewer-hud-bottom {
+        bottom: 10px;
+      }
+
+      .controls-card {
+        padding: 14px 16px;
+        gap: 10px;
+      }
+
+      .ctrl-btn {
+        min-height: 40px;
+        font-size: 12.5px;
+      }
+
+      .compare-card {
+        padding: 14px;
+      }
+
+      .compare-box {
+        aspect-ratio: 1 / 1;
+        min-height: 270px;
+        flex: none;
+      }
+
+      .gallery-card {
+        padding: 14px;
+        flex: none;
+      }
+
+      .gallery-main {
+        grid-template-columns: 1fr;
+      }
+
+      .gallery-hero-wrap {
+        aspect-ratio: 1 / 1;
+      }
+
+      .thumb-col {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+
+      .thumb-btn {
+        flex-direction: column;
+        padding: 5px 3px;
+        font-size: 10.5px;
+        gap: 4px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .topbar {
+        height: 52px;
+        padding: 0 12px;
+        gap: 8px;
+      }
+
+      .top-page-pills {
+        display: none;
+      }
+
+      .drag-cue {
+        display: none;
+      }
+
+      .cta-row .primary-btn {
+        width: 100%;
+        min-height: 44px;
+      }
+
+      .scrubber-dock {
+        height: auto;
+        padding: 8px 10px max(10px, env(safe-area-inset-bottom));
+        gap: 8px;
+      }
+
+      .scrubber-caption {
+        display: none;
+      }
+
+      .nav-arrow {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+      }
+
+      .scrubber-wrap {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+      }
+
+      .scrubber-track {
+        height: 38px;
+      }
+
+      .scrubber-thumb {
+        height: 30px;
+      }
+
+      .scrubber-thumb::after {
+        content: "拖曳切換";
+        font-size: 10px;
+      }
+
+      .scrubber-stop {
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 2px;
+      }
+
+      .hide-sm {
+        display: none;
+      }
+
+      .show-sm {
+        display: inline;
+      }
+    }
   </style>
 </head>
 <body>
@@ -967,7 +1177,7 @@
           <button class="top-pill-btn" data-goto="1">02 3D模型</button>
           <button class="top-pill-btn" data-goto="2">03 工藝對比</button>
         </div>
-        <a class="game-launch-pill" href="./game.html" data-no-page-drag="true">🎮 逗貓小遊戲</a>
+        <a class="game-launch-pill" href="./game.html" data-no-page-drag="true">📦 跳跳樂小遊戲</a>
       </div>
     </header>
 
@@ -1013,10 +1223,10 @@
 
                 <div class="section-label">風格化 3D 結構分析（Stylized Anatomy）</div>
                 <div class="trait-list">
-                  <div class="trait-chip">大頭圓臉比例（~40% 高度）</div>
-                  <div class="trait-chip">左橘右黑不對稱雙耳花紋</div>
-                  <div class="trait-chip">金綠漸層大眼與高光亮點</div>
-                  <div class="trait-chip">雙色捲曲蓬尾與滾邊軟墊</div>
+                  <div class="trait-chip">飽滿橫向橢圓大頭比例</div>
+                  <div class="trait-chip">左橘右黑小巧圓潤雙耳</div>
+                  <div class="trait-chip">亮白眼白大眼與金綠眼圈</div>
+                  <div class="trait-chip">大微笑嘴角與圓滾蓬尾</div>
                 </div>
               </div>
 
@@ -1040,7 +1250,7 @@
               <div id="viewer3d" data-no-page-drag="true"></div>
 
               <div class="viewer-hud-bottom">
-                <span class="hud-pill">左鍵拖曳旋轉 360° · 滾輪縮放 · 切換視角或燈光氛圍</span>
+                <span class="hud-pill"><span class="hide-sm">左鍵拖曳旋轉 360° · 滾輪縮放 · 切換視角或燈光氛圍</span><span class="show-sm">單指旋轉 360° · 雙指縮放</span></span>
               </div>
 
               <div class="loader-overlay" id="loaderOverlay">
@@ -1085,7 +1295,7 @@
               </div>
 
               <div>
-                <a class="game-cta-btn" href="./game.html">🧶 開始玩「逗貓棒互動小遊戲」→</a>
+                <a class="game-cta-btn" href="./game.html">📦 開始玩「三花貓跳跳樂 3D」→</a>
                 <div class="stats-strip" id="statsStrip" style="padding: 8px;">
                   <div class="stat-box"><strong id="statTris">--</strong><span>Triangles</span></div>
                   <div class="stat-box"><strong id="statMats">--</strong><span>Materials</span></div>
@@ -1179,9 +1389,9 @@
       <div class="scrubber-wrap">
         <div class="scrubber-track" id="scrubberTrack">
           <div class="scrubber-thumb" id="scrubberThumb"></div>
-          <span class="scrubber-stop active" data-stop="0">01 · 2D 概念原畫</span>
-          <span class="scrubber-stop" data-stop="1">02 · 3D 互動展廳</span>
-          <span class="scrubber-stop" data-stop="2">03 · Blender 對比</span>
+          <span class="scrubber-stop active" data-stop="0"><span class="hide-sm">01 · 2D 概念原畫</span><span class="show-sm">01 原畫</span></span>
+          <span class="scrubber-stop" data-stop="1"><span class="hide-sm">02 · 3D 互動展廳</span><span class="show-sm">02 3D 模型</span></span>
+          <span class="scrubber-stop" data-stop="2"><span class="hide-sm">03 · Blender 對比</span><span class="show-sm">03 對比</span></span>
         </div>
         <div class="scrubber-caption">
           <span>拖曳上方黑色拉桿或按住頁面空白處左右滑動</span>
@@ -1209,8 +1419,11 @@
 
       let currentPage = 0;
       const totalPages = 3;
-      let stageDragActive = false;
+      let stagePointerDown = false;
+      let stageDragLockedX = false;
+      let stageActivePointerId = null;
       let stageStartX = 0;
+      let stageStartY = 0;
       let stageCurrentOffsetPx = 0;
       let dragStartTime = 0;
 
@@ -1251,21 +1464,38 @@
         if (e.key === "ArrowLeft") goToPage(currentPage - 1);
       });
 
-      // Stage pointer drag (ignoring interactive sub-controls like 3D canvas & comparison slider)
+      // Stage pointer drag with 8px axis lock (lets mobile vertical scrolling work naturally!)
       stageViewport.addEventListener("pointerdown", (e) => {
         if (e.button !== 0) return;
         if (e.target.closest("[data-no-page-drag='true'], button, a, input")) return;
-        stageDragActive = true;
+        stagePointerDown = true;
+        stageDragLockedX = false;
+        stageActivePointerId = e.pointerId;
         stageStartX = e.clientX;
+        stageStartY = e.clientY;
         stageCurrentOffsetPx = 0;
         dragStartTime = performance.now();
-        stageViewport.classList.add("is-dragging");
-        stageViewport.setPointerCapture(e.pointerId);
       });
 
       stageViewport.addEventListener("pointermove", (e) => {
-        if (!stageDragActive) return;
-        let dx = e.clientX - stageStartX;
+        if (!stagePointerDown || e.pointerId !== stageActivePointerId) return;
+        const rawDx = e.clientX - stageStartX;
+        const rawDy = e.clientY - stageStartY;
+
+        if (!stageDragLockedX) {
+          if (Math.hypot(rawDx, rawDy) < 8) return;
+          if (Math.abs(rawDy) >= Math.abs(rawDx)) {
+            // Vertical scroll intent -> abort horizontal page drag cleanly
+            stagePointerDown = false;
+            stageActivePointerId = null;
+            return;
+          }
+          stageDragLockedX = true;
+          stageViewport.classList.add("is-dragging");
+          try { stageViewport.setPointerCapture(e.pointerId); } catch (_) {}
+        }
+
+        let dx = rawDx;
         // Rubber-band resistance at outer edges
         if ((currentPage === 0 && dx > 0) || (currentPage === totalPages - 1 && dx < 0)) {
           dx *= 0.28;
@@ -1277,10 +1507,15 @@
         applyTrackPercent(basePct + deltaPct, true);
       });
 
-      function endStageDrag() {
-        if (!stageDragActive) return;
-        stageDragActive = false;
+      function endStageDrag(e) {
+        if (!stagePointerDown || (e && e.pointerId !== stageActivePointerId)) return;
+        const wasLockedX = stageDragLockedX;
+        stagePointerDown = false;
+        stageDragLockedX = false;
+        stageActivePointerId = null;
         stageViewport.classList.remove("is-dragging");
+        if (!wasLockedX) return;
+
         const vw = stageViewport.clientWidth || window.innerWidth;
         const elapsed = Math.max(1, performance.now() - dragStartTime);
         const velocity = stageCurrentOffsetPx / elapsed;
@@ -1459,7 +1694,7 @@
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.07;
-        controls.enablePan = true;
+        controls.enablePan = !(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
         controls.minDistance = 0.38;
         controls.maxDistance = 2.6;
         controls.maxPolarAngle = Math.PI * 0.49;
@@ -1508,14 +1743,19 @@
           camAnimTargetLook = null;
         });
 
-        window.addEventListener("resize", () => {
+        function handleViewerResize() {
           const nw = viewerEl.clientWidth;
           const nh = viewerEl.clientHeight;
           if (!nw || !nh) return;
           camera.aspect = nw / nh;
           camera.updateProjectionMatrix();
           renderer.setSize(nw, nh);
-        });
+        }
+
+        window.addEventListener("resize", handleViewerResize);
+        if (window.ResizeObserver) {
+          new ResizeObserver(handleViewerResize).observe(viewerEl);
+        }
 
         loadCalicoGLB();
         animate();

@@ -2,27 +2,27 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>三花貓咪逗貓棒與撲抓大挑戰 | 3D 小遊戲</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>三花貓跳跳樂 3D · 跳一跳挑戰 | Calico Cat 3D</title>
   <link rel="icon" href="data:," />
   <script src="./libs/three.min.js"></script>
   <script src="./libs/GLTFLoader.js"></script>
   <style>
     :root {
-      --ink: #251d18;
-      --ink-soft: #64564c;
-      --cream: #faf4ec;
+      --ink: #261d17;
+      --ink-soft: #6c5b50;
       --surface: rgba(255, 251, 246, 0.90);
       --accent: #de6b28;
-      --accent-dark: #ba481c;
-      --gold: #e0a726;
-      --border: rgba(56, 38, 26, 0.12);
-      --shadow: 0 14px 36px rgba(48, 30, 16, 0.16);
+      --accent-deep: #be4719;
+      --gold: #f0ad26;
+      --border: rgba(58, 38, 26, 0.12);
+      --shadow: 0 12px 32px rgba(48, 30, 16, 0.16);
     }
 
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
     }
 
     html, body {
@@ -31,51 +31,57 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: radial-gradient(circle at 50% 25%, #fff9f1 0%, #f1e1ce 65%, #e4cbb0 100%);
+      background: radial-gradient(circle at 50% 22%, #fffaf2 0%, #f5e4cd 58%, #e6caa7 100%);
       color: var(--ink);
       font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Segoe UI", system-ui, sans-serif;
       user-select: none;
-    }
-
-    #gameCanvasWrap {
-      position: fixed;
-      inset: 0;
-      cursor: crosshair;
+      -webkit-user-select: none;
       touch-action: none;
     }
 
-    #gameCanvasWrap canvas {
+    #gameViewport {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    #gameViewport canvas {
       display: block;
       width: 100% !important;
       height: 100% !important;
+      touch-action: none;
     }
 
     /* ---------------- Top HUD ---------------- */
     .hud-top {
       position: fixed;
-      top: 14px;
-      left: 18px;
-      right: 18px;
+      top: max(12px, env(safe-area-inset-top));
+      left: max(12px, env(safe-area-inset-left));
+      right: max(12px, env(safe-area-inset-right));
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      pointer-events: none;
+      gap: 8px;
       z-index: 20;
+      pointer-events: none;
     }
 
-    .hud-group {
+    .hud-side {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 7px;
       pointer-events: auto;
+      min-width: 0;
     }
 
     .back-btn {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      padding: 9px 15px;
+      gap: 6px;
+      height: 40px;
+      padding: 0 14px;
       border-radius: 999px;
       background: var(--surface);
       backdrop-filter: blur(10px);
@@ -84,8 +90,9 @@
       font-size: 13px;
       font-weight: 800;
       text-decoration: none;
+      white-space: nowrap;
       box-shadow: var(--shadow);
-      transition: transform 0.15s ease, background 0.15s ease;
+      transition: transform 0.14s ease, background 0.14s ease;
     }
 
     .back-btn:hover {
@@ -94,79 +101,147 @@
       transform: translateY(-1px);
     }
 
-    .hud-pill {
+    .score-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      pointer-events: none;
+    }
+
+    .score-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 15px;
+      padding: 6px 18px;
       border-radius: 999px;
       background: var(--surface);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
-      font-size: 13px;
-      font-weight: 700;
+      white-space: nowrap;
     }
 
-    .score-num {
-      font-size: 18px;
+    .score-label {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      letter-spacing: 0.04em;
+    }
+
+    .score-val {
+      font-size: 24px;
+      line-height: 1;
       font-weight: 900;
       color: var(--accent);
       font-variant-numeric: tabular-nums;
     }
 
-    .combo-badge {
-      padding: 3px 9px;
+    .combo-pill {
+      padding: 3px 11px;
       border-radius: 999px;
       background: linear-gradient(135deg, #f3952f, #d94c24);
       color: #fff;
       font-size: 11.5px;
-      font-weight: 800;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      box-shadow: 0 4px 12px rgba(217, 76, 36, 0.35);
       opacity: 0;
-      transform: scale(0.85);
+      transform: translateY(-4px) scale(0.86);
       transition: opacity 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
     }
 
-    .combo-badge.visible {
+    .combo-pill.visible {
       opacity: 1;
-      transform: scale(1);
+      transform: translateY(0) scale(1);
     }
 
-    .timer-pill strong {
-      font-size: 16px;
+    .hud-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 40px;
+      padding: 0 13px;
+      border-radius: 999px;
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      font-size: 12.5px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .hud-pill strong {
+      color: var(--accent-deep);
       font-variant-numeric: tabular-nums;
-      color: var(--ink);
-    }
-
-    .timer-pill.urgent strong {
-      color: #c82a2a;
     }
 
     .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       border: 1px solid var(--border);
       background: var(--surface);
       backdrop-filter: blur(10px);
-      color: var(--ink);
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 12.5px;
-      font-weight: 700;
+      font-size: 16px;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       box-shadow: var(--shadow);
-      transition: all 0.15s ease;
+      transition: transform 0.14s ease;
     }
 
-    .icon-btn:hover {
-      transform: translateY(-1px);
-      border-color: var(--accent);
+    .icon-btn:active {
+      transform: scale(0.94);
     }
 
-    /* ---------------- Bottom Toy Dock ---------------- */
+    /* ---------------- Floating Popups ---------------- */
+    #floatPopup {
+      position: fixed;
+      top: 24%;
+      left: 50%;
+      transform: translate(-50%, 0) scale(0.85);
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: rgba(36, 26, 20, 0.88);
+      color: #fff8ef;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      box-shadow: 0 10px 26px rgba(32, 20, 12, 0.26);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 25;
+      transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    #floatPopup.perfect {
+      background: linear-gradient(135deg, #f3a126, #df5322);
+      color: #fff;
+      font-size: 18px;
+    }
+
+    #floatPopup.bonus {
+      background: linear-gradient(135deg, #279d6c, #187a52);
+      color: #fff;
+    }
+
+    #floatPopup.show {
+      opacity: 1;
+      transform: translate(-50%, -14px) scale(1);
+    }
+
+    /* ---------------- Bottom Power Dock ---------------- */
     .hud-bottom {
       position: fixed;
-      bottom: 16px;
+      bottom: max(14px, env(safe-area-inset-bottom));
       left: 50%;
       transform: translateX(-50%);
+      width: min(390px, calc(100vw - 28px));
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -175,330 +250,346 @@
       pointer-events: none;
     }
 
-    .toy-dock {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 10px;
-      border-radius: 999px;
+    .charge-card {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 18px;
       background: var(--surface);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.12s ease;
     }
 
-    .toy-btn {
-      border: none;
-      background: transparent;
-      padding: 8px 16px;
-      border-radius: 999px;
-      font-size: 13px;
+    .charge-card.charging {
+      transform: scale(0.985);
+      border-color: rgba(222, 107, 40, 0.45);
+    }
+
+    .charge-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
       font-weight: 800;
       color: var(--ink-soft);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.16s ease;
     }
 
-    .toy-btn:hover {
-      color: var(--ink);
-      background: rgba(38, 30, 24, 0.06);
+    .charge-top-row strong {
+      color: var(--accent-deep);
+      font-variant-numeric: tabular-nums;
     }
 
-    .toy-btn.active {
-      background: linear-gradient(135deg, #2b2320, #463730);
-      color: #fff9f2;
-      box-shadow: 0 4px 12px rgba(36, 26, 20, 0.26);
-    }
-
-    .pet-btn {
-      border: none;
-      background: linear-gradient(135deg, #f37082, #d84b64);
-      color: #fff;
-      padding: 8px 16px;
+    .charge-track {
+      width: 100%;
+      height: 11px;
       border-radius: 999px;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(216, 75, 100, 0.28);
-      transition: transform 0.15s ease;
+      background: rgba(38, 29, 23, 0.09);
+      overflow: hidden;
+      padding: 2px;
     }
 
-    .pet-btn:hover {
-      transform: scale(1.04);
-    }
-
-    .toy-hint {
-      padding: 4px 14px;
+    .charge-fill {
+      width: 0%;
+      height: 100%;
       border-radius: 999px;
-      background: rgba(36, 28, 24, 0.72);
-      color: #fff9f2;
+      background: linear-gradient(90deg, #f3b547 0%, #e97524 62%, #d83923 100%);
+      transition: width 0.04s linear;
+    }
+
+    .hint-chip {
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: rgba(38, 28, 22, 0.74);
+      color: #fff8f0;
       font-size: 11.5px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
     }
 
-    /* ---------------- Floating Popups ---------------- */
-    #toastBanner {
-      position: fixed;
-      top: 74px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-10px);
-      padding: 7px 18px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #e57a2e, #c84426);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 800;
-      box-shadow: 0 10px 24px rgba(200, 68, 38, 0.35);
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.25s ease;
-      z-index: 25;
-    }
-
-    #toastBanner.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ---------------- Overlays (Start & Result) ---------------- */
-    .modal-overlay {
+    /* ---------------- Modals (Start / Game Over / Loader) ---------------- */
+    .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(32, 24, 20, 0.42);
-      backdrop-filter: blur(8px);
+      background: rgba(32, 22, 16, 0.42);
+      backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 16px;
       z-index: 40;
-      transition: opacity 0.25s ease;
+      transition: opacity 0.24s ease;
     }
 
-    .modal-overlay.hidden {
+    .modal-backdrop.hidden {
       opacity: 0;
       pointer-events: none;
     }
 
     .modal-card {
-      width: min(490px, 94vw);
-      padding: 28px 30px;
-      border-radius: 26px;
-      background: rgba(255, 251, 246, 0.96);
-      border: 1px solid rgba(58, 42, 32, 0.14);
-      box-shadow: 0 28px 70px rgba(28, 16, 8, 0.28);
+      width: min(440px, 100%);
+      padding: 24px 22px;
+      border-radius: 24px;
+      background: #fffcf7;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 60px rgba(34, 20, 10, 0.28);
       text-align: center;
     }
 
-    .modal-eyebrow {
-      display: inline-block;
+    .modal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 4px 12px;
       border-radius: 999px;
       background: rgba(222, 107, 40, 0.14);
-      color: var(--accent-dark);
+      color: var(--accent-deep);
       font-size: 11.5px;
       font-weight: 800;
-      letter-spacing: 0.06em;
       margin-bottom: 10px;
     }
 
     .modal-card h1 {
       margin: 0 0 8px;
-      font-size: 26px;
+      font-size: 25px;
       font-weight: 900;
       letter-spacing: -0.02em;
     }
 
     .modal-card p {
-      margin: 0 0 18px;
+      margin: 0 0 14px;
       font-size: 13.5px;
-      line-height: 1.65;
+      line-height: 1.6;
       color: var(--ink-soft);
     }
 
-    .rules-grid {
+    .rule-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 9px;
-      margin-bottom: 20px;
+      gap: 8px;
+      margin-bottom: 18px;
       text-align: left;
     }
 
-    .rule-item {
-      padding: 10px 11px;
+    .rule-box {
+      padding: 10px 9px;
       border-radius: 14px;
-      background: rgba(38, 30, 24, 0.045);
-      border: 1px solid var(--border);
-      font-size: 12px;
+      background: #f8eee2;
+      font-size: 11.5px;
       line-height: 1.45;
     }
 
-    .rule-item strong {
+    .rule-box strong {
       display: block;
       font-size: 12.5px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
+      color: var(--ink);
     }
 
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin: 14px 0 18px;
+    }
+
+    .stat-tile {
+      padding: 11px 8px;
+      border-radius: 14px;
+      background: #f7ece0;
+    }
+
+    .stat-tile strong {
+      display: block;
+      font-size: 21px;
+      font-weight: 900;
+      color: var(--accent-deep);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-tile span {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink-soft);
     }
 
     .btn-primary {
+      width: 100%;
       border: none;
       border-radius: 999px;
-      padding: 12px 24px;
-      background: linear-gradient(135deg, #e57a2e, #c84426);
+      padding: 13px 20px;
+      background: linear-gradient(135deg, #ea7b2d, #c64422);
       color: #fff;
-      font-size: 14px;
-      font-weight: 800;
+      font-size: 16px;
+      font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(200, 68, 38, 0.30);
-      transition: transform 0.15s ease;
+      box-shadow: 0 8px 22px rgba(198, 68, 34, 0.34);
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
     }
 
     .btn-primary:hover {
       transform: translateY(-1px);
+      box-shadow: 0 11px 26px rgba(198, 68, 34, 0.42);
     }
 
-    .btn-secondary {
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 12px 20px;
-      background: #fff;
-      color: var(--ink);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s ease;
+    .btn-primary:active {
+      transform: scale(0.98);
     }
 
-    .btn-secondary:hover {
-      background: var(--ink);
-      color: #fff;
-    }
-
-    .result-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin: 14px 0 20px;
-    }
-
-    .res-box {
-      padding: 12px 8px;
-      border-radius: 14px;
-      background: rgba(38, 30, 24, 0.05);
-    }
-
-    .res-box strong {
-      display: block;
-      font-size: 22px;
-      font-weight: 900;
-      color: var(--accent);
-    }
-
-    .res-box span {
-      font-size: 11.5px;
+    .btn-secondary-link {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 13px;
+      font-weight: 800;
       color: var(--ink-soft);
-      font-weight: 700;
+      text-decoration: none;
     }
 
-    @media (max-width: 720px) {
-      .hud-top { flex-wrap: wrap; top: 10px; left: 10px; right: 10px; }
-      .rules-grid { grid-template-columns: 1fr; }
-      .toy-btn { padding: 7px 11px; font-size: 12px; }
-      .pet-btn { padding: 7px 12px; font-size: 12px; }
+    .btn-secondary-link:hover {
+      color: var(--ink);
+    }
+
+    .loader-pill {
+      padding: 14px 22px;
+      border-radius: 999px;
+      background: #fffcf7;
+      box-shadow: var(--shadow);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 600px) {
+      .back-btn {
+        height: 36px;
+        padding: 0 11px;
+        font-size: 12px;
+      }
+
+      .score-pill {
+        padding: 5px 14px;
+      }
+
+      .score-val {
+        font-size: 20px;
+      }
+
+      .hud-pill {
+        height: 36px;
+        padding: 0 10px;
+        font-size: 11.5px;
+      }
+
+      .icon-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 15px;
+      }
+
+      .rule-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .modal-card {
+        padding: 20px 16px;
+      }
+
+      .modal-card h1 {
+        font-size: 22px;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="gameCanvasWrap"></div>
+  <div id="gameViewport"></div>
 
   <!-- Top HUD -->
   <header class="hud-top">
-    <div class="hud-group">
-      <a class="back-btn" href="./index.html">← 返回 3D 展廳</a>
-      <div class="hud-pill">
-        <span>得分</span>
-        <span class="score-num" id="scoreVal">0</span>
-        <span class="combo-badge" id="comboBadge">×2 COMBO</span>
-      </div>
-      <div class="hud-pill" id="bestPill">最高分：<strong id="bestVal">0</strong></div>
+    <div class="hud-side">
+      <a class="back-btn" href="./index.html" id="backLink">← 回展廳</a>
     </div>
-    <div class="hud-group">
-      <div class="hud-pill timer-pill" id="timerPill">時間：<strong id="timerVal">60s</strong></div>
-      <button class="icon-btn" id="btnSound">🔊 音效：開</button>
-      <button class="icon-btn" id="btnRestartTop">↻ 重開</button>
+
+    <div class="score-center">
+      <div class="score-pill">
+        <span class="score-label">SCORE</span>
+        <span class="score-val" id="scoreVal">0</span>
+      </div>
+      <div class="combo-pill" id="comboPill">✨ PERFECT ×1</div>
+    </div>
+
+    <div class="hud-side">
+      <div class="hud-pill">🏆 <strong id="bestVal">0</strong></div>
+      <button class="icon-btn" id="btnSound" title="音效開關" aria-label="音效開關">🔊</button>
     </div>
   </header>
 
-  <div id="toastBanner"></div>
+  <div id="floatPopup">✨ PERFECT!</div>
 
-  <!-- Bottom Toy Dock -->
-  <footer class="hud-bottom">
-    <div class="toy-dock">
-      <button class="toy-btn active" data-toy="wand">🪶 羽毛逗貓棒</button>
-      <button class="toy-btn" data-toy="laser">🔴 雷射紅點</button>
-      <button class="toy-btn" data-toy="yarn">🧶 拋毛線球</button>
-      <button class="pet-btn" id="btnPetCat">💖 摸摸頭</button>
+  <!-- Bottom Tactile Charge Dock -->
+  <div class="hud-bottom">
+    <div class="charge-card" id="chargeCard">
+      <div class="charge-top-row">
+        <span id="chargeActionLabel">🐾 按住蓄力・放開起跳</span>
+        <strong id="chargePctLabel">0%</strong>
+      </div>
+      <div class="charge-track">
+        <div class="charge-fill" id="chargeFill"></div>
+      </div>
     </div>
-    <div class="toy-hint" id="toyHint">移動滑鼠／手指引誘三花貓，點擊地板晃動羽毛讓牠高高撲抓！（快捷鍵 1 / 2 / 3）</div>
-  </footer>
+    <div class="hint-chip" id="hintChip">按住畫面或空白鍵蓄力 · 跳到中心觸發連擊加倍！</div>
+  </div>
+
+  <!-- Loader Modal -->
+  <div class="modal-backdrop" id="loaderModal">
+    <div class="loader-pill" id="loaderText">正在召喚可愛 3D 三花貓咪與紙箱關卡...</div>
+  </div>
 
   <!-- Start Modal -->
-  <div class="modal-overlay" id="startModal">
+  <div class="modal-backdrop hidden" id="startModal">
     <div class="modal-card">
-      <span class="modal-eyebrow">3D CALICO CAT · INTERACTIVE PLAYGROUND</span>
-      <h1>🧶 逗貓棒與撲抓大挑戰</h1>
+      <div class="modal-badge">📦 BLENDER 3D 跳跳樂</div>
+      <h1>三花貓跳跳樂 🐾</h1>
       <p>
-        我們把剛做好的 Blender 3D 三花貓咪裝上關節動起來了！移動游標或手指逗牠玩，牠會轉頭追視、搖尾巴、衝刺並飛撲上來抓玩具。
+        親自操控圓滾滾的三花貓咪！按住蓄力、算好距離放開起跳，在紙箱、軟墊、書疊與貓跳台之間接力向前！
       </p>
-      <div class="rules-grid">
-        <div class="rule-item">
-          <strong>🪶 羽毛逗貓棒</strong>
-          <span>緩緩晃動吸引跟隨，點擊揮舞羽毛讓貓咪跳起來撲抓（+20）</span>
+      <div class="rule-grid">
+        <div class="rule-box">
+          <strong>👆 一指就能玩</strong>
+          手機按住螢幕、電腦按住左鍵或空白鍵即可蓄力起跳。
         </div>
-        <div class="rule-item">
-          <strong>🔴 雷射紅點</strong>
-          <span>移動紅點引導衝刺與連擊（+15），順便撿場上的小魚乾（+25）</span>
+        <div class="rule-box">
+          <strong>✨ 完美中心連擊</strong>
+          跳正中紅心連續 +2、+4、+6… 分數飆升還有華麗轉圈！
         </div>
-        <div class="rule-item">
-          <strong>🧶 拋毛線球</strong>
-          <span>點擊地板丟出彈跳毛線球，三花貓會飛撲拍飛它（+30）</span>
+        <div class="rule-box">
+          <strong>🐟 驚喜點心盒</strong>
+          偶爾會出現小魚乾 (+5) 與金鈴鐺 (+10)，記得接住它！
         </div>
       </div>
-      <div id="loadingStatus" style="font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 14px;">
-        正在載入 3D 三花貓咪模型...
-      </div>
-      <div class="modal-actions">
-        <button class="btn-primary" id="btnStartChallenge" disabled>🏆 開始 60 秒挑戰</button>
-        <button class="btn-secondary" id="btnStartFree" disabled>🧸 無限療癒模式</button>
-      </div>
+      <button class="btn-primary" id="btnStartGame">開始跳跳大挑戰！</button>
+      <a class="btn-secondary-link" href="./index.html">← 先回 3D 三花貓展廳逛逛</a>
     </div>
   </div>
 
-  <!-- Result Modal -->
-  <div class="modal-overlay hidden" id="resultModal">
+  <!-- Game Over Modal -->
+  <div class="modal-backdrop hidden" id="gameOverModal">
     <div class="modal-card">
-      <span class="modal-eyebrow">TIME'S UP · 遊戲結算</span>
-      <h1 id="resultRankTitle">🌟 超級逗貓大師！</h1>
-      <p id="resultSubText">三花貓咪玩得超開心，鈴鐺響個不停！</p>
-      <div class="result-stats">
-        <div class="res-box"><strong id="resScore">0</strong><span>總得分</span></div>
-        <div class="res-box"><strong id="resCatches">0</strong><span>成功撲抓</span></div>
-        <div class="res-box"><strong id="resBest">0</strong><span>歷史最高</span></div>
+      <div class="modal-badge" id="gameOverBadge">🐾 喵嗚！踩空啦</div>
+      <h1 id="gameOverTitle">三花貓翻滾落地！</h1>
+      <p id="gameOverSubtitle">再調整一點蓄力節奏，一定能跳得更遠！</p>
+      <div class="stats-row">
+        <div class="stat-tile"><strong id="finalScore">0</strong><span>本局分數</span></div>
+        <div class="stat-tile"><strong id="finalBest">0</strong><span>最高紀錄</span></div>
+        <div class="stat-tile"><strong id="finalMaxStreak">0</strong><span>最大連擊</span></div>
       </div>
-      <div class="modal-actions">
-        <button class="btn-primary" id="btnPlayAgain">🔄 再玩一次 60 秒</button>
-        <button class="btn-secondary" id="btnSwitchFree">🧸 切換無限模式</button>
-      </div>
+      <button class="btn-primary" id="btnRestartGame">再跳一局 🐾</button>
+      <a class="btn-secondary-link" href="./index.html">← 返回 3D 三花貓互動展廳</a>
     </div>
   </div>
 
@@ -506,11 +597,31 @@
     (function () {
       "use strict";
 
+      const BEST_KEY = "calico_hop_best_v1";
+      const viewportEl = document.getElementById("gameViewport");
+      const scoreValEl = document.getElementById("scoreVal");
+      const bestValEl = document.getElementById("bestVal");
+      const comboPillEl = document.getElementById("comboPill");
+      const floatPopupEl = document.getElementById("floatPopup");
+      const chargeCardEl = document.getElementById("chargeCard");
+      const chargeActionEl = document.getElementById("chargeActionLabel");
+      const chargePctEl = document.getElementById("chargePctLabel");
+      const chargeFillEl = document.getElementById("chargeFill");
+      const hintChipEl = document.getElementById("hintChip");
+
+      const loaderModal = document.getElementById("loaderModal");
+      const loaderText = document.getElementById("loaderText");
+      const startModal = document.getElementById("startModal");
+      const gameOverModal = document.getElementById("gameOverModal");
+      const btnSound = document.getElementById("btnSound");
+
       // ---------------------------------------------------------------------
-      // 1. Web Audio Synthesizer (Cute Cat Chirp, Bell Jingle, Bounce SFX)
+      // 1. Web Audio Synthesizer (Tactile Pop / Bell / Perfect Chimes)
       // ---------------------------------------------------------------------
       let audioCtx = null;
       let soundOn = true;
+      let chargeOsc = null;
+      let chargeGain = null;
 
       function ensureAudio() {
         if (!soundOn) return null;
@@ -524,105 +635,98 @@
         return audioCtx;
       }
 
-      function playBellAndMeow(isJoy) {
+      function playTone(freq, duration, type = "sine", vol = 0.14, delay = 0, endFreq = null) {
+        if (!soundOn) return;
         const ctx = ensureAudio();
         if (!ctx) return;
-        const now = ctx.currentTime;
-        // Shiny bell chime
-        [1567.98, 2093.0].forEach((freq, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = "triangle";
-          osc.frequency.setValueAtTime(freq, now + idx * 0.04);
-          gain.gain.setValueAtTime(0.08, now + idx * 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.25);
-          osc.connect(gain).connect(ctx.destination);
-          osc.start(now + idx * 0.04);
-          osc.stop(now + idx * 0.04 + 0.26);
-        });
-        // Cute melodic chirp / purr
-        const chirp = ctx.createOscillator();
-        const cg = ctx.createGain();
-        chirp.type = "sine";
-        const f0 = isJoy ? 680 : 580;
-        const f1 = isJoy ? 1040 : 880;
-        chirp.frequency.setValueAtTime(f0, now + 0.02);
-        chirp.frequency.exponentialRampToValueAtTime(f1, now + 0.11);
-        chirp.frequency.exponentialRampToValueAtTime(f0 * 1.08, now + 0.22);
-        cg.gain.setValueAtTime(0.001, now + 0.02);
-        cg.gain.linearRampToValueAtTime(0.11, now + 0.06);
-        cg.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-        chirp.connect(cg).connect(ctx.destination);
-        chirp.start(now + 0.02);
-        chirp.stop(now + 0.25);
-      }
-
-      function playSoftBoing() {
-        const ctx = ensureAudio();
-        if (!ctx) return;
-        const now = ctx.currentTime;
+        const t = ctx.currentTime + delay;
         const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(240, now);
-        osc.frequency.exponentialRampToValueAtTime(420, now + 0.10);
-        gain.gain.setValueAtTime(0.07, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.15);
+        const g = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t);
+        if (endFreq !== null) {
+          osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), t + duration);
+        }
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(vol, t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + duration + 0.02);
       }
 
-      // ---------------------------------------------------------------------
-      // 2. Game State & UI Refs
-      // ---------------------------------------------------------------------
-      const ARENA_RADIUS = 1.85;
-      const STORAGE_KEY = "calico_cat_game_best_v1";
-
-      const state = {
-        loaded: false,
-        playing: false,
-        mode: "challenge", // "challenge" | "free"
-        activeToy: "wand", // "wand" | "laser" | "yarn"
-        score: 0,
-        catches: 0,
-        combo: 0,
-        comboTimer: 0,
-        timeLeft: 60.0,
-        bestScore: parseInt(localStorage.getItem(STORAGE_KEY) || "0", 10) || 0,
-        pointerNDC: new THREE.Vector2(0, 0),
-        pointerWorld: new THREE.Vector3(0.45, 0.22, 0.45),
-        pointerDown: false,
-        wandDipTimer: 0,
-        pounceTimer: 0,
-        pounceCooldown: 0,
-        joySpinTimer: 0,
-        bonusTimer: 3.0,
-      };
-
-      const scoreEl = document.getElementById("scoreVal");
-      const comboEl = document.getElementById("comboBadge");
-      const bestEl = document.getElementById("bestVal");
-      const timerEl = document.getElementById("timerVal");
-      const timerPill = document.getElementById("timerPill");
-      const toastEl = document.getElementById("toastBanner");
-      const toyHintEl = document.getElementById("toyHint");
-      const startModal = document.getElementById("startModal");
-      const resultModal = document.getElementById("resultModal");
-      bestEl.textContent = String(state.bestScore);
-
-      let toastTimeout = null;
-      function showToast(msg) {
-        toastEl.textContent = msg;
-        toastEl.classList.add("show");
-        clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => toastEl.classList.remove("show"), 1400);
+      function startChargeHum() {
+        if (!soundOn) return;
+        const ctx = ensureAudio();
+        if (!ctx || chargeOsc) return;
+        chargeOsc = ctx.createOscillator();
+        chargeGain = ctx.createGain();
+        chargeOsc.type = "triangle";
+        chargeOsc.frequency.setValueAtTime(220, ctx.currentTime);
+        chargeGain.gain.setValueAtTime(0.001, ctx.currentTime);
+        chargeGain.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 0.06);
+        chargeOsc.connect(chargeGain);
+        chargeGain.connect(ctx.destination);
+        chargeOsc.start();
       }
 
+      function updateChargeHum(ratio) {
+        if (chargeOsc && audioCtx) {
+          chargeOsc.frequency.setTargetAtTime(220 + ratio * 340, audioCtx.currentTime, 0.03);
+        }
+      }
+
+      function stopChargeHum() {
+        if (chargeOsc && chargeGain && audioCtx) {
+          try {
+            chargeGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.02);
+            chargeOsc.stop(audioCtx.currentTime + 0.06);
+          } catch (_) {}
+        }
+        chargeOsc = null;
+        chargeGain = null;
+      }
+
+      function sfxJump() {
+        stopChargeHum();
+        playTone(340, 0.16, "sine", 0.14, 0, 620);
+      }
+
+      function sfxLandGood() {
+        playTone(280, 0.12, "triangle", 0.14, 0, 190);
+        playTone(523.25, 0.14, "sine", 0.08, 0.02);
+      }
+
+      function sfxLandPerfect(streak) {
+        const scale = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66];
+        const base = scale[Math.min(scale.length - 1, Math.max(0, streak - 1))];
+        playTone(base, 0.22, "sine", 0.16, 0);
+        playTone(base * 1.25, 0.24, "triangle", 0.11, 0.05);
+      }
+
+      function sfxBonus() {
+        playTone(659.25, 0.14, "triangle", 0.13, 0);
+        playTone(880.0, 0.16, "triangle", 0.14, 0.06);
+        playTone(1174.66, 0.22, "sine", 0.13, 0.12);
+      }
+
+      function sfxFail() {
+        stopChargeHum();
+        playTone(460, 0.22, "sawtooth", 0.08, 0, 180);
+        playTone(220, 0.28, "triangle", 0.11, 0.12, 110);
+      }
+
+      btnSound.addEventListener("click", (e) => {
+        e.stopPropagation();
+        soundOn = !soundOn;
+        if (!soundOn) stopChargeHum();
+        btnSound.textContent = soundOn ? "🔊" : "🔇";
+      });
+
       // ---------------------------------------------------------------------
-      // 3. Three.js Playroom Scene Setup
+      // 2. Three.js Scene, Lighting, Warm Living Room Backdrop
       // ---------------------------------------------------------------------
-      const wrap = document.getElementById("gameCanvasWrap");
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -631,901 +735,1067 @@
       renderer.toneMappingExposure = 0.94;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      wrap.appendChild(renderer.domElement);
+      viewportEl.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0xf2dfc6, 24, 54);
 
-      // Studio PMREM Environment
+      // Soft studio PMREM environment for glossy cat eyes & golden treats
       const pmrem = new THREE.PMREMGenerator(renderer);
       pmrem.compileEquirectangularShader();
       const envScene = new THREE.Scene();
-      envScene.background = new THREE.Color(0x7c6858);
-      const addSoftbox = (hex, sw, sh, pos, rot) => {
-        const p = new THREE.Mesh(
-          new THREE.PlaneGeometry(sw, sh),
+      envScene.background = new THREE.Color(0x7c6756);
+      const addSoftbox = (hex, w, h, p, r) => {
+        const m = new THREE.Mesh(
+          new THREE.PlaneGeometry(w, h),
           new THREE.MeshBasicMaterial({ color: hex, side: THREE.DoubleSide })
         );
-        p.position.set(pos[0], pos[1], pos[2]);
-        p.rotation.set(rot[0], rot[1], rot[2]);
-        envScene.add(p);
+        m.position.set(p[0], p[1], p[2]);
+        m.rotation.set(r[0], r[1], r[2]);
+        envScene.add(m);
       };
       addSoftbox(0xfffaf2, 6, 6, [0, 6, 0], [Math.PI / 2, 0, 0]);
-      addSoftbox(0xffe9cf, 4.5, 4.5, [-5, 3, 5], [0, Math.PI / 4, 0]);
-      addSoftbox(0xdbe6ff, 4.5, 4.5, [5, 3, -4], [0, -Math.PI * 0.75, 0]);
+      addSoftbox(0xffe7cb, 5, 5, [-5, 3, 5], [0, Math.PI / 4, 0]);
+      addSoftbox(0xdbe8ff, 5, 5, [5, 3, -5], [0, -Math.PI * 0.75, 0]);
       scene.environment = pmrem.fromScene(envScene, 0.04).texture;
       pmrem.dispose();
 
-      const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.05, 40);
-      camera.position.set(0, 2.15, 3.15);
-      camera.lookAt(0, 0.22, 0.0);
+      const camera = new THREE.PerspectiveCamera(34, window.innerWidth / window.innerHeight, 0.1, 90);
+      const camCurrentTarget = new THREE.Vector3(0.8, 0.22, 0.0);
+      const camDesiredTarget = new THREE.Vector3(0.8, 0.22, 0.0);
 
-      // Lighting
-      const hemi = new THREE.HemisphereLight(0xfff5e8, 0xc9ab8d, 0.36);
-      scene.add(hemi);
+      function getResponsiveCamOffset() {
+        const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+        // On narrow mobile portrait screens, step camera farther back so BOTH current & next platforms fit comfortably
+        const zoom = aspect < 0.92 ? Math.min(2.15, Math.max(1.06, 0.88 / Math.max(0.42, aspect))) : 1.0;
+        return new THREE.Vector3(-5.5 * zoom, 5.85 * zoom, 5.5 * zoom);
+      }
 
-      const sunLight = new THREE.DirectionalLight(0xfff6ea, 1.15);
-      sunLight.position.set(-2.2, 3.8, 2.6);
+      scene.add(new THREE.HemisphereLight(0xfff6ea, 0xc49f7d, 0.42));
+
+      const sunLight = new THREE.DirectionalLight(0xfff5e7, 1.06);
+      sunLight.position.set(-4.5, 9.5, 6.0);
       sunLight.castShadow = true;
       sunLight.shadow.mapSize.set(1024, 1024);
-      sunLight.shadow.camera.near = 0.5;
-      sunLight.shadow.camera.far = 12;
-      sunLight.shadow.camera.left = -2.8;
-      sunLight.shadow.camera.right = 2.8;
-      sunLight.shadow.camera.top = 2.8;
-      sunLight.shadow.camera.bottom = -2.8;
+      sunLight.shadow.camera.near = 1;
+      sunLight.shadow.camera.far = 28;
+      sunLight.shadow.camera.left = -8;
+      sunLight.shadow.camera.right = 8;
+      sunLight.shadow.camera.top = 8;
+      sunLight.shadow.camera.bottom = -8;
       sunLight.shadow.bias = -0.0005;
       scene.add(sunLight);
+      scene.add(sunLight.target);
 
-      const rimLight = new THREE.DirectionalLight(0xfff4e0, 0.55);
-      rimLight.position.set(2.0, 2.2, -2.5);
+      const rimLight = new THREE.DirectionalLight(0xfff1de, 0.42);
+      rimLight.position.set(5.5, 4.5, -5.0);
       scene.add(rimLight);
 
-      // Procedural Warm Wood Floor + Playmat Rug
-      function createWoodFloorTexture() {
+      // Warm cozy subtle parquet floor plane (follows player smoothly)
+      const FLOOR_Y = -0.68;
+      function makeFloorTexture() {
         const c = document.createElement("canvas");
         c.width = 512;
         c.height = 512;
-        const g = c.getContext("2d");
-        g.fillStyle = "#e7ceb1";
-        g.fillRect(0, 0, 512, 512);
-        const plankH = 64;
-        for (let row = 0; row < 8; row++) {
-          const y = row * plankH;
-          const shade = (row % 2 === 0) ? "#e8cfb3" : "#e1c4a4";
-          g.fillStyle = shade;
-          g.fillRect(0, y, 512, plankH - 2);
-          g.fillStyle = "rgba(120, 82, 52, 0.14)";
-          g.fillRect(0, y + plankH - 2, 512, 2);
-          const xJoint = ((row * 173) % 440) + 32;
-          g.fillRect(xJoint, y, 2, plankH);
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#f2dfc7";
+        ctx.fillRect(0, 0, 512, 512);
+        ctx.strokeStyle = "rgba(182, 138, 96, 0.14)";
+        ctx.lineWidth = 2;
+        const step = 64;
+        for (let i = 0; i <= 512; i += step) {
+          ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
         }
         const tex = new THREE.CanvasTexture(c);
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(4, 4);
+        tex.repeat.set(22, 22);
         tex.encoding = THREE.sRGBEncoding;
         return tex;
       }
 
+      const floorTex = makeFloorTexture();
       const floorMesh = new THREE.Mesh(
-        new THREE.CircleGeometry(7.5, 64),
-        new THREE.MeshStandardMaterial({ map: createWoodFloorTexture(), roughness: 0.78, metalness: 0.02 })
+        new THREE.PlaneGeometry(80, 80),
+        new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.94, metalness: 0.0 })
       );
       floorMesh.rotation.x = -Math.PI / 2;
+      floorMesh.position.y = FLOOR_Y;
       floorMesh.receiveShadow = true;
       scene.add(floorMesh);
 
-      // Cozy cream-sage circular playmat rug
-      const rugMesh = new THREE.Mesh(
-        new THREE.CylinderGeometry(ARENA_RADIUS + 0.08, ARENA_RADIUS + 0.12, 0.016, 64),
-        new THREE.MeshStandardMaterial({ color: 0xf6efe4, roughness: 0.92 })
-      );
-      rugMesh.position.y = 0.008;
-      rugMesh.receiveShadow = true;
-      scene.add(rugMesh);
-
-      const rugBorder = new THREE.Mesh(
-        new THREE.RingGeometry(ARENA_RADIUS - 0.02, ARENA_RADIUS + 0.04, 64),
-        new THREE.MeshStandardMaterial({ color: 0xdfb996, roughness: 0.85, side: THREE.DoubleSide })
-      );
-      rugBorder.rotation.x = -Math.PI / 2;
-      rugBorder.position.y = 0.018;
-      scene.add(rugBorder);
-
-      // Invisible raycast floor plane
-      const rayFloorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.02);
-      const raycaster = new THREE.Raycaster();
-
       // ---------------------------------------------------------------------
-      // 4. Interactive 3D Toys (Feather Wand, Laser Dot, Yarn Balls, Bonus)
+      // 3. Shared Textures & Platform Builders (5 Cozy Themes)
       // ---------------------------------------------------------------------
-      // 4A. Feather Wand Toy
-      const wandGroup = new THREE.Group();
-      scene.add(wandGroup);
-
-      const stickMat = new THREE.MeshStandardMaterial({ color: 0xc58e58, roughness: 0.45 });
-      const stickMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.016, 1.35, 12), stickMat);
-      stickMesh.rotation.x = Math.PI / 2;
-      stickMesh.position.set(0.18, 0.36, 0.70);
-      stickMesh.rotation.y = 0.25;
-      stickMesh.castShadow = true;
-      wandGroup.add(stickMesh);
-
-      const wandTipGroup = new THREE.Group();
-      wandGroup.add(wandTipGroup);
-
-      const cordMat = new THREE.LineBasicMaterial({ color: 0x5c4738 });
-      const cordGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, -0.25, 0)]);
-      const cordLine = new THREE.Line(cordGeo, cordMat);
-      wandGroup.add(cordLine);
-
-      const featherColors = [0xe86b38, 0xf2b632, 0x3fa7a3];
-      featherColors.forEach((hex, idx) => {
-        const fMesh = new THREE.Mesh(
-          new THREE.ConeGeometry(0.032, 0.14, 8),
-          new THREE.MeshStandardMaterial({ color: hex, roughness: 0.65 })
-        );
-        fMesh.position.set((idx - 1) * 0.024, -0.04, 0);
-        fMesh.rotation.z = (idx - 1) * 0.35;
-        fMesh.rotation.x = 0.25;
-        fMesh.castShadow = true;
-        wandTipGroup.add(fMesh);
-      });
-      const wandBell = new THREE.Mesh(
-        new THREE.SphereGeometry(0.022, 14, 12),
-        new THREE.MeshStandardMaterial({ color: 0xeeb934, metalness: 0.88, roughness: 0.22 })
-      );
-      wandBell.position.y = 0.02;
-      wandTipGroup.add(wandBell);
-
-      // 4B. Laser Dot Toy
-      const laserGroup = new THREE.Group();
-      laserGroup.visible = false;
-      scene.add(laserGroup);
-      const laserCore = new THREE.Mesh(
-        new THREE.CircleGeometry(0.045, 24),
-        new THREE.MeshBasicMaterial({ color: 0xff2828 })
-      );
-      laserCore.rotation.x = -Math.PI / 2;
-      laserCore.position.y = 0.022;
-      laserGroup.add(laserCore);
-      const laserHalo = new THREE.Mesh(
-        new THREE.RingGeometry(0.05, 0.11, 24),
-        new THREE.MeshBasicMaterial({ color: 0xff6247, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
-      );
-      laserHalo.rotation.x = -Math.PI / 2;
-      laserHalo.position.y = 0.021;
-      laserGroup.add(laserHalo);
-
-      // 4C. Yarn Balls + Bonus Collectibles + Heart Particles
-      const yarnBalls = [];
-      const yarnPalette = [0xe67332, 0xe86d8a, 0xebb134, 0x4ca39d];
-
-      function createYarnBallTexture(hexColor) {
+      function makePawStampTexture() {
         const c = document.createElement("canvas");
-        c.width = 128;
-        c.height = 128;
-        const g = c.getContext("2d");
-        g.fillStyle = "#" + hexColor.toString(16).padStart(6, "0");
-        g.fillRect(0, 0, 128, 128);
-        g.strokeStyle = "rgba(255,255,255,0.28)";
-        g.lineWidth = 3;
-        for (let i = -32; i < 160; i += 10) {
-          g.beginPath();
-          g.moveTo(0, i);
-          g.lineTo(128, i + 36);
-          g.stroke();
-          g.beginPath();
-          g.moveTo(i, 0);
-          g.lineTo(i + 24, 128);
-          g.stroke();
-        }
+        c.width = 256;
+        c.height = 256;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#d9a570";
+        ctx.fillRect(0, 0, 256, 256);
+        // Box center flap seam
+        ctx.strokeStyle = "rgba(128, 78, 36, 0.25)";
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, 128); ctx.lineTo(256, 128); ctx.stroke();
+        // Packing tape strip
+        ctx.fillStyle = "#f3e1c4";
+        ctx.fillRect(102, 0, 52, 256);
+        // Subtle paw icon in corner
+        ctx.fillStyle = "rgba(116, 68, 32, 0.34)";
+        const drawCircle = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
+        drawCircle(52, 198, 13);
+        drawCircle(36, 178, 5.5);
+        drawCircle(52, 173, 5.5);
+        drawCircle(68, 178, 5.5);
         const tex = new THREE.CanvasTexture(c);
         tex.encoding = THREE.sRGBEncoding;
         return tex;
       }
+      const boxTopTex = makePawStampTexture();
 
-      function spawnYarnBall(targetPos) {
-        const colorHex = yarnPalette[yarnBalls.length % yarnPalette.length];
-        const radius = 0.085;
-        const mesh = new THREE.Mesh(
-          new THREE.SphereGeometry(radius, 20, 16),
-          new THREE.MeshStandardMaterial({ map: createYarnBallTexture(colorHex), roughness: 0.85 })
-        );
-        mesh.castShadow = true;
-        mesh.position.set(targetPos.x * 0.45, 0.45, Math.min(ARENA_RADIUS, targetPos.z + 0.75));
-        scene.add(mesh);
+      const platformList = [];
+      const activeRipples = [];
+      const activeParticles = [];
 
-        const dir = new THREE.Vector3(targetPos.x - mesh.position.x, 0, targetPos.z - mesh.position.z);
-        if (dir.length() < 0.05) dir.set(0, 0, -1);
-        const speed = Math.min(2.6, dir.length() * 2.1);
-        dir.normalize();
-        yarnBalls.push({
-          mesh,
-          radius,
-          vx: dir.x * speed,
-          vy: 1.9,
-          vz: dir.z * speed,
-          swatCooldown: 0,
-          life: 16.0,
-        });
-        playSoftBoing();
-
-        if (yarnBalls.length > 5) {
-          const old = yarnBalls.shift();
-          scene.remove(old.mesh);
+      function createCollectible(type) {
+        const g = new THREE.Group();
+        if (type === "bell") {
+          const goldMat = new THREE.MeshStandardMaterial({ color: 0xf4bd2e, roughness: 0.22, metalness: 0.82, emissive: 0x623b00, emissiveIntensity: 0.25 });
+          const orb = new THREE.Mesh(new THREE.SphereGeometry(0.14, 18, 14), goldMat);
+          const ridge = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.022, 8, 20), goldMat);
+          ridge.rotation.x = Math.PI / 2;
+          const ring = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.015, 8, 16), goldMat);
+          ring.position.y = 0.16;
+          g.add(orb, ridge, ring);
+          g.userData = { points: 10, label: "🔔 金鈴鐺 +10" };
+        } else {
+          // Cute golden-orange fish biscuit
+          const fishMat = new THREE.MeshStandardMaterial({ color: 0xf39337, roughness: 0.34, metalness: 0.12, emissive: 0x5c2400, emissiveIntensity: 0.18 });
+          const body = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12), fishMat);
+          body.scale.set(1.35, 0.72, 0.48);
+          const tail = new THREE.Mesh(new THREE.ConeGeometry(0.095, 0.14, 4), fishMat);
+          tail.rotation.z = -Math.PI / 2;
+          tail.scale.set(1.0, 1.0, 0.45);
+          tail.position.x = -0.20;
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), new THREE.MeshBasicMaterial({ color: 0x261a14 }));
+          eye.position.set(0.10, 0.03, 0.055);
+          const eye2 = eye.clone();
+          eye2.position.z = -0.055;
+          g.add(body, tail, eye, eye2);
+          g.userData = { points: 5, label: "🐟 小魚乾 +5" };
         }
+        g.traverse((c) => { if (c.isMesh) c.castShadow = true; });
+        return g;
       }
 
-      const bonusItems = [];
-      function spawnBonusItem() {
-        if (bonusItems.length >= 2) return;
-        const angle = Math.random() * Math.PI * 2;
-        const r = 0.45 + Math.random() * (ARENA_RADIUS - 0.75);
-        const isGoldYarn = Math.random() > 0.6;
+      function spawnPlatform(index, posX, posZ, halfW, halfD) {
         const group = new THREE.Group();
-        group.position.set(Math.cos(angle) * r, 0.14, Math.sin(angle) * r);
+        group.position.set(posX, 0, posZ);
 
-        if (isGoldYarn) {
-          const ball = new THREE.Mesh(
-            new THREE.SphereGeometry(0.078, 16, 14),
-            new THREE.MeshStandardMaterial({ color: 0xf3b834, roughness: 0.35, metalness: 0.25, emissive: 0x6b4304, emissiveIntensity: 0.35 })
+        const bodyGroup = new THREE.Group();
+        group.add(bodyGroup);
+
+        const platHeight = 0.68; // So bottom sits cleanly at FLOOR_Y = -0.68
+        const isTreatBox = index > 0 && index % 4 === 0;
+        const theme = isTreatBox ? 4 : (index === 0 ? 0 : Math.floor(Math.random() * 4));
+
+        if (theme === 0) {
+          // Cardboard Box
+          const sideMat = new THREE.MeshStandardMaterial({ color: 0xcf965d, roughness: 0.85 });
+          const topMat = new THREE.MeshStandardMaterial({ map: boxTopTex, roughness: 0.82 });
+          const box = new THREE.Mesh(
+            new THREE.BoxGeometry(halfW * 2, platHeight, halfD * 2),
+            [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
           );
-          ball.castShadow = true;
-          group.add(ball);
+          box.position.y = -platHeight / 2;
+          box.castShadow = true;
+          box.receiveShadow = true;
+          bodyGroup.add(box);
+        } else if (theme === 1) {
+          // Soft Pastel Cushion
+          const palette = [
+            { main: 0xf4d2b8, trim: 0xdf8252 },
+            { main: 0xd9e8d2, trim: 0x739c68 },
+            { main: 0xf7e3d4, trim: 0xd86655 },
+          ];
+          const pal = palette[index % palette.length];
+          const cushMat = new THREE.MeshStandardMaterial({ color: pal.main, roughness: 0.88 });
+          const trimMat = new THREE.MeshStandardMaterial({ color: pal.trim, roughness: 0.72 });
+
+          const base = new THREE.Mesh(
+            new THREE.BoxGeometry(halfW * 1.92, 0.34, halfD * 1.92),
+            new THREE.MeshStandardMaterial({ color: 0xe6d3bc, roughness: 0.86 })
+          );
+          base.position.y = -0.51;
+          const topPad = new THREE.Mesh(
+            new THREE.CylinderGeometry(halfW * 1.04, halfW * 1.08, 0.36, 28),
+            cushMat
+          );
+          topPad.scale.set(1.0, 1.0, halfD / halfW);
+          topPad.position.y = -0.18;
+          const piping = new THREE.Mesh(new THREE.TorusGeometry(halfW * 1.04, 0.032, 10, 32), trimMat);
+          piping.rotation.x = Math.PI / 2;
+          piping.scale.set(1.0, halfD / halfW, 1.0);
+          piping.position.y = -0.02;
+          [base, topPad, piping].forEach((m) => {
+            m.castShadow = true;
+            m.receiveShadow = true;
+            bodyGroup.add(m);
+          });
+        } else if (theme === 2) {
+          // Cozy Hardcover Book Stack
+          const coverPairs = [
+            [0x3c5d78, 0xe87b4a],
+            [0x8c443c, 0x5c8b72],
+            [0x534c6b, 0xdda147],
+          ];
+          const pair = coverPairs[index % coverPairs.length];
+          const paperMat = new THREE.MeshStandardMaterial({ color: 0xfaf2e4, roughness: 0.85 });
+          const b1Mat = new THREE.MeshStandardMaterial({ color: pair[0], roughness: 0.55 });
+          const b2Mat = new THREE.MeshStandardMaterial({ color: pair[1], roughness: 0.55 });
+
+          const makeBook = (w, h, d, coverMat) => {
+            const bg = new THREE.Group();
+            const covTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), coverMat);
+            covTop.position.y = h / 2 - 0.02;
+            const covBot = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), coverMat);
+            covBot.position.y = -h / 2 + 0.02;
+            const spine = new THREE.Mesh(new THREE.BoxGeometry(0.045, h, d), coverMat);
+            spine.position.x = -w / 2 + 0.022;
+            const pages = new THREE.Mesh(new THREE.BoxGeometry(w * 0.94, h - 0.07, d * 0.92), paperMat);
+            pages.position.x = 0.015;
+            [covTop, covBot, spine, pages].forEach((m) => {
+              m.castShadow = true;
+              m.receiveShadow = true;
+              bg.add(m);
+            });
+            return bg;
+          };
+
+          const botBook = makeBook(halfW * 2.06, 0.34, halfD * 2.06, b1Mat);
+          botBook.position.y = -0.51;
+          botBook.rotation.y = 0.06;
+          const topBook = makeBook(halfW * 2.0, 0.34, halfD * 2.0, b2Mat);
+          topBook.position.y = -0.17;
+          topBook.rotation.y = -0.04;
+          bodyGroup.add(botBook, topBook);
+        } else if (theme === 3) {
+          // Cat Tree Sisal Pillar + Plush Top
+          const woodMat = new THREE.MeshStandardMaterial({ color: 0xb98252, roughness: 0.72 });
+          const ropeMat = new THREE.MeshStandardMaterial({ color: 0xdec49e, roughness: 0.92 });
+          const plushMat = new THREE.MeshStandardMaterial({ color: 0xfff3e6, roughness: 0.88 });
+
+          const plinth = new THREE.Mesh(new THREE.BoxGeometry(halfW * 1.9, 0.14, halfD * 1.9), woodMat);
+          plinth.position.y = -0.61;
+          const post = new THREE.Mesh(new THREE.CylinderGeometry(Math.min(halfW, halfD) * 0.56, Math.min(halfW, halfD) * 0.58, 0.42, 24), ropeMat);
+          post.position.y = -0.34;
+          const cap = new THREE.Mesh(new THREE.CylinderGeometry(halfW * 1.03, halfW * 1.03, 0.14, 28), plushMat);
+          cap.scale.set(1.0, 1.0, halfD / halfW);
+          cap.position.y = -0.07;
+          [plinth, post, cap].forEach((m) => {
+            m.castShadow = true;
+            m.receiveShadow = true;
+            bodyGroup.add(m);
+          });
         } else {
-          // Cute stylized golden fish treat
-          const body = new THREE.Mesh(
-            new THREE.SphereGeometry(0.065, 14, 10),
-            new THREE.MeshStandardMaterial({ color: 0xf59d3d, roughness: 0.4, emissive: 0x552905, emissiveIntensity: 0.28 })
-          );
-          body.scale.set(1.45, 0.72, 0.42);
-          body.castShadow = true;
-          group.add(body);
-          const tail = new THREE.Mesh(
-            new THREE.ConeGeometry(0.048, 0.075, 4),
-            new THREE.MeshStandardMaterial({ color: 0xf59d3d, roughness: 0.4 })
-          );
-          tail.rotation.z = -Math.PI / 2;
-          tail.position.x = -0.095;
-          group.add(tail);
+          // Golden Gift Treat Box
+          const boxMat = new THREE.MeshStandardMaterial({ color: 0xf7c552, roughness: 0.42, metalness: 0.12 });
+          const ribMat = new THREE.MeshStandardMaterial({ color: 0xd9383a, roughness: 0.36 });
+          const box = new THREE.Mesh(new THREE.BoxGeometry(halfW * 2, platHeight, halfD * 2), boxMat);
+          box.position.y = -platHeight / 2;
+          const rib1 = new THREE.Mesh(new THREE.BoxGeometry(halfW * 2.03, platHeight + 0.015, 0.20), ribMat);
+          rib1.position.y = -platHeight / 2;
+          const rib2 = new THREE.Mesh(new THREE.BoxGeometry(0.20, platHeight + 0.015, halfD * 2.03), ribMat);
+          rib2.position.y = -platHeight / 2;
+          [box, rib1, rib2].forEach((m) => {
+            m.castShadow = true;
+            m.receiveShadow = true;
+            bodyGroup.add(m);
+          });
         }
 
-        const aura = new THREE.Mesh(
-          new THREE.RingGeometry(0.11, 0.15, 24),
-          new THREE.MeshBasicMaterial({ color: 0xf3b834, transparent: true, opacity: 0.6, side: THREE.DoubleSide })
-        );
-        aura.rotation.x = -Math.PI / 2;
-        aura.position.y = -0.11;
-        group.add(aura);
+        // Subtle bullseye dot on top center for visual feedback
+        const dotMat = new THREE.MeshBasicMaterial({ color: isTreatBox ? 0xffffff : 0x5c3e2a, transparent: true, opacity: 0.24 });
+        const centerDot = new THREE.Mesh(new THREE.CircleGeometry(0.11, 20), dotMat);
+        centerDot.rotation.x = -Math.PI / 2;
+        centerDot.position.y = 0.008;
+        bodyGroup.add(centerDot);
+
+        // Optional Treat Collectible floating above box
+        let collectible = null;
+        if (index > 0 && (isTreatBox || Math.random() < 0.34)) {
+          collectible = createCollectible(isTreatBox ? "bell" : "fish");
+          collectible.position.set(0, 0.56, 0);
+          group.add(collectible);
+        }
+
+        // Gentle spawn pop-in animation
+        bodyGroup.scale.set(0.7, 0.7, 0.7);
+        bodyGroup.position.y = index === 0 ? 0 : 0.45;
 
         scene.add(group);
-        bonusItems.push({
+        const plat = {
+          index,
           group,
-          points: isGoldYarn ? 40 : 25,
-          label: isGoldYarn ? "🧶 黃金毛線球 +40" : "🐟 美味小魚乾 +25",
-          age: 0,
-        });
+          bodyGroup,
+          x: posX,
+          z: posZ,
+          halfW,
+          halfD,
+          pressY: 0,
+          targetPressY: 0,
+          collectible,
+          collected: false,
+          spawnAnim: index === 0 ? 1 : 0,
+        };
+        platformList.push(plat);
+        return plat;
       }
 
-      const particles = [];
-      function spawnHeartBurst(pos, count) {
-        const colors = [0xff6b8b, 0xffb833, 0xff7b42, 0xffffff];
+      // ---------------------------------------------------------------------
+      // 4. Helper FX: Charge Ring, Tutorial Dotted Arc, Ripples & Particles
+      // ---------------------------------------------------------------------
+      const chargeRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.22, 0.30, 32),
+        new THREE.MeshBasicMaterial({ color: 0xf4a82a, side: THREE.DoubleSide, transparent: true, opacity: 0.0 })
+      );
+      chargeRing.rotation.x = -Math.PI / 2;
+      chargeRing.position.y = 0.015;
+      scene.add(chargeRing);
+
+      // Gentle helper landing guide shown ONLY for the player's first 2 jumps
+      const guideDotMat = new THREE.MeshBasicMaterial({ color: 0xe66824, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
+      const guideRing = new THREE.Mesh(new THREE.RingGeometry(0.13, 0.19, 28), guideDotMat);
+      guideRing.rotation.x = -Math.PI / 2;
+      guideRing.position.y = 0.018;
+      scene.add(guideRing);
+
+      function spawnRipple(x, z, radius, colorHex) {
+        const mesh = new THREE.Mesh(
+          new THREE.RingGeometry(radius * 0.5, radius, 32),
+          new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+        );
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.position.set(x, 0.016, z);
+        scene.add(mesh);
+        activeRipples.push({ mesh, age: 0, dur: 0.55 });
+      }
+
+      function spawnBurstParticles(x, y, z, colorHex, count = 14) {
+        const geo = new THREE.SphereGeometry(0.042, 8, 6);
         for (let i = 0; i < count; i++) {
-          const p = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.032, 0),
-            new THREE.MeshBasicMaterial({ color: colors[i % colors.length] })
-          );
-          p.position.copy(pos);
-          p.position.y += 0.22;
-          const a = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-          const sp = 0.6 + Math.random() * 1.1;
+          const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95 });
+          const p = new THREE.Mesh(geo, mat);
+          p.position.set(x, y, z);
+          const ang = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+          const spd = 1.2 + Math.random() * 1.9;
           scene.add(p);
-          particles.push({
+          activeParticles.push({
             mesh: p,
-            vx: Math.cos(a) * sp,
-            vy: 1.4 + Math.random() * 1.1,
-            vz: Math.sin(a) * sp,
-            life: 0.75 + Math.random() * 0.3,
-            maxLife: 1.0,
+            vx: Math.cos(ang) * spd,
+            vy: 1.8 + Math.random() * 2.2,
+            vz: Math.sin(ang) * spd,
+            age: 0,
+            dur: 0.52 + Math.random() * 0.25,
           });
         }
       }
 
       // ---------------------------------------------------------------------
-      // 5. Articulated 3D Calico Cat Rig (Loaded from Blender GLB)
+      // 5. Load Cute 3D Calico Cat GLB (Strip Cushion & Ground Feet Cleanly)
       // ---------------------------------------------------------------------
       const catRoot = new THREE.Group();
+      const catTiltGroup = new THREE.Group();
+      const catSquashGroup = new THREE.Group();
+      const catFlipGroup = new THREE.Group();
+      const catModelHolder = new THREE.Group();
+
+      // Rotate flip around cat center height (~0.36) so mid-air somersault spins in place
+      catFlipGroup.position.set(0, 0.36, 0);
+      catModelHolder.position.set(0, -0.36, 0);
+      catFlipGroup.add(catModelHolder);
+      catSquashGroup.add(catFlipGroup);
+      catTiltGroup.add(catSquashGroup);
+      catRoot.add(catTiltGroup);
+
+      // Soft contact shadow directly under cat paws
+      const catShadow = new THREE.Mesh(
+        new THREE.CircleGeometry(0.32, 24),
+        new THREE.MeshBasicMaterial({ color: 0x26170e, transparent: true, opacity: 0.26 })
+      );
+      catShadow.rotation.x = -Math.PI / 2;
+      catShadow.position.y = 0.012;
+      scene.add(catShadow);
       scene.add(catRoot);
 
-      const catBodyGroup = new THREE.Group();
-      const headPivot = new THREE.Group();
-      headPivot.position.set(0, 0.282, 0.015);
-      const tailPivot = new THREE.Group();
-      tailPivot.position.set(0, 0.122, -0.095);
-      const pawFLPivot = new THREE.Group();
-      pawFLPivot.position.set(-0.036, 0.21, 0.058);
-      const pawFRPivot = new THREE.Group();
-      pawFRPivot.position.set(0.036, 0.21, 0.058);
-      const pawBLPivot = new THREE.Group();
-      pawBLPivot.position.set(-0.076, 0.14, -0.005);
-      const pawBRPivot = new THREE.Group();
-      pawBRPivot.position.set(0.076, 0.14, -0.005);
-      const bellPivot = new THREE.Group();
-      bellPivot.position.set(0, 0.264, 0.091);
+      let catTailMesh = null;
+      let catReady = false;
 
-      catRoot.add(catBodyGroup, headPivot, tailPivot, pawFLPivot, pawFRPivot, pawBLPivot, pawBRPivot, bellPivot);
+      function attachCatGLTF(gltf) {
+        const raw = gltf.scene;
+        const toRemove = [];
+        raw.traverse((obj) => {
+          if (obj.name && obj.name.includes("Cushion")) {
+            toRemove.push(obj);
+          }
+          if (obj.name && obj.name.includes("Tail")) {
+            catTailMesh = obj;
+          }
+        });
+        toRemove.forEach((obj) => {
+          if (obj.parent) obj.parent.remove(obj);
+        });
 
-      const catPhysics = {
-        x: 0,
-        z: 0,
-        yaw: 0,
-        speed: 0,
-        stridePhase: 0,
-        hopY: 0,
-        hopVy: 0,
-        headYaw: 0,
-        headPitch: 0,
-      };
+        raw.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(raw);
+        const center = new THREE.Vector3();
+        const size = new THREE.Vector3();
+        box.getCenter(center);
+        box.getSize(size);
 
-      function buildCatFromGLB(gltf) {
-        const root = gltf.scene;
-        root.updateMatrixWorld(true);
+        const targetHeight = 0.78;
+        const scale = targetHeight / Math.max(0.001, size.y);
+        raw.scale.setScalar(scale);
+        raw.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
 
-        // Compute paw floor min Y so the cat stands flush on rug without cushion
-        let pawMinY = 0.088;
-        const allMeshes = [];
-        root.traverse((obj) => {
-          if (obj.isMesh) {
-            obj.castShadow = true;
-            obj.receiveShadow = true;
-            allMeshes.push(obj);
+        raw.traverse((c) => {
+          if (c.isMesh) {
+            c.castShadow = true;
+            c.receiveShadow = true;
           }
         });
 
-        // Separate cushion prop vs cat anatomical parts
-        const cushionMeshes = [];
-        const catMeshes = [];
-        allMeshes.forEach((m) => {
-          const n = m.name + "|" + (m.parent ? m.parent.name : "");
-          if (n.includes("Cushion")) {
-            cushionMeshes.push(m);
-          } else {
-            catMeshes.push(m);
-            if (n.includes("Paw_FL")) {
-              const b = new THREE.Box3().setFromObject(m);
-              pawMinY = b.min.y;
-            }
-          }
-        });
-
-        // Place cozy cushion prop at back-left corner of rug (move AFTER attach!)
-        const cushionGroup = new THREE.Group();
-        scene.add(cushionGroup);
-        cushionGroup.updateMatrixWorld(true);
-        cushionMeshes.forEach((m) => cushionGroup.attach(m));
-        cushionGroup.position.set(-1.18, 0.016, -0.95);
-
-        // Shift cat pivots down by pawMinY so paws rest right on rug top (0.016)
-        const floorOffset = -pawMinY + 0.016;
-        [catBodyGroup, headPivot, tailPivot, pawFLPivot, pawFRPivot, pawBLPivot, pawBRPivot, bellPivot].forEach((p) => {
-          p.position.y += floorOffset;
-        });
-        catRoot.updateMatrixWorld(true);
-
-        // Attach each mesh into its exact anatomical pivot while preserving world transforms
-        catMeshes.forEach((m) => {
-          // Offset mesh in world temporarily by floorOffset so attach() lands right in shifted pivots
-          const wp = new THREE.Vector3();
-          const wq = new THREE.Quaternion();
-          const ws = new THREE.Vector3();
-          m.matrixWorld.decompose(wp, wq, ws);
-          scene.attach(m);
-          m.position.y += floorOffset;
-          m.updateMatrixWorld(true);
-
-          const fullName = m.name + "|" + (m.parent ? m.parent.name : "");
-          if (fullName.includes("Head") || fullName.includes("Ear") || fullName.includes("Eye") || fullName.includes("Nose") || fullName.includes("Mouth") || fullName.includes("Whiskers")) {
-            headPivot.attach(m);
-          } else if (fullName.includes("Tail")) {
-            tailPivot.attach(m);
-          } else if (fullName.includes("Paw_FL")) {
-            pawFLPivot.attach(m);
-          } else if (fullName.includes("Paw_FR")) {
-            pawFRPivot.attach(m);
-          } else if (fullName.includes("Paw_BL")) {
-            pawBLPivot.attach(m);
-          } else if (fullName.includes("Paw_BR")) {
-            pawBRPivot.attach(m);
-          } else if (fullName.includes("Bell")) {
-            bellPivot.attach(m);
-          } else {
-            catBodyGroup.attach(m);
-          }
-        });
-
-        // Scale cat slightly up (~1.22x) for delightful visibility on the playmat
-        catRoot.scale.setScalar(1.22);
-
-        state.loaded = true;
-        document.getElementById("loadingStatus").textContent = "3D 三花貓咪就緒，選一種模式開始逗貓！";
-        document.getElementById("btnStartChallenge").disabled = false;
-        document.getElementById("btnStartFree").disabled = false;
+        catModelHolder.add(raw);
+        catReady = true;
+        loaderModal.classList.add("hidden");
+        startModal.classList.remove("hidden");
+        gameAPI.loaded = true;
       }
 
-      const loader = new THREE.GLTFLoader();
-      function loadModel() {
-        const tryEmbedded = () => {
-          if (window.CALICO_CAT_GLB_B64) {
-            const bin = atob(window.CALICO_CAT_GLB_B64);
-            const bytes = new Uint8Array(bin.length);
-            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-            loader.parse(bytes.buffer, "", buildCatFromGLB, (err) => {
-              document.getElementById("loadingStatus").textContent = "模型解析失敗：" + err;
-            });
+      function loadCatAsset() {
+        const loader = new THREE.GLTFLoader();
+        const parseEmbedded = () => {
+          if (!window.CALICO_CAT_GLB_B64) {
+            loaderText.textContent = "無法載入 3D 三花貓咪模型";
+            return;
           }
+          const bin = atob(window.CALICO_CAT_GLB_B64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          loader.parse(bytes.buffer, "", attachCatGLTF, (err) => {
+            loaderText.textContent = "模型解析失敗：" + err;
+          });
         };
-        if (location.protocol === "file:" && window.CALICO_CAT_GLB_B64) {
-          tryEmbedded();
+
+        if (location.protocol === "file:") {
+          parseEmbedded();
         } else {
-          loader.load("./assets/calico_cat.glb", buildCatFromGLB, undefined, () => tryEmbedded());
+          loader.load("./assets/calico_cat.glb", attachCatGLTF, undefined, () => parseEmbedded());
         }
       }
-      loadModel();
 
       // ---------------------------------------------------------------------
-      // 6. Scoring, Modes, Toys & Input Handlers
+      // 6. Core Jump Gameplay State Machine
       // ---------------------------------------------------------------------
-      function addScore(pts, msg, burstPos) {
-        state.catches += 1;
-        state.combo = Math.min(5, state.combo + 1);
-        state.comboTimer = 3.2;
-        const mult = state.combo >= 5 ? 5 : state.combo >= 3 ? 3 : state.combo >= 2 ? 2 : 1;
-        const gained = pts * mult;
-        state.score += gained;
-        scoreEl.textContent = String(state.score);
-        if (state.score > state.bestScore) {
-          state.bestScore = state.score;
-          bestEl.textContent = String(state.bestScore);
-          localStorage.setItem(STORAGE_KEY, String(state.bestScore));
-        }
-        if (mult > 1) {
-          comboEl.textContent = `×${mult} COMBO`;
-          comboEl.classList.add("visible");
-        } else {
-          comboEl.classList.remove("visible");
-        }
-        showToast(mult > 1 ? `${msg} (×${mult} 連擊 +${gained})` : msg);
-        spawnHeartBurst(burstPos || catRoot.position, 10);
-        playBellAndMeow(mult >= 3);
+      let bestScore = parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0;
+      bestValEl.textContent = String(bestScore);
+
+      let gameState = "start"; // "start" | "idle" | "charging" | "jumping" | "tipping" | "falling" | "gameover"
+      let score = 0;
+      let perfectStreak = 0;
+      let maxStreak = 0;
+      let jumpCount = 0;
+      let consecutiveAxisCount = 0;
+      let lastAxis = "+X";
+
+      let currIdx = 0;
+      let chargeRatio = 0;
+      const MAX_CHARGE_SEC = 1.25;
+      const MIN_DIST = 0.65;
+      const MAX_DIST = 4.35;
+
+      // Active jump trajectory state
+      let jumpElapsed = 0;
+      let jumpDuration = 0.44;
+      let jumpStartPos = new THREE.Vector3();
+      let jumpEndPos = new THREE.Vector3();
+      let jumpApexH = 1.15;
+      let jumpDoFlip = true;
+      let jumpTargetOutcome = null;
+
+      // Edge tip-over state
+      let tipAngleTarget = 0;
+      let tipAxis = new THREE.Vector3(1, 0, 0);
+      let tipTimer = 0;
+      let fallVelY = 0;
+      let fallDrift = new THREE.Vector3();
+
+      let currentCatYaw = Math.PI / 2;
+      let targetCatYaw = Math.PI / 2;
+      let popupTimer = null;
+
+      function showPopup(text, variant) {
+        floatPopupEl.textContent = text;
+        floatPopupEl.className = variant ? variant : "";
+        void floatPopupEl.offsetWidth;
+        floatPopupEl.classList.add("show");
+        clearTimeout(popupTimer);
+        popupTimer = setTimeout(() => floatPopupEl.classList.remove("show"), 950);
       }
 
-      function selectToy(toy) {
-        state.activeToy = toy;
-        wandGroup.visible = toy === "wand";
-        laserGroup.visible = toy === "laser";
-        document.querySelectorAll("[data-toy]").forEach((btn) => {
-          btn.classList.toggle("active", btn.dataset.toy === toy);
-        });
-        if (toy === "wand") {
-          toyHintEl.textContent = "移動滑鼠／手指引誘三花貓，點擊揮舞羽毛讓牠飛撲抓！（快捷鍵 1 / 2 / 3）";
-        } else if (toy === "laser") {
-          toyHintEl.textContent = "滑動雷射紅點帶三花貓高速衝刺、搶吃場上小魚乾！（快捷鍵 1 / 2 / 3）";
+      function updateHUD() {
+        scoreValEl.textContent = String(score);
+        bestValEl.textContent = String(bestScore);
+        if (perfectStreak >= 2) {
+          comboPillEl.textContent = `✨ PERFECT ×${perfectStreak}`;
+          comboPillEl.classList.add("visible");
         } else {
-          toyHintEl.textContent = "點擊地板任何位置丟出毛線球，三花貓會追過去一掌拍飛！（快捷鍵 1 / 2 / 3）";
+          comboPillEl.classList.remove("visible");
+        }
+        gameAPI.score = score;
+        gameAPI.bestScore = bestScore;
+        gameAPI.perfectStreak = perfectStreak;
+        gameAPI.jumps = jumpCount;
+        gameAPI.state = gameState;
+      }
+
+      function spawnNextPlatform() {
+        const prev = platformList[platformList.length - 1];
+        let axis;
+        if (platformList.length === 1) {
+          axis = "+X";
+        } else {
+          const wantFlip = consecutiveAxisCount >= 2 ? true : Math.random() < 0.62;
+          axis = wantFlip ? (lastAxis === "+X" ? "-Z" : "+X") : lastAxis;
+        }
+        if (axis === lastAxis) consecutiveAxisCount += 1;
+        else { lastAxis = axis; consecutiveAxisCount = 1; }
+
+        const early = platformList.length <= 3;
+        const gap = early ? (1.85 + Math.random() * 0.65) : (1.72 + Math.random() * 1.48);
+        const halfBase = early
+          ? 0.72
+          : Math.max(0.46, 0.70 - Math.min(0.16, score * 0.0028) - Math.random() * 0.14);
+
+        const nx = axis === "+X" ? prev.x + gap : prev.x;
+        const nz = axis === "-Z" ? prev.z - gap : prev.z;
+        spawnPlatform(platformList.length, nx, nz, halfBase, halfBase);
+
+        // Trim far-back platforms to keep mobile framerate ultra smooth
+        while (platformList.length > 9 && currIdx > 2) {
+          const old = platformList.shift();
+          scene.remove(old.group);
+          currIdx -= 1;
         }
       }
 
-      function petCat() {
-        if (!state.loaded) return;
-        state.joySpinTimer = 0.85;
-        catPhysics.hopVy = 2.0;
-        spawnHeartBurst(catRoot.position, 14);
-        playBellAndMeow(true);
-        if (state.playing) {
-          addScore(10, "💖 呼嚕呼嚕摸摸頭 +10", catRoot.position);
-        } else {
-          showToast("💖 三花貓咪開心地喵了一聲～");
-        }
+      function aimCatAtNext() {
+        const curr = platformList[currIdx];
+        const next = platformList[currIdx + 1];
+        if (!curr || !next) return;
+        const dx = next.x - catRoot.position.x;
+        const dz = next.z - catRoot.position.z;
+        targetCatYaw = Math.atan2(dx, dz);
+        camDesiredTarget.set((curr.x + next.x) * 0.5, 0.22, (curr.z + next.z) * 0.5);
       }
 
-      function startGame(mode) {
+      function resetWorld() {
+        while (platformList.length > 0) {
+          scene.remove(platformList.pop().group);
+        }
+        score = 0;
+        perfectStreak = 0;
+        maxStreak = 0;
+        jumpCount = 0;
+        currIdx = 0;
+        consecutiveAxisCount = 0;
+        lastAxis = "+X";
+
+        spawnPlatform(0, 0, 0, 0.74, 0.74);
+        spawnNextPlatform();
+        spawnNextPlatform();
+
+        catRoot.position.set(0, 0, 0);
+        catTiltGroup.rotation.set(0, 0, 0);
+        catSquashGroup.scale.set(1, 1, 1);
+        catFlipGroup.rotation.set(0, 0, 0);
+
+        aimCatAtNext();
+        currentCatYaw = targetCatYaw;
+        catRoot.rotation.y = currentCatYaw;
+        camCurrentTarget.copy(camDesiredTarget);
+        chargeRatio = 0;
+        chargeFillEl.style.width = "0%";
+        chargePctEl.textContent = "0%";
+        chargeCardEl.classList.remove("charging");
+        chargeRing.material.opacity = 0;
+        guideRing.material.opacity = 0;
+        hintChipEl.style.display = "";
+        updateHUD();
+      }
+
+      function startGame() {
         ensureAudio();
-        state.mode = mode;
-        state.playing = true;
-        state.score = 0;
-        state.catches = 0;
-        state.combo = 0;
-        state.comboTimer = 0;
-        state.timeLeft = 60.0;
-        state.bonusTimer = 2.0;
-        catPhysics.x = 0;
-        catPhysics.z = 0;
-        catPhysics.yaw = 0;
-        scoreEl.textContent = "0";
-        comboEl.classList.remove("visible");
-        timerPill.classList.remove("urgent");
-        timerEl.textContent = mode === "challenge" ? "60s" : "∞ 無限";
-
-        bonusItems.forEach((b) => scene.remove(b.group));
-        bonusItems.length = 0;
-        yarnBalls.forEach((y) => scene.remove(y.mesh));
-        yarnBalls.length = 0;
-
+        resetWorld();
+        gameState = "idle";
         startModal.classList.add("hidden");
-        resultModal.classList.add("hidden");
-        spawnBonusItem();
+        gameOverModal.classList.add("hidden");
+        updateHUD();
       }
 
-      function endChallenge() {
-        state.playing = false;
-        document.getElementById("resScore").textContent = String(state.score);
-        document.getElementById("resCatches").textContent = String(state.catches);
-        document.getElementById("resBest").textContent = String(state.bestScore);
-        let title = "🐾 溫柔鏟屎官";
-        if (state.score >= 600) title = "👑 傳奇逗貓宗師！";
-        else if (state.score >= 300) title = "🌟 超級逗貓達人！";
-        else if (state.score >= 120) title = "🧶 活力貓咪玩伴！";
-        document.getElementById("resultRankTitle").textContent = title;
-        resultModal.classList.remove("hidden");
+      function evaluateLanding(endPos) {
+        const curr = platformList[currIdx];
+        const next = platformList[currIdx + 1];
+
+        const inBox = (p, pt, margin) =>
+          Math.abs(pt.x - p.x) <= p.halfW + margin && Math.abs(pt.z - p.z) <= p.halfD + margin;
+
+        // 1. Landed on Next Platform? (generous paw margin +0.13)
+        if (inBox(next, endPos, 0.13)) {
+          const dx = Math.abs(endPos.x - next.x);
+          const dz = Math.abs(endPos.z - next.z);
+          const radial = Math.hypot(dx, dz);
+          const minHalf = Math.min(next.halfW, next.halfD);
+          const isPerfect = radial <= minHalf * 0.36;
+          const isEdgeSave = dx > next.halfW + 0.02 || dz > next.halfD + 0.02;
+          return { result: "next", isPerfect, isEdgeSave, plat: next };
+        }
+
+        // 2. Undershot back onto Current Platform?
+        if (inBox(curr, endPos, 0.08)) {
+          return { result: "curr", plat: curr };
+        }
+
+        // 3. Missed! Determine whether grazing outer edge (teeter) or clean miss
+        const nearCurrEdge =
+          Math.abs(endPos.x - curr.x) <= curr.halfW + 0.28 && Math.abs(endPos.z - curr.z) <= curr.halfD + 0.28;
+        const nearNextEdge =
+          Math.abs(endPos.x - next.x) <= next.halfW + 0.28 && Math.abs(endPos.z - next.z) <= next.halfD + 0.28;
+        const teeterPlat = nearNextEdge ? next : (nearCurrEdge ? curr : null);
+        return { result: "miss", teeterPlat };
       }
 
-      document.getElementById("btnStartChallenge").addEventListener("click", () => startGame("challenge"));
-      document.getElementById("btnStartFree").addEventListener("click", () => startGame("free"));
-      document.getElementById("btnPlayAgain").addEventListener("click", () => startGame("challenge"));
-      document.getElementById("btnSwitchFree").addEventListener("click", () => startGame("free"));
-      document.getElementById("btnRestartTop").addEventListener("click", () => startGame(state.mode));
-      document.getElementById("btnPetCat").addEventListener("click", petCat);
+      function beginCharge() {
+        if (gameState !== "idle") return;
+        gameState = "charging";
+        chargeRatio = 0;
+        chargeCardEl.classList.add("charging");
+        chargeActionEl.textContent = "🔥 蓄力中… 放開起跳！";
+        startChargeHum();
+        updateHUD();
+      }
 
-      const btnSound = document.getElementById("btnSound");
-      btnSound.addEventListener("click", () => {
-        soundOn = !soundOn;
-        btnSound.textContent = soundOn ? "🔊 音效：開" : "🔇 音效：關";
-      });
+      function releaseJump(overrideRatio = null) {
+        if (gameState !== "charging" && overrideRatio === null) return;
+        const ratio = overrideRatio !== null ? Math.max(0.04, Math.min(1, overrideRatio)) : Math.max(0.05, chargeRatio);
+        stopChargeHum();
+        chargeCardEl.classList.remove("charging");
+        chargeActionEl.textContent = "🐾 按住蓄力・放開起跳";
+        chargeFillEl.style.width = "0%";
+        chargePctEl.textContent = "0%";
+        chargeRing.material.opacity = 0;
+        guideRing.material.opacity = 0;
 
-      document.querySelectorAll("[data-toy]").forEach((btn) => {
-        btn.addEventListener("click", () => selectToy(btn.dataset.toy));
-      });
+        const curr = platformList[currIdx];
+        const next = platformList[currIdx + 1];
+        curr.targetPressY = 0;
+
+        const dir = new THREE.Vector3(next.x - catRoot.position.x, 0, next.z - catRoot.position.z).normalize();
+        const dist = MIN_DIST + ratio * (MAX_DIST - MIN_DIST);
+
+        jumpStartPos.copy(catRoot.position);
+        jumpEndPos.copy(jumpStartPos).addScaledVector(dir, dist);
+        jumpEndPos.y = 0;
+        jumpApexH = 0.85 + ratio * 0.72;
+        jumpDuration = 0.36 + ratio * 0.14;
+        jumpElapsed = 0;
+        jumpDoFlip = ratio > 0.22;
+        jumpTargetOutcome = evaluateLanding(jumpEndPos);
+
+        targetCatYaw = Math.atan2(dir.x, dir.z);
+        currentCatYaw = targetCatYaw;
+        catRoot.rotation.y = currentCatYaw;
+        catSquashGroup.scale.set(0.86, 1.20, 0.86);
+
+        gameState = "jumping";
+        sfxJump();
+        updateHUD();
+      }
+
+      function finishJumpLanding() {
+        catFlipGroup.rotation.set(0, 0, 0);
+        catSquashGroup.scale.set(1.18, 0.76, 1.18);
+
+        const out = jumpTargetOutcome;
+        if (out.result === "next") {
+          currIdx += 1;
+          jumpCount += 1;
+          const plat = out.plat;
+          plat.pressY = -0.10;
+
+          let pts = 1;
+          if (out.isPerfect) {
+            perfectStreak += 1;
+            maxStreak = Math.max(maxStreak, perfectStreak);
+            pts = 2 * perfectStreak;
+            score += pts;
+            showPopup(`✨ PERFECT ×${perfectStreak}  +${pts}`, "perfect");
+            spawnRipple(plat.x, plat.z, Math.max(plat.halfW, plat.halfD) * 1.1, 0xf4a82a);
+            spawnBurstParticles(catRoot.position.x, 0.25, catRoot.position.z, 0xf6b93b, 16);
+            sfxLandPerfect(perfectStreak);
+          } else {
+            perfectStreak = 0;
+            score += 1;
+            showPopup(out.isEdgeSave ? "😅 驚險踩邊 +1！" : "+1", "");
+            spawnRipple(catRoot.position.x, catRoot.position.z, 0.42, 0xffffff);
+            sfxLandGood();
+          }
+
+          // Collect floating fish / golden bell!
+          if (plat.collectible && !plat.collected) {
+            plat.collected = true;
+            const bonusPts = plat.collectible.userData.points || 5;
+            const bonusLabel = plat.collectible.userData.label || `+${bonusPts}`;
+            score += bonusPts;
+            spawnBurstParticles(plat.x, 0.55, plat.z, 0xffd147, 20);
+            setTimeout(() => showPopup(bonusLabel, "bonus"), 180);
+            sfxBonus();
+            plat.group.remove(plat.collectible);
+            plat.collectible = null;
+          }
+
+          if (score > bestScore) {
+            bestScore = score;
+            try { localStorage.setItem(BEST_KEY, String(bestScore)); } catch (_) {}
+          }
+
+          if (jumpCount >= 2) {
+            hintChipEl.style.display = "none";
+          }
+
+          spawnNextPlatform();
+          aimCatAtNext();
+          gameState = "idle";
+          updateHUD();
+        } else if (out.result === "curr") {
+          out.plat.pressY = -0.07;
+          perfectStreak = 0;
+          sfxLandGood();
+          aimCatAtNext();
+          gameState = "idle";
+          updateHUD();
+        } else {
+          // Missed -> edge wobble if grazed, otherwise fall right down!
+          sfxFail();
+          const refPlat = out.teeterPlat;
+          if (refPlat) {
+            const away = new THREE.Vector3(jumpEndPos.x - refPlat.x, 0, jumpEndPos.z - refPlat.z);
+            if (away.lengthSq() < 1e-4) away.set(1, 0, 0);
+            away.normalize();
+            tipAxis.set(away.z, 0, -away.x).normalize();
+            tipAngleTarget = Math.PI * 0.48;
+            fallDrift.copy(away).multiplyScalar(1.3);
+            tipTimer = 0.24;
+            gameState = "tipping";
+          } else {
+            fallDrift.copy(jumpEndPos).sub(jumpStartPos).normalize().multiplyScalar(1.2);
+            fallVelY = -0.6;
+            gameState = "falling";
+          }
+          updateHUD();
+        }
+      }
+
+      function triggerGameOver() {
+        gameState = "gameover";
+        const badge = document.getElementById("gameOverBadge");
+        const title = document.getElementById("gameOverTitle");
+        const sub = document.getElementById("gameOverSubtitle");
+        if (score >= bestScore && score > 0) {
+          badge.textContent = "🎉 刷新個人最高紀錄！";
+          title.textContent = "太強了，三花貓飛天紀錄！";
+          sub.textContent = "分享給朋友，看看誰能跳破你的紀錄！";
+        } else if (score >= 15) {
+          badge.textContent = "🐾 好身手！差一點點";
+          title.textContent = "差半步就踩穩了！";
+          sub.textContent = "再抓一下節奏，準備挑戰連擊新高分！";
+        } else {
+          badge.textContent = "🐾 喵嗚！踩空啦";
+          title.textContent = "三花貓滾進柔軟地板啦～";
+          sub.textContent = "試著放短或放長一點蓄力，很快就能連擊！";
+        }
+        document.getElementById("finalScore").textContent = String(score);
+        document.getElementById("finalBest").textContent = String(bestScore);
+        document.getElementById("finalMaxStreak").textContent = String(maxStreak);
+        gameOverModal.classList.remove("hidden");
+        updateHUD();
+      }
+
+      // ---------------------------------------------------------------------
+      // 7. Input Bindings (Mobile Touch + Desktop Mouse + Spacebar)
+      // ---------------------------------------------------------------------
+      let activePointerId = null;
+
+      function handlePressStart(e) {
+        if (e.target.closest("a, button, .modal-backdrop")) return;
+        if (gameState !== "idle") return;
+        e.preventDefault();
+        activePointerId = e.pointerId;
+        beginCharge();
+      }
+
+      function handlePressEnd(e) {
+        if (activePointerId !== null && e.pointerId !== activePointerId) return;
+        activePointerId = null;
+        if (gameState === "charging") {
+          releaseJump();
+        }
+      }
+
+      window.addEventListener("pointerdown", handlePressStart, { passive: false });
+      window.addEventListener("pointerup", handlePressEnd);
+      window.addEventListener("pointercancel", handlePressEnd);
+      window.addEventListener("contextmenu", (e) => e.preventDefault());
+
       window.addEventListener("keydown", (e) => {
-        if (e.key === "1") selectToy("wand");
-        if (e.key === "2") selectToy("laser");
-        if (e.key === "3") selectToy("yarn");
-      });
-
-      function updatePointerRay(clientX, clientY) {
-        state.pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
-        state.pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(state.pointerNDC, camera);
-        const hit = new THREE.Vector3();
-        if (raycaster.ray.intersectPlane(rayFloorPlane, hit)) {
-          const r = Math.hypot(hit.x, hit.z);
-          if (r > ARENA_RADIUS) {
-            hit.x *= ARENA_RADIUS / r;
-            hit.z *= ARENA_RADIUS / r;
-          }
-          state.pointerWorld.copy(hit);
-        }
-      }
-
-      wrap.addEventListener("pointermove", (e) => updatePointerRay(e.clientX, e.clientY));
-      wrap.addEventListener("pointerdown", (e) => {
-        ensureAudio();
-        updatePointerRay(e.clientX, e.clientY);
-        state.pointerDown = true;
-        if (!state.playing) return;
-        if (state.activeToy === "wand") {
-          state.wandDipTimer = 0.42;
-          playSoftBoing();
-        } else if (state.activeToy === "yarn") {
-          spawnYarnBall(state.pointerWorld);
-        } else if (state.activeToy === "laser") {
-          // Clicking in laser mode triggers an eager pounce hop if close
-          const d = Math.hypot(state.pointerWorld.x - catPhysics.x, state.pointerWorld.z - catPhysics.z);
-          if (d < 0.85 && state.pounceCooldown <= 0) {
-            state.pounceTimer = 0.45;
-            state.pounceCooldown = 0.55;
-            catPhysics.hopVy = 2.3;
+        if (e.code === "Space" && !e.repeat) {
+          e.preventDefault();
+          if (gameState === "start" || gameState === "gameover") {
+            if (catReady) startGame();
+          } else if (gameState === "idle") {
+            beginCharge();
           }
         }
       });
-      wrap.addEventListener("pointerup", () => { state.pointerDown = false; });
+
+      window.addEventListener("keyup", (e) => {
+        if (e.code === "Space") {
+          e.preventDefault();
+          if (gameState === "charging") releaseJump();
+        }
+      });
+
+      document.getElementById("btnStartGame").addEventListener("click", startGame);
+      document.getElementById("btnRestartGame").addEventListener("click", startGame);
 
       window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
+        const w = window.innerWidth;
+        const h = Math.max(1, window.innerHeight);
+        camera.aspect = w / h;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(w, h);
       });
 
-      // Expose state for verification
-      window.__CAT_GAME__ = {
-        get loaded() { return state.loaded; },
-        get playing() { return state.playing; },
-        get score() { return state.score; },
-        get activeToy() { return state.activeToy; },
-        get catPos() { return { x: catPhysics.x, z: catPhysics.z }; },
-        startChallenge: () => startGame("challenge"),
-        selectToy,
-        petCat,
-      };
-
       // ---------------------------------------------------------------------
-      // 7. Main Animation & Cat AI Loop
+      // 8. Main Animation Loop
       // ---------------------------------------------------------------------
-      const wandSmoothPos = new THREE.Vector3(0.45, 0.36, 0.45);
       let prevTime = performance.now();
 
-      function shortestAngleDiff(a, b) {
-        let d = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
-        if (d < -Math.PI) d += Math.PI * 2;
-        return d;
-      }
-
-      function animate(now) {
-        requestAnimationFrame(animate);
-        const dt = Math.min(0.05, (now - prevTime) / 1000);
+      function tick(now) {
+        requestAnimationFrame(tick);
+        const dt = Math.min(0.05, Math.max(0.001, (now - prevTime) / 1000));
         prevTime = now;
-        const t = now / 1000;
+        const tSec = now * 0.001;
 
-        // Timer & combo countdown
-        if (state.playing) {
-          if (state.mode === "challenge") {
-            state.timeLeft = Math.max(0, state.timeLeft - dt);
-            const sec = Math.ceil(state.timeLeft);
-            timerEl.textContent = sec + "s";
-            timerPill.classList.toggle("urgent", sec <= 10);
-            if (state.timeLeft <= 0) endChallenge();
+        // Smooth cat yaw rotation toward next target
+        const yawDiff = ((targetCatYaw - currentCatYaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        currentCatYaw += yawDiff * Math.min(1, dt * 12);
+        catRoot.rotation.y = currentCatYaw;
+
+        // Gentle tail wag on cute 3D model
+        if (catTailMesh) {
+          catTailMesh.rotation.z = Math.sin(tSec * 4.2) * 0.04;
+        }
+
+        // Charging update
+        if (gameState === "charging") {
+          chargeRatio = Math.min(1.0, chargeRatio + dt / MAX_CHARGE_SEC);
+          updateChargeHum(chargeRatio);
+          chargeFillEl.style.width = `${Math.round(chargeRatio * 100)}%`;
+          chargePctEl.textContent = `${Math.round(chargeRatio * 100)}%`;
+
+          // Cute cat crouch + platform compression
+          const sx = 1.0 + chargeRatio * 0.22;
+          const sy = 1.0 - chargeRatio * 0.38;
+          catSquashGroup.scale.set(sx, sy, sx);
+
+          const curr = platformList[currIdx];
+          if (curr) {
+            curr.pressY = -chargeRatio * 0.14;
+            catRoot.position.y = curr.pressY;
           }
-          if (state.comboTimer > 0) {
-            state.comboTimer -= dt;
-            if (state.comboTimer <= 0) {
-              state.combo = 0;
-              comboEl.classList.remove("visible");
-            }
+
+          // Expanding glowing paw ring
+          chargeRing.position.set(catRoot.position.x, catRoot.position.y + 0.015, catRoot.position.z);
+          chargeRing.scale.setScalar(0.85 + chargeRatio * 1.15);
+          chargeRing.material.opacity = 0.25 + chargeRatio * 0.55;
+
+          // First 2 jumps friendly aiming helper dot so new players master the distance easily
+          const next = platformList[currIdx + 1];
+          if (jumpCount < 2 && next) {
+            const dir = new THREE.Vector3(next.x - catRoot.position.x, 0, next.z - catRoot.position.z).normalize();
+            const dist = MIN_DIST + chargeRatio * (MAX_DIST - MIN_DIST);
+            guideRing.position.set(catRoot.position.x + dir.x * dist, 0.02, catRoot.position.z + dir.z * dist);
+            guideRing.material.opacity = 0.78;
           }
-          state.bonusTimer -= dt;
-          if (state.bonusTimer <= 0) {
-            state.bonusTimer = 5.5 + Math.random() * 3.0;
-            spawnBonusItem();
+        } else if (gameState === "jumping") {
+          jumpElapsed += dt;
+          const u = Math.min(1.0, jumpElapsed / jumpDuration);
+          catRoot.position.x = THREE.MathUtils.lerp(jumpStartPos.x, jumpEndPos.x, u);
+          catRoot.position.z = THREE.MathUtils.lerp(jumpStartPos.z, jumpEndPos.z, u);
+          catRoot.position.y = 4.0 * jumpApexH * u * (1.0 - u);
+
+          // Mid-air stretch + cute 360 forward flip
+          const stretch = 1.0 + Math.sin(u * Math.PI) * 0.12;
+          catSquashGroup.scale.set(1.0 / Math.sqrt(stretch), stretch, 1.0 / Math.sqrt(stretch));
+          if (jumpDoFlip) {
+            const flipEase = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+            catFlipGroup.rotation.x = flipEase * Math.PI * 2;
+          }
+          if (u >= 1.0) {
+            catRoot.position.y = 0;
+            finishJumpLanding();
+          }
+        } else if (gameState === "tipping") {
+          tipTimer -= dt;
+          catTiltGroup.rotateOnAxis(tipAxis, (tipAngleTarget / 0.24) * dt);
+          catRoot.position.addScaledVector(fallDrift, dt * 0.4);
+          if (tipTimer <= 0) {
+            fallVelY = -0.8;
+            gameState = "falling";
+          }
+        } else if (gameState === "falling") {
+          fallVelY -= 14.0 * dt;
+          catRoot.position.y += fallVelY * dt;
+          catRoot.position.addScaledVector(fallDrift, dt * 0.6);
+          catTiltGroup.rotateOnAxis(tipAxis, 3.2 * dt);
+          if (catRoot.position.y <= FLOOR_Y) {
+            catRoot.position.y = FLOOR_Y;
+            spawnRipple(catRoot.position.x, catRoot.position.z, 0.45, 0xc87040);
+            triggerGameOver();
+          }
+        } else {
+          // Idle squash recovery + spring back on current platform
+          catSquashGroup.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 11));
+          const curr = platformList[currIdx];
+          if (curr && gameState !== "gameover") {
+            catRoot.position.y = curr.pressY;
           }
         }
 
-        // Update Feather Wand 3D motion
-        if (state.wandDipTimer > 0) state.wandDipTimer -= dt;
-        const wandTargetY = state.wandDipTimer > 0
-          ? 0.14 + 0.08 * Math.sin(t * 26)
-          : 0.34 + 0.05 * Math.sin(t * 3.5);
-        wandSmoothPos.lerp(new THREE.Vector3(state.pointerWorld.x, wandTargetY, state.pointerWorld.z), 0.22);
-        wandTipGroup.position.copy(wandSmoothPos);
-        wandTipGroup.rotation.z = Math.sin(t * 9.0) * 0.24;
-        wandTipGroup.rotation.x = Math.cos(t * 7.5) * 0.18;
-
-        const handleBase = new THREE.Vector3(wandSmoothPos.x * 0.55 + 0.45, 0.72, wandSmoothPos.z * 0.55 + 0.65);
-        stickMesh.position.lerpVectors(handleBase, new THREE.Vector3(wandSmoothPos.x, wandSmoothPos.y + 0.28, wandSmoothPos.z), 0.52);
-        stickMesh.lookAt(wandSmoothPos.x, wandSmoothPos.y + 0.26, wandSmoothPos.z);
-        stickMesh.rotateX(Math.PI / 2);
-        const cordTop = new THREE.Vector3(wandSmoothPos.x, wandSmoothPos.y + 0.26, wandSmoothPos.z);
-        cordGeo.setFromPoints([cordTop, wandSmoothPos]);
-
-        // Update Laser Dot pulse
-        laserGroup.position.set(state.pointerWorld.x, 0, state.pointerWorld.z);
-        const lScale = 1.0 + 0.22 * Math.sin(t * 14.0);
-        laserHalo.scale.setScalar(lScale);
-
-        // Update Yarn Balls physics
-        for (let i = yarnBalls.length - 1; i >= 0; i--) {
-          const yb = yarnBalls[i];
-          if (yb.swatCooldown > 0) yb.swatCooldown -= dt;
-          yb.vy -= 9.5 * dt;
-          yb.mesh.position.x += yb.vx * dt;
-          yb.mesh.position.y += yb.vy * dt;
-          yb.mesh.position.z += yb.vz * dt;
-          yb.mesh.rotation.x += yb.vz * 6.0 * dt;
-          yb.mesh.rotation.z -= yb.vx * 6.0 * dt;
-
-          const floorY = yb.radius + 0.016;
-          if (yb.mesh.position.y < floorY) {
-            yb.mesh.position.y = floorY;
-            if (Math.abs(yb.vy) > 0.35) {
-              yb.vy = -yb.vy * 0.55;
-            } else {
-              yb.vy = 0;
-            }
-            yb.vx *= Math.pow(0.28, dt);
-            yb.vz *= Math.pow(0.28, dt);
-          }
-          const br = Math.hypot(yb.mesh.position.x, yb.mesh.position.z);
-          if (br > ARENA_RADIUS) {
-            const nx = yb.mesh.position.x / br;
-            const nz = yb.mesh.position.z / br;
-            yb.mesh.position.x = nx * ARENA_RADIUS;
-            yb.mesh.position.z = nz * ARENA_RADIUS;
-            const dot = yb.vx * nx + yb.vz * nz;
-            if (dot > 0) {
-              yb.vx -= 1.7 * dot * nx;
-              yb.vz -= 1.7 * dot * nz;
-            }
-          }
-          yb.life -= dt;
-          if (yb.life <= 0) {
-            scene.remove(yb.mesh);
-            yarnBalls.splice(i, 1);
-          }
-        }
-
-        // Update Bonus Collectibles + Cat pickup check
-        for (let i = bonusItems.length - 1; i >= 0; i--) {
-          const b = bonusItems[i];
-          b.age += dt;
-          b.group.rotation.y += dt * 2.2;
-          b.group.position.y = 0.14 + Math.sin(t * 4.2 + i) * 0.035;
-          const dist = Math.hypot(b.group.position.x - catPhysics.x, b.group.position.z - catPhysics.z);
-          if (state.playing && dist < 0.34) {
-            addScore(b.points, b.label, b.group.position);
-            scene.remove(b.group);
-            bonusItems.splice(i, 1);
-          } else if (b.age > 12.0) {
-            scene.remove(b.group);
-            bonusItems.splice(i, 1);
-          }
-        }
-
-        // Cat AI Target Selection & Locomotion
-        if (state.loaded) {
-          if (state.pounceCooldown > 0) state.pounceCooldown -= dt;
-          if (state.pounceTimer > 0) state.pounceTimer -= dt;
-          if (state.joySpinTimer > 0) state.joySpinTimer -= dt;
-
-          const targetPos = new THREE.Vector3(state.pointerWorld.x, 0.25, state.pointerWorld.z);
-          let targetYarn = null;
-          if (state.activeToy === "yarn" && yarnBalls.length > 0) {
-            // Chase closest active yarn ball
-            let bestDist = 1e9;
-            yarnBalls.forEach((yb) => {
-              const d = Math.hypot(yb.mesh.position.x - catPhysics.x, yb.mesh.position.z - catPhysics.z);
-              if (d < bestDist) {
-                bestDist = d;
-                targetYarn = yb;
-              }
-            });
-            if (targetYarn) {
-              targetPos.copy(targetYarn.mesh.position);
-            }
-          } else if (state.activeToy === "wand") {
-            targetPos.copy(wandSmoothPos);
-          }
-
-          const dx = targetPos.x - catPhysics.x;
-          const dz = targetPos.z - catPhysics.z;
-          const dist = Math.hypot(dx, dz);
-
-          const desiredYaw = Math.atan2(dx, dz);
-          if (state.joySpinTimer > 0) {
-            catPhysics.yaw += dt * 10.5;
-          } else if (dist > 0.06) {
-            const diff = shortestAngleDiff(catPhysics.yaw, desiredYaw);
-            catPhysics.yaw += diff * Math.min(1.0, dt * 8.5);
-          }
-
-          // Move toward active target
-          let moveSpeed = 0;
-          const stopDist = state.activeToy === "wand" ? 0.24 : 0.14;
-          const maxSpd = state.activeToy === "laser" ? 2.55 : (state.activeToy === "yarn" ? 2.30 : 1.75);
-          if (state.playing && dist > stopDist && state.joySpinTimer <= 0) {
-            moveSpeed = Math.min(maxSpd, dist * 3.0);
-            catPhysics.x += (dx / dist) * moveSpeed * dt;
-            catPhysics.z += (dz / dist) * moveSpeed * dt;
-          } else if (!state.playing) {
-            // Gentle idle preview rotation when modal open
-            catPhysics.yaw = Math.sin(t * 0.7) * 0.45;
-          }
-          catPhysics.speed = THREE.MathUtils.lerp(catPhysics.speed, moveSpeed, 0.18);
-
-          // Clamp inside rug arena
-          const cr = Math.hypot(catPhysics.x, catPhysics.z);
-          if (cr > ARENA_RADIUS - 0.15) {
-            catPhysics.x *= (ARENA_RADIUS - 0.15) / cr;
-            catPhysics.z *= (ARENA_RADIUS - 0.15) / cr;
-          }
-
-          // Pounce / Catch Trigger Logic
-          if (state.playing && state.pounceCooldown <= 0) {
-            if (state.activeToy === "wand" && dist < 0.46 && (state.wandDipTimer > 0 || dist < 0.28)) {
-              state.pounceTimer = 0.48;
-              state.pounceCooldown = 0.65;
-              catPhysics.hopVy = 2.45;
-              addScore(20, "🪶 撲中羽毛逗貓棒 +20", wandSmoothPos);
-            } else if (state.activeToy === "laser" && dist < 0.22) {
-              state.pounceTimer = 0.36;
-              state.pounceCooldown = 0.52;
-              catPhysics.hopVy = 1.65;
-              addScore(15, "🔴 抓到雷射紅點 +15", targetPos);
-            } else if (state.activeToy === "yarn" && targetYarn && targetYarn.swatCooldown <= 0 && dist < 0.30) {
-              state.pounceTimer = 0.42;
-              state.pounceCooldown = 0.48;
-              catPhysics.hopVy = 2.1;
-              targetYarn.swatCooldown = 0.85;
-              // Bat the yarn ball across the playmat!
-              const swatAng = Math.atan2(targetYarn.mesh.position.z - catPhysics.z, targetYarn.mesh.position.x - catPhysics.x) + (Math.random() - 0.5) * 0.8;
-              targetYarn.vx = Math.cos(swatAng) * 2.5;
-              targetYarn.vz = Math.sin(swatAng) * 2.5;
-              targetYarn.vy = 2.4;
-              addScore(30, "🧶 拍飛毛線球 +30", targetYarn.mesh.position);
-            }
-          }
-
-          // Vertical Hop & Trot Stride Bounce
-          if (catPhysics.hopY > 0 || catPhysics.hopVy > 0) {
-            catPhysics.hopVy -= 10.5 * dt;
-            catPhysics.hopY += catPhysics.hopVy * dt;
-            if (catPhysics.hopY <= 0) {
-              catPhysics.hopY = 0;
-              catPhysics.hopVy = 0;
-            }
-          }
-          catPhysics.stridePhase += (2.5 + catPhysics.speed * 7.2) * dt;
-          const trotBob = catPhysics.speed > 0.15 ? Math.abs(Math.sin(catPhysics.stridePhase)) * 0.042 : 0;
-
-          catRoot.position.set(catPhysics.x, catPhysics.hopY + trotBob, catPhysics.z);
-          catRoot.rotation.y = catPhysics.yaw;
-          // Slight pounce tilt forward
-          const targetPitch = state.pounceTimer > 0 ? 0.22 : (catPhysics.speed > 0.2 ? 0.08 : 0);
-          catRoot.rotation.x = THREE.MathUtils.lerp(catRoot.rotation.x, targetPitch, 0.22);
-
-          // Head tracking toward toy
-          const relYaw = THREE.MathUtils.clamp(shortestAngleDiff(catPhysics.yaw, desiredYaw), -0.72, 0.72);
-          const relPitch = THREE.MathUtils.clamp(-(targetPos.y - 0.28) * 0.9, -0.42, 0.24);
-          catPhysics.headYaw = THREE.MathUtils.lerp(catPhysics.headYaw, state.playing ? relYaw : Math.sin(t * 1.4) * 0.18, 0.16);
-          catPhysics.headPitch = THREE.MathUtils.lerp(catPhysics.headPitch, state.playing ? relPitch : Math.sin(t * 2.0) * 0.06, 0.14);
-          headPivot.rotation.y = catPhysics.headYaw;
-          headPivot.rotation.x = catPhysics.headPitch;
-          headPivot.rotation.z = Math.sin(t * 2.5) * 0.04 + (state.pounceTimer > 0 ? 0.12 : 0);
-
-          // Tail happy swish (faster when excited/chasing!)
-          const tailSpeed = 4.0 + catPhysics.speed * 3.8 + (state.pounceTimer > 0 ? 7.0 : 0);
-          tailPivot.rotation.y = Math.sin(t * tailSpeed) * (0.28 + Math.min(0.25, catPhysics.speed * 0.12));
-          tailPivot.rotation.x = Math.cos(t * tailSpeed * 0.5) * 0.08 + (state.pounceTimer > 0 ? 0.18 : 0);
-
-          // Front paws swat / running stride
-          if (state.pounceTimer > 0) {
-            pawFLPivot.rotation.x = THREE.MathUtils.lerp(pawFLPivot.rotation.x, -0.78, 0.35);
-            pawFRPivot.rotation.x = THREE.MathUtils.lerp(pawFRPivot.rotation.x, -0.78, 0.35);
-          } else if (catPhysics.speed > 0.15) {
-            pawFLPivot.rotation.x = Math.sin(catPhysics.stridePhase) * 0.36;
-            pawFRPivot.rotation.x = -Math.sin(catPhysics.stridePhase) * 0.36;
+        // Update platform springs, spawn animations, and floating treats
+        for (const p of platformList) {
+          if (p.spawnAnim < 1) {
+            p.spawnAnim = Math.min(1, p.spawnAnim + dt * 5.0);
+            const e = 1 - Math.pow(1 - p.spawnAnim, 3);
+            p.bodyGroup.scale.setScalar(0.7 + 0.3 * e);
+            p.bodyGroup.position.y = (1 - e) * 0.45;
           } else {
-            pawFLPivot.rotation.x = THREE.MathUtils.lerp(pawFLPivot.rotation.x, 0, 0.2);
-            pawFRPivot.rotation.x = THREE.MathUtils.lerp(pawFRPivot.rotation.x, 0, 0.2);
+            if (gameState !== "charging" || platformList[currIdx] !== p) {
+              p.pressY += (0 - p.pressY) * Math.min(1, dt * 14);
+            }
+            p.bodyGroup.position.y = p.pressY;
           }
-
-          // Bell swing jingle
-          bellPivot.rotation.z = Math.sin(catPhysics.stridePhase * 1.3) * (0.06 + catPhysics.speed * 0.12);
-          bellPivot.rotation.x = Math.cos(catPhysics.stridePhase) * (0.04 + catPhysics.speed * 0.08);
-
-          // Gentle camera follow
-          camera.position.x = THREE.MathUtils.lerp(camera.position.x, catPhysics.x * 0.28, 0.05);
-          camera.lookAt(catPhysics.x * 0.22, 0.24, catPhysics.z * 0.18);
+          if (p.collectible) {
+            p.collectible.rotation.y += dt * 2.2;
+            p.collectible.position.y = 0.56 + Math.sin(tSec * 3.4 + p.index) * 0.08;
+          }
         }
 
-        // Update particles
-        for (let i = particles.length - 1; i >= 0; i--) {
-          const pt = particles[i];
-          pt.vy -= 4.5 * dt;
-          pt.mesh.position.x += pt.vx * dt;
-          pt.mesh.position.y += pt.vy * dt;
-          pt.mesh.position.z += pt.vz * dt;
-          pt.mesh.rotation.y += 5.0 * dt;
-          pt.life -= dt;
-          pt.mesh.scale.setScalar(Math.max(0.01, pt.life / pt.maxLife));
-          if (pt.life <= 0) {
+        // Update shadow under cat (shrinks/fades with height above platform)
+        const shadowHeight = Math.max(0, catRoot.position.y);
+        catShadow.position.x = catRoot.position.x;
+        catShadow.position.z = catRoot.position.z;
+        const curr = platformList[currIdx];
+        catShadow.position.y = curr && gameState !== "falling" ? curr.pressY + 0.014 : FLOOR_Y + 0.014;
+        const shScale = Math.max(0.38, 1.0 - shadowHeight * 0.42);
+        catShadow.scale.setScalar(shScale);
+        catShadow.material.opacity = Math.max(0.06, 0.28 - shadowHeight * 0.14);
+
+        // Update ripples
+        for (let i = activeRipples.length - 1; i >= 0; i--) {
+          const r = activeRipples[i];
+          r.age += dt;
+          const u = r.age / r.dur;
+          if (u >= 1) {
+            scene.remove(r.mesh);
+            r.mesh.geometry.dispose();
+            r.mesh.material.dispose();
+            activeRipples.splice(i, 1);
+          } else {
+            r.mesh.scale.setScalar(1.0 + u * 1.45);
+            r.mesh.material.opacity = 0.85 * (1 - u);
+          }
+        }
+
+        // Update burst particles
+        for (let i = activeParticles.length - 1; i >= 0; i--) {
+          const pt = activeParticles[i];
+          pt.age += dt;
+          if (pt.age >= pt.dur) {
             scene.remove(pt.mesh);
-            particles.splice(i, 1);
+            pt.mesh.material.dispose();
+            activeParticles.splice(i, 1);
+          } else {
+            pt.vy -= 9.5 * dt;
+            pt.mesh.position.x += pt.vx * dt;
+            pt.mesh.position.y += pt.vy * dt;
+            pt.mesh.position.z += pt.vz * dt;
+            pt.mesh.material.opacity = 1 - pt.age / pt.dur;
           }
         }
+
+        // Smooth camera follow + floor tile offset wrap so world feels endless
+        camCurrentTarget.lerp(camDesiredTarget, Math.min(1, dt * 5.2));
+        const offset = getResponsiveCamOffset();
+        camera.position.copy(camCurrentTarget).add(offset);
+        camera.lookAt(camCurrentTarget);
+
+        sunLight.position.set(camCurrentTarget.x - 4.5, 9.5, camCurrentTarget.z + 6.0);
+        sunLight.target.position.copy(camCurrentTarget);
+        sunLight.target.updateMatrixWorld();
+
+        const tileStep = 80 / 22;
+        const fx = Math.round(camCurrentTarget.x / tileStep) * tileStep;
+        const fz = Math.round(camCurrentTarget.z / tileStep) * tileStep;
+        floorMesh.position.x = fx;
+        floorMesh.position.z = fz;
 
         renderer.render(scene, camera);
       }
 
-      requestAnimationFrame(animate);
+      // Exposed test & automation hook
+      const gameAPI = {
+        loaded: false,
+        state: gameState,
+        score: 0,
+        bestScore,
+        perfectStreak: 0,
+        jumps: 0,
+        startGame,
+        getPlatforms: () => platformList.map((p) => ({
+          index: p.index, x: p.x, z: p.z, halfW: p.halfW, halfD: p.halfD, hasCollectible: !!p.collectible,
+        })),
+        simulateJump: (ratio) => {
+          if (gameState !== "idle") return false;
+          beginCharge();
+          releaseJump(ratio);
+          return true;
+        },
+        computeExactRatioToNext: () => {
+          const next = platformList[currIdx + 1];
+          if (!next) return 0.5;
+          const dist = Math.hypot(next.x - catRoot.position.x, next.z - catRoot.position.z);
+          return Math.max(0.05, Math.min(1.0, (dist - MIN_DIST) / (MAX_DIST - MIN_DIST)));
+        },
+      };
+      window.__CAT_GAME__ = gameAPI;
+
+      resetWorld();
+      loadCatAsset();
+      requestAnimationFrame(tick);
     })();
   </script>
 </body>
