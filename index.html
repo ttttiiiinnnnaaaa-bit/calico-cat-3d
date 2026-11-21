@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>三花貓咪 2D → 3D 互動展廳 | Blender Skills</title>
+  <link rel="icon" href="data:," />
+  <script src="./libs/three.min.js"></script>
+  <script src="./libs/OrbitControls.js"></script>
+  <script src="./libs/GLTFLoader.js"></script>
+  <script src="./assets/calico_cat_report.js"></script>
+  <style>
+    :root {
+      --bg-cream: #faf4ec;
+      --bg-warm: #f2e7d8;
+      --surface: rgba(255, 252, 247, 0.88);
+      --surface-solid: #fffcf7;
+      --ink: #241d19;
+      --ink-soft: #66584f;
+      --accent-ginger: #d96b27;
+      --accent-ginger-soft: rgba(217, 107, 39, 0.12);
+      --accent-charcoal: #262226;
+      --accent-gold: #d9a126;
+      --accent-red: #c83232;
+      --border: rgba(58, 42, 32, 0.11);
+      --shadow-lg: 0 20px 50px rgba(46, 30, 18, 0.12);
+      --shadow-sm: 0 8px 22px rgba(46, 30, 18, 0.08);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 15% 15%, #fff9f1 0%, var(--bg-cream) 48%, var(--bg-warm) 100%);
+      color: var(--ink);
+      font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Segoe UI", system-ui, -apple-system, sans-serif;
+      user-select: none;
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* ---------------- Top Navigation Bar ---------------- */
+    .topbar {
+      height: 58px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      background: rgba(255, 251, 245, 0.78);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: var(--accent-charcoal);
+      color: #fff8f0;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f39042, #e05226);
+      box-shadow: 0 0 8px rgba(243, 144, 66, 0.7);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .meta-pill strong {
+      color: var(--accent-ginger);
+    }
+
+    .top-page-pills {
+      display: flex;
+      gap: 4px;
+      padding: 3px;
+      background: rgba(38, 34, 38, 0.06);
+      border-radius: 999px;
+    }
+
+    .top-pill-btn {
+      border: none;
+      background: transparent;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .top-pill-btn.active {
+      background: var(--surface-solid);
+      color: var(--ink);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ---------------- 3-Page Horizontal Draggable Stage ---------------- */
+    .stage-viewport {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: pan-y;
+    }
+
+    .stage-viewport.is-dragging {
+      cursor: grabbing;
+    }
+
+    .pages-track {
+      display: flex;
+      width: 300%;
+      height: 100%;
+      will-change: transform;
+      transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .pages-track.no-transition {
+      transition: none !important;
+    }
+
+    .page-slide {
+      width: 33.333333%;
+      height: 100%;
+      padding: 18px 32px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .page-inner {
+      width: 100%;
+      max-width: 1220px;
+      height: 100%;
+      display: grid;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    /* ---------------- PAGE 1: 2D Concept ---------------- */
+    .page-1-grid {
+      grid-template-columns: 1.08fr 0.92fr;
+    }
+
+    .art-frame {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: radial-gradient(circle at 50% 45%, #fffdf9 0%, #f4e3ce 100%);
+    }
+
+    .art-frame img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 18px;
+      box-shadow: 0 22px 44px rgba(72, 42, 20, 0.18);
+      object-fit: contain;
+      pointer-events: none;
+      transition: transform 0.35s ease;
+    }
+
+    .art-frame:hover img {
+      transform: scale(1.015);
+    }
+
+    .floating-tag {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: rgba(36, 29, 25, 0.84);
+      color: #fff9f0;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .floating-tag span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4cd98c;
+    }
+
+    .info-panel {
+      padding: 26px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-ginger);
+      margin-bottom: 8px;
+    }
+
+    .page-heading {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .page-desc {
+      margin: 0 0 18px;
+      color: var(--ink-soft);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      margin-bottom: 10px;
+      letter-spacing: 0.04em;
+    }
+
+    .swatch-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+      margin-bottom: 16px;
+    }
+
+    .swatch-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--border);
+    }
+
+    .swatch-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+    }
+
+    .swatch-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .swatch-text strong {
+      font-size: 12.5px;
+    }
+
+    .swatch-text span {
+      font-size: 11px;
+      color: var(--ink-soft);
+      font-family: ui-monospace, Consolas, monospace;
+    }
+
+    .trait-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .trait-chip {
+      padding: 9px 11px;
+      border-radius: 11px;
+      background: var(--accent-ginger-soft);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #6b3411;
+    }
+
+    .cta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .drag-cue {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .primary-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: var(--accent-charcoal);
+      color: #fffaf3;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .primary-btn:hover {
+      background: var(--accent-ginger);
+      transform: translateY(-1px);
+    }
+
+    /* ---------------- PAGE 2: Interactive 3D Three.js ---------------- */
+    .page-2-grid {
+      grid-template-columns: 1.5fr 0.72fr;
+    }
+
+    .viewer-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at 50% 42%, #fff8ee 0%, #ead8c2 75%, #dec6aa 100%);
+      transition: background 0.45s ease;
+    }
+
+    .viewer-card.mood-white {
+      background: radial-gradient(circle at 50% 42%, #ffffff 0%, #eceef2 75%, #dde1e8 100%);
+    }
+
+    .viewer-card.mood-night {
+      background: radial-gradient(circle at 50% 42%, #312636 0%, #1d1722 72%, #130f17 100%);
+    }
+
+    #viewer3d {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #viewer3d:active {
+      cursor: grabbing;
+    }
+
+    #viewer3d canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      outline: none;
+    }
+
+    .viewer-hud-top {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .hud-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 13px;
+      border-radius: 999px;
+      background: rgba(255, 250, 243, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(36, 29, 25, 0.12);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .viewer-card.mood-night .hud-pill {
+      background: rgba(34, 28, 40, 0.84);
+      color: #f7efe5;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .viewer-hud-bottom {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .loader-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(250, 244, 236, 0.86);
+      font-size: 14px;
+      font-weight: 700;
+      z-index: 6;
+      transition: opacity 0.3s ease;
+    }
+
+    .loader-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .controls-card {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .ctrl-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .btn-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+
+    .ctrl-btn {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--ink);
+      border-radius: 11px;
+      padding: 9px 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    .ctrl-btn:hover {
+      border-color: var(--accent-ginger);
+      transform: translateY(-1px);
+    }
+
+    .ctrl-btn.active {
+      background: var(--accent-charcoal);
+      color: #fffaf3;
+      border-color: var(--accent-charcoal);
+    }
+
+    .ctrl-btn.accent-active {
+      background: var(--accent-ginger);
+      color: #ffffff;
+      border-color: var(--accent-ginger);
+    }
+
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(38, 34, 38, 0.045);
+    }
+
+    .stat-box {
+      text-align: center;
+    }
+
+    .stat-box strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .stat-box span {
+      font-size: 11px;
+      color: var(--ink-soft);
+      font-weight: 600;
+    }
+
+    /* ---------------- PAGE 3: Comparison & Blender Renders ---------------- */
+    .page-3-grid {
+      grid-template-columns: 1.08fr 0.92fr;
+    }
+
+    .compare-card {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .compare-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .compare-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .compare-box {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #efe2d1;
+      cursor: ew-resize;
+      touch-action: none;
+    }
+
+    .compare-box img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .compare-after-wrap {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      clip-path: inset(0 0 0 50%);
+      pointer-events: none;
+    }
+
+    .compare-divider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 3px;
+      background: #ffffff;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.35);
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .compare-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--accent-charcoal);
+      color: #ffffff;
+      border: 3px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+      pointer-events: none;
+    }
+
+    .compare-label {
+      position: absolute;
+      bottom: 12px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      background: rgba(36, 29, 25, 0.8);
+      color: #fffaf3;
+      font-size: 11.5px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .compare-label.left { left: 12px; }
+    .compare-label.right { right: 12px; background: rgba(217, 107, 39, 0.9); }
+
+    .right-col-p3 {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .gallery-card {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1.15;
+      min-height: 0;
+    }
+
+    .gallery-main {
+      display: grid;
+      grid-template-columns: 1fr 126px;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .gallery-hero-wrap {
+      border-radius: 14px;
+      overflow: hidden;
+      background: #efe2d1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gallery-hero-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .thumb-col {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      justify-content: space-between;
+    }
+
+    .thumb-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 7px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.72);
+      cursor: pointer;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink);
+      transition: all 0.15s ease;
+    }
+
+    .thumb-btn img {
+      width: 34px;
+      height: 34px;
+      border-radius: 7px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .thumb-btn.active {
+      border-color: var(--accent-ginger);
+      background: var(--accent-ginger-soft);
+      color: #823a0d;
+    }
+
+    .qa-card {
+      padding: 15px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .qa-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .qa-badge {
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #daf5e5;
+      color: #12663a;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .skill-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .skill-tag {
+      padding: 3px 8px;
+      border-radius: 7px;
+      background: rgba(38, 34, 38, 0.065);
+      font-size: 11px;
+      font-weight: 700;
+      font-family: ui-monospace, Consolas, monospace;
+      color: var(--ink);
+    }
+
+    /* ---------------- Bottom Draggable 3-Page Scrubber Dock ---------------- */
+    .scrubber-dock {
+      height: 76px;
+      flex-shrink: 0;
+      padding: 8px 28px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: rgba(255, 251, 245, 0.84);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      z-index: 20;
+    }
+
+    .nav-arrow {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface-solid);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.15s ease;
+    }
+
+    .nav-arrow:hover {
+      background: var(--accent-charcoal);
+      color: #fff;
+    }
+
+    .scrubber-wrap {
+      width: min(680px, 68vw);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .scrubber-track {
+      position: relative;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(38, 34, 38, 0.08);
+      border: 1px solid rgba(38, 34, 38, 0.08);
+      padding: 3px;
+      cursor: grab;
+      touch-action: none;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+    }
+
+    .scrubber-track:active {
+      cursor: grabbing;
+    }
+
+    .scrubber-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: calc(33.3333% - 4px);
+      height: 24px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #2b2421, #46372f);
+      box-shadow: 0 4px 12px rgba(38, 28, 20, 0.25);
+      transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scrubber-thumb::after {
+      content: "⋮⋮ 拖曳切換 ⋮⋮";
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: rgba(255, 246, 236, 0.72);
+      font-weight: 700;
+    }
+
+    .scrubber-thumb.no-transition {
+      transition: none !important;
+    }
+
+    .scrubber-stop {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+
+    .scrubber-stop.active {
+      color: transparent;
+    }
+
+    .scrubber-caption {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      padding: 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-badge"><span class="brand-dot"></span>CALICO 3D STUDIO</span>
+        <span class="brand-title">三花貓咪 · 2D 概念到 Blender 3D 互動展廳</span>
+      </div>
+      <div class="topbar-right">
+        <div class="meta-pill">Skills: <strong>arjun988/blender-skills (94)</strong></div>
+        <div class="meta-pill" id="topEnginePill">Engine: <strong>Blender 4.5 LTS</strong></div>
+        <div class="top-page-pills" data-no-page-drag="true">
+          <button class="top-pill-btn active" data-goto="0">01 原畫</button>
+          <button class="top-pill-btn" data-goto="1">02 3D模型</button>
+          <button class="top-pill-btn" data-goto="2">03 工藝對比</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Draggable 3-Page Horizontal Viewport -->
+    <main class="stage-viewport" id="stageViewport">
+      <div class="pages-track" id="pagesTrack">
+        <!-- PAGE 1: 2D AI Reference Concept -->
+        <section class="page-slide" id="page-1">
+          <div class="page-inner page-1-grid">
+            <div class="card art-frame">
+              <span class="floating-tag"><span class="dot"></span>Page 01 · AI 2D 概念原畫</span>
+              <img src="./assets/calico_cat_2d.png" alt="2D AI 生成三花貓咪概念圖" />
+            </div>
+
+            <div class="card info-panel">
+              <div>
+                <div class="eyebrow">Step 01 · Reference Image Generation</div>
+                <h1 class="page-heading">三花貓咪 · 2D 概念原畫</h1>
+                <p class="page-desc">
+                  先透過圖像生成建立可愛坐姿三花貓咪的視覺基準，再依循已安裝的
+                  <code>blender-skills</code>（<code>blender-director</code> + <code>reference-image-match</code>）提取配色、輪廓比例與光影氛圍進入 Blender 建模。
+                </p>
+
+                <div class="section-label">三花貓色彩提取（Reference Palette）</div>
+                <div class="swatch-grid">
+                  <div class="swatch-item">
+                    <span class="swatch-dot" style="background: #faf2e8;"></span>
+                    <div class="swatch-text"><strong>奶油白毛色</strong><span>#FAF2E8 · 胸口與爪</span></div>
+                  </div>
+                  <div class="swatch-item">
+                    <span class="swatch-dot" style="background: #dd7327;"></span>
+                    <div class="swatch-text"><strong>暖橘虎斑塊</strong><span>#DD7327 · 右耳肩側</span></div>
+                  </div>
+                  <div class="swatch-item">
+                    <span class="swatch-dot" style="background: #232024;"></span>
+                    <div class="swatch-text"><strong>炭黑斑塊</strong><span>#232024 · 左耳與尾尖</span></div>
+                  </div>
+                  <div class="swatch-item">
+                    <span class="swatch-dot" style="background: linear-gradient(135deg, #c92c2c 50%, #e8b838 50%);"></span>
+                    <div class="swatch-text"><strong>紅領圈 &amp; 金鈴</strong><span>#C92C2C / #E8B838</span></div>
+                  </div>
+                </div>
+
+                <div class="section-label">風格化 3D 結構分析（Stylized Anatomy）</div>
+                <div class="trait-list">
+                  <div class="trait-chip">大頭圓臉比例（~40% 高度）</div>
+                  <div class="trait-chip">左橘右黑不對稱雙耳花紋</div>
+                  <div class="trait-chip">金綠漸層大眼與高光亮點</div>
+                  <div class="trait-chip">雙色捲曲蓬尾與滾邊軟墊</div>
+                </div>
+              </div>
+
+              <div class="cta-row">
+                <span class="drag-cue">← 按住空白處或拖曳底部拉桿向左滑動</span>
+                <button class="primary-btn" data-goto="1">進入 3D 互動展廳 →</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE 2: Interactive 3D Model Viewer -->
+        <section class="page-slide" id="page-2">
+          <div class="page-inner page-2-grid">
+            <div class="card viewer-card" id="viewerCard">
+              <div class="viewer-hud-top">
+                <span class="hud-pill" id="viewerBadge">Page 02 · 3D 實時 WebGL 模型 (GLB)</span>
+                <span class="hud-pill" id="polyBadge">載入模型中...</span>
+              </div>
+
+              <div id="viewer3d" data-no-page-drag="true"></div>
+
+              <div class="viewer-hud-bottom">
+                <span class="hud-pill">左鍵拖曳旋轉 360° · 滾輪縮放 · 切換視角或燈光氛圍</span>
+              </div>
+
+              <div class="loader-overlay" id="loaderOverlay">
+                <div>正在載入 Blender 3D 三花貓咪...</div>
+              </div>
+            </div>
+
+            <div class="card controls-card" data-no-page-drag="true">
+              <div>
+                <div class="eyebrow">Step 02 · Blender 3D + Three.js</div>
+                <h2 class="page-heading" style="font-size: 22px; margin-bottom: 6px;">3D 三花貓咪互動控制台</h2>
+                <p class="page-desc" style="font-size: 13px; margin-bottom: 12px;">
+                  以 Blender 4.5 雕刻建模並烘焙 2048px 三花皮毛貼圖（<code>T_CalicoCat_BC.png</code>），導出乾淨的 GLB 資產於網頁端 360° 互動檢視。
+                </p>
+
+                <div class="ctrl-block" style="margin-bottom: 12px;">
+                  <div class="section-label" style="margin-bottom: 2px;">鏡頭視角切換</div>
+                  <div class="btn-grid-2">
+                    <button class="ctrl-btn active" data-cam="hero">45° 主視角</button>
+                    <button class="ctrl-btn" data-cam="front">正面特寫</button>
+                    <button class="ctrl-btn" data-cam="side">側面輪廓</button>
+                    <button class="ctrl-btn" data-cam="back">背面花紋</button>
+                  </div>
+                </div>
+
+                <div class="ctrl-block" style="margin-bottom: 12px;">
+                  <div class="section-label" style="margin-bottom: 2px;">模型檢視模式</div>
+                  <div class="btn-grid-2">
+                    <button class="ctrl-btn accent-active" id="btnAutoRotate">自動旋轉：開啟</button>
+                    <button class="ctrl-btn" id="btnWireframe">線框拓樸：關閉</button>
+                  </div>
+                </div>
+
+                <div class="ctrl-block">
+                  <div class="section-label" style="margin-bottom: 2px;">棚拍燈光氛圍</div>
+                  <div class="btn-grid-3">
+                    <button class="ctrl-btn active" data-mood="warm">暖陽棚拍</button>
+                    <button class="ctrl-btn" data-mood="white">純白柔光</button>
+                    <button class="ctrl-btn" data-mood="night">微醺夜燈</button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="stats-strip" id="statsStrip">
+                  <div class="stat-box"><strong id="statTris">--</strong><span>Triangles</span></div>
+                  <div class="stat-box"><strong id="statMats">--</strong><span>Materials</span></div>
+                  <div class="stat-box"><strong id="statGlb">--</strong><span>GLB 檔案</span></div>
+                </div>
+                <div class="cta-row" style="margin-top: 10px;">
+                  <button class="ctrl-btn" data-goto="0">← 回 2D 原畫</button>
+                  <button class="primary-btn" data-goto="2">工藝對比 →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE 3: 2D vs 3D Comparison & Blender Skills QA -->
+        <section class="page-slide" id="page-3">
+          <div class="page-inner page-3-grid">
+            <div class="card compare-card">
+              <div class="compare-header">
+                <h3>Page 03 · 2D 原畫 vs 3D Blender Cycles 渲染對比</h3>
+                <span style="font-size: 12px; font-weight: 700; color: var(--accent-ginger);">左右拖曳中線滑桿</span>
+              </div>
+              <div class="compare-box" id="compareBox" data-no-page-drag="true">
+                <img src="./assets/calico_cat_2d.png" alt="2D 原畫" />
+                <div class="compare-after-wrap" id="compareAfter">
+                  <img src="./assets/render_hero.png" alt="3D Blender Cycles 渲染" />
+                </div>
+                <div class="compare-divider" id="compareDivider"></div>
+                <div class="compare-knob" id="compareKnob">◄ ►</div>
+                <span class="compare-label left">2D AI 概念原畫</span>
+                <span class="compare-label right">3D Blender Cycles</span>
+              </div>
+            </div>
+
+            <div class="right-col-p3">
+              <div class="card gallery-card" data-no-page-drag="true">
+                <div class="compare-header">
+                  <h3 style="font-size: 15px;">Blender 多視角棚拍與拓樸線框</h3>
+                  <span style="font-size: 11.5px; color: var(--ink-soft); font-weight: 600;">Cycles CPU · AgX</span>
+                </div>
+                <div class="gallery-main">
+                  <div class="gallery-hero-wrap">
+                    <img id="galleryActiveImg" src="./assets/render_hero.png" alt="Blender Render Preview" />
+                  </div>
+                  <div class="thumb-col">
+                    <button class="thumb-btn active" data-render="./assets/render_hero.png">
+                      <img src="./assets/render_hero.png" alt="主視角" /><span>主視角</span>
+                    </button>
+                    <button class="thumb-btn" data-render="./assets/render_side.png">
+                      <img src="./assets/render_side.png" alt="側面" /><span>側面輪廓</span>
+                    </button>
+                    <button class="thumb-btn" data-render="./assets/render_back.png">
+                      <img src="./assets/render_back.png" alt="背面" /><span>背面花紋</span>
+                    </button>
+                    <button class="thumb-btn" data-render="./assets/render_wireframe.png">
+                      <img src="./assets/render_wireframe.png" alt="線框" /><span>線框拓樸</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card qa-card">
+                <div class="qa-header">
+                  <strong style="font-size: 14px;">arjun988/blender-skills 管線檢核報告</strong>
+                  <span class="qa-badge" id="qaBadge">QA PASS</span>
+                </div>
+                <div class="skill-tags">
+                  <span class="skill-tag">blender-director</span>
+                  <span class="skill-tag">reference-image-match</span>
+                  <span class="skill-tag">creature-artist</span>
+                  <span class="skill-tag">stylized-style</span>
+                  <span class="skill-tag">uv-workflow</span>
+                  <span class="skill-tag">materials</span>
+                  <span class="skill-tag">lighting</span>
+                  <span class="skill-tag">export-pipeline</span>
+                  <span class="skill-tag">qa-review</span>
+                </div>
+                <div style="font-size: 12px; color: var(--ink-soft); line-height: 1.5;" id="qaSummaryLine">
+                  規範前綴：<code>COL_</code> / <code>SM_</code> / <code>MAT_</code> · 2048px 烘焙貼圖 · +Y Up GLB 導出驗證通過
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Bottom 3-Page Draggable Scrubber Dock -->
+    <footer class="scrubber-dock">
+      <button class="nav-arrow" id="btnPrevPage" title="上一頁">‹</button>
+      <div class="scrubber-wrap">
+        <div class="scrubber-track" id="scrubberTrack">
+          <div class="scrubber-thumb" id="scrubberThumb"></div>
+          <span class="scrubber-stop active" data-stop="0">01 · 2D 概念原畫</span>
+          <span class="scrubber-stop" data-stop="1">02 · 3D 互動展廳</span>
+          <span class="scrubber-stop" data-stop="2">03 · Blender 對比</span>
+        </div>
+        <div class="scrubber-caption">
+          <span>拖曳上方黑色拉桿或按住頁面空白處左右滑動</span>
+          <span id="pageIndicatorText">第 1 / 3 頁</span>
+        </div>
+      </div>
+      <button class="nav-arrow" id="btnNextPage" title="下一頁">›</button>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // ---------------------------------------------------------------------
+      // 1. 3-Page Horizontal Drag & Scrubber Controller
+      // ---------------------------------------------------------------------
+      const stageViewport = document.getElementById("stageViewport");
+      const pagesTrack = document.getElementById("pagesTrack");
+      const scrubberTrack = document.getElementById("scrubberTrack");
+      const scrubberThumb = document.getElementById("scrubberThumb");
+      const scrubberStops = Array.from(document.querySelectorAll(".scrubber-stop"));
+      const topPillBtns = Array.from(document.querySelectorAll(".top-pill-btn"));
+      const pageIndicatorText = document.getElementById("pageIndicatorText");
+
+      let currentPage = 0;
+      const totalPages = 3;
+      let stageDragActive = false;
+      let stageStartX = 0;
+      let stageCurrentOffsetPx = 0;
+      let dragStartTime = 0;
+
+      function applyTrackPercent(pct, immediate) {
+        pagesTrack.classList.toggle("no-transition", !!immediate);
+        scrubberThumb.classList.toggle("no-transition", !!immediate);
+        pagesTrack.style.transform = `translate3d(${pct}%, 0, 0)`;
+
+        // Map track pct [0 .. -66.6667] -> thumb translateX [0 .. 200%]
+        const progress = Math.max(0, Math.min(2, (-pct) / 33.333333));
+        scrubberThumb.style.transform = `translateX(${progress * 100}%)`;
+      }
+
+      function updatePageUI() {
+        applyTrackPercent(-currentPage * 33.333333, false);
+        topPillBtns.forEach((btn, idx) => btn.classList.toggle("active", idx === currentPage));
+        scrubberStops.forEach((st, idx) => st.classList.toggle("active", idx === currentPage));
+        pageIndicatorText.textContent = `第 ${currentPage + 1} / 3 頁`;
+        if (window.__CAT_SHOWCASE__) {
+          window.__CAT_SHOWCASE__.currentPage = currentPage;
+        }
+      }
+
+      function goToPage(idx) {
+        currentPage = Math.max(0, Math.min(totalPages - 1, idx));
+        updatePageUI();
+      }
+
+      // Click bindings for page jumps
+      document.querySelectorAll("[data-goto]").forEach((el) => {
+        el.addEventListener("click", () => goToPage(parseInt(el.dataset.goto, 10)));
+      });
+      document.getElementById("btnPrevPage").addEventListener("click", () => goToPage(currentPage - 1));
+      document.getElementById("btnNextPage").addEventListener("click", () => goToPage(currentPage + 1));
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight") goToPage(currentPage + 1);
+        if (e.key === "ArrowLeft") goToPage(currentPage - 1);
+      });
+
+      // Stage pointer drag (ignoring interactive sub-controls like 3D canvas & comparison slider)
+      stageViewport.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0) return;
+        if (e.target.closest("[data-no-page-drag='true'], button, a, input")) return;
+        stageDragActive = true;
+        stageStartX = e.clientX;
+        stageCurrentOffsetPx = 0;
+        dragStartTime = performance.now();
+        stageViewport.classList.add("is-dragging");
+        stageViewport.setPointerCapture(e.pointerId);
+      });
+
+      stageViewport.addEventListener("pointermove", (e) => {
+        if (!stageDragActive) return;
+        let dx = e.clientX - stageStartX;
+        // Rubber-band resistance at outer edges
+        if ((currentPage === 0 && dx > 0) || (currentPage === totalPages - 1 && dx < 0)) {
+          dx *= 0.28;
+        }
+        stageCurrentOffsetPx = dx;
+        const vw = stageViewport.clientWidth || window.innerWidth;
+        const basePct = -currentPage * 33.333333;
+        const deltaPct = (dx / vw) * 33.333333;
+        applyTrackPercent(basePct + deltaPct, true);
+      });
+
+      function endStageDrag() {
+        if (!stageDragActive) return;
+        stageDragActive = false;
+        stageViewport.classList.remove("is-dragging");
+        const vw = stageViewport.clientWidth || window.innerWidth;
+        const elapsed = Math.max(1, performance.now() - dragStartTime);
+        const velocity = stageCurrentOffsetPx / elapsed;
+        if (stageCurrentOffsetPx < -vw * 0.14 || velocity < -0.45) {
+          goToPage(currentPage + 1);
+        } else if (stageCurrentOffsetPx > vw * 0.14 || velocity > 0.45) {
+          goToPage(currentPage - 1);
+        } else {
+          updatePageUI();
+        }
+      }
+
+      stageViewport.addEventListener("pointerup", endStageDrag);
+      stageViewport.addEventListener("pointercancel", endStageDrag);
+
+      // Bottom Scrubber Track continuous drag & click-to-jump
+      let scrubDragging = false;
+      let scrubLatestProgress = 0;
+
+      function updateFromScrubberClientX(clientX) {
+        const rect = scrubberTrack.getBoundingClientRect();
+        const rel = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        // Map [0..1] across 3 slots centered at 1/6, 3/6, 5/6 -> progress [0..2]
+        const clamped = Math.max(0, Math.min(2, (rel - 1 / 6) * 3));
+        scrubLatestProgress = clamped;
+        applyTrackPercent(-clamped * 33.333333, true);
+      }
+
+      scrubberTrack.addEventListener("pointerdown", (e) => {
+        scrubDragging = true;
+        scrubberTrack.setPointerCapture(e.pointerId);
+        updateFromScrubberClientX(e.clientX);
+      });
+
+      scrubberTrack.addEventListener("pointermove", (e) => {
+        if (!scrubDragging) return;
+        updateFromScrubberClientX(e.clientX);
+      });
+
+      function endScrubDrag() {
+        if (!scrubDragging) return;
+        scrubDragging = false;
+        goToPage(Math.round(scrubLatestProgress));
+      }
+
+      scrubberTrack.addEventListener("pointerup", endScrubDrag);
+      scrubberTrack.addEventListener("pointercancel", endScrubDrag);
+
+      // ---------------------------------------------------------------------
+      // 2. Page 3 Comparison Slider & Studio Render Gallery
+      // ---------------------------------------------------------------------
+      const compareBox = document.getElementById("compareBox");
+      const compareAfter = document.getElementById("compareAfter");
+      const compareDivider = document.getElementById("compareDivider");
+      const compareKnob = document.getElementById("compareKnob");
+      let compareDragging = false;
+
+      function setComparePercent(pct) {
+        const clamped = Math.max(4, Math.min(96, pct));
+        compareAfter.style.clipPath = `inset(0 0 0 ${clamped}%)`;
+        compareDivider.style.left = `${clamped}%`;
+        compareKnob.style.left = `${clamped}%`;
+      }
+
+      function updateCompareFromPointer(clientX) {
+        const rect = compareBox.getBoundingClientRect();
+        const pct = ((clientX - rect.left) / rect.width) * 100;
+        setComparePercent(pct);
+      }
+
+      compareBox.addEventListener("pointerdown", (e) => {
+        e.stopPropagation();
+        compareDragging = true;
+        compareBox.setPointerCapture(e.pointerId);
+        updateCompareFromPointer(e.clientX);
+      });
+      compareBox.addEventListener("pointermove", (e) => {
+        if (!compareDragging) return;
+        updateCompareFromPointer(e.clientX);
+      });
+      compareBox.addEventListener("pointerup", () => { compareDragging = false; });
+      compareBox.addEventListener("pointercancel", () => { compareDragging = false; });
+
+      const galleryActiveImg = document.getElementById("galleryActiveImg");
+      const thumbBtns = Array.from(document.querySelectorAll(".thumb-btn"));
+      thumbBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          thumbBtns.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          galleryActiveImg.src = btn.dataset.render;
+        });
+      });
+
+      // Populate QA metrics from CALICO_CAT_DATA
+      const report = window.CALICO_CAT_REPORT || null;
+      if (report) {
+        document.getElementById("statTris").textContent = report.total_triangles.toLocaleString();
+        document.getElementById("statMats").textContent = String(report.material_count);
+        document.getElementById("statGlb").textContent = (report.glb_size_bytes / 1024).toFixed(0) + " KB";
+        document.getElementById("polyBadge").textContent =
+          `${report.total_triangles.toLocaleString()} tris · ${report.material_count} 材質`;
+        document.getElementById("qaBadge").textContent = `QA ${report.status}`;
+        document.getElementById("qaSummaryLine").innerHTML =
+          `Blender ${report.blender_version} · 物件 ${report.total_objects} 個 (${report.total_triangles.toLocaleString()} tris) · ` +
+          `2048px 烘焙貼圖 · GLB ${(report.glb_size_bytes / (1024 * 1024)).toFixed(2)} MB`;
+      }
+
+      // ---------------------------------------------------------------------
+      // 3. Page 2 Three.js 3D Calico Cat Interactive Viewer
+      // ---------------------------------------------------------------------
+      const viewerEl = document.getElementById("viewer3d");
+      const viewerCard = document.getElementById("viewerCard");
+      const loaderOverlay = document.getElementById("loaderOverlay");
+
+      const showcaseAPI = {
+        loaded: false,
+        currentPage: 0,
+        error: null,
+        goToPage,
+        setCameraPreset: null,
+        setWireframe: null,
+        setMood: null,
+      };
+      window.__CAT_SHOWCASE__ = showcaseAPI;
+
+      let renderer, scene, camera, controls;
+      let keyLight, fillLight, rimLight, hemiLight, shadowPlane;
+      let modelRoot = null;
+      let wireframeOverlays = [];
+      let wireframeOn = false;
+      let autoRotateOn = true;
+      let modelCenterY = 0.25;
+      let camDist = 0.85;
+      let camAnimTargetPos = null;
+      let camAnimTargetLook = null;
+
+      function initThree() {
+        const w = viewerEl.clientWidth || 720;
+        const h = viewerEl.clientHeight || 520;
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(w, h);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 0.94;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        viewerEl.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+
+        // Procedural Studio PMREM Environment for rich specular bell & eye highlights
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        pmrem.compileEquirectangularShader();
+        const envScene = new THREE.Scene();
+        envScene.background = new THREE.Color(0x9a8470);
+        const addSoftbox = (hex, sw, sh, pos, rot) => {
+          const p = new THREE.Mesh(
+            new THREE.PlaneGeometry(sw, sh),
+            new THREE.MeshBasicMaterial({ color: hex, side: THREE.DoubleSide })
+          );
+          p.position.set(pos[0], pos[1], pos[2]);
+          p.rotation.set(rot[0], rot[1], rot[2]);
+          envScene.add(p);
+        };
+        addSoftbox(0xfffaf2, 7, 7, [0, 6, 0], [Math.PI / 2, 0, 0]);
+        addSoftbox(0xffe9cf, 5, 5, [-5, 3, 5], [0, Math.PI / 4, 0]);
+        addSoftbox(0xdbe6ff, 5, 5, [5, 3, -4], [0, -Math.PI * 0.75, 0]);
+        scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+        pmrem.dispose();
+
+        camera = new THREE.PerspectiveCamera(36, w / h, 0.02, 40);
+        camera.position.set(-0.42, 0.42, 1.15);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.07;
+        controls.enablePan = true;
+        controls.minDistance = 0.38;
+        controls.maxDistance = 2.6;
+        controls.maxPolarAngle = Math.PI * 0.49;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.15;
+
+        // Three-point Studio Lighting
+        hemiLight = new THREE.HemisphereLight(0xfff4e6, 0xb89677, 0.34);
+        scene.add(hemiLight);
+
+        keyLight = new THREE.DirectionalLight(0xfff5e6, 1.18);
+        keyLight.position.set(-1.3, 1.9, 1.5);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.set(1024, 1024);
+        keyLight.shadow.camera.near = 0.3;
+        keyLight.shadow.camera.far = 6;
+        keyLight.shadow.camera.left = -0.6;
+        keyLight.shadow.camera.right = 0.6;
+        keyLight.shadow.camera.top = 0.6;
+        keyLight.shadow.camera.bottom = -0.6;
+        keyLight.shadow.bias = -0.0005;
+        scene.add(keyLight);
+
+        fillLight = new THREE.DirectionalLight(0xffe6cf, 0.36);
+        fillLight.position.set(1.5, 0.9, 1.2);
+        scene.add(fillLight);
+
+        rimLight = new THREE.DirectionalLight(0xfff8f0, 0.68);
+        rimLight.position.set(0.6, 1.5, -1.6);
+        scene.add(rimLight);
+
+        // Soft contact shadow floor
+        shadowPlane = new THREE.Mesh(
+          new THREE.CircleGeometry(0.95, 48),
+          new THREE.ShadowMaterial({ opacity: 0.22 })
+        );
+        shadowPlane.rotation.x = -Math.PI / 2;
+        shadowPlane.position.y = 0.0005;
+        shadowPlane.receiveShadow = true;
+        scene.add(shadowPlane);
+
+        // Stop propagation inside WebGL canvas so dragging rotates 3D cat without flipping page
+        viewerEl.addEventListener("pointerdown", (e) => {
+          e.stopPropagation();
+          camAnimTargetPos = null;
+          camAnimTargetLook = null;
+        });
+
+        window.addEventListener("resize", () => {
+          const nw = viewerEl.clientWidth;
+          const nh = viewerEl.clientHeight;
+          if (!nw || !nh) return;
+          camera.aspect = nw / nh;
+          camera.updateProjectionMatrix();
+          renderer.setSize(nw, nh);
+        });
+
+        loadCalicoGLB();
+        animate();
+      }
+
+      function base64ToArrayBuffer(b64) {
+        const bin = atob(b64);
+        const len = bin.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = bin.charCodeAt(i);
+        }
+        return bytes.buffer;
+      }
+
+      function onGLBLoaded(gltf) {
+        modelRoot = gltf.scene;
+
+        // Normalize resting floor & center
+        const box = new THREE.Box3().setFromObject(modelRoot);
+        const center = new THREE.Vector3();
+        const size = new THREE.Vector3();
+        box.getCenter(center);
+        box.getSize(size);
+        modelRoot.position.x -= center.x;
+        modelRoot.position.z -= center.z;
+        modelRoot.position.y -= box.min.y;
+
+        modelCenterY = size.y * 0.49;
+        camDist = Math.max(size.x, size.y, size.z) * 1.48;
+
+        // Enable shadows + build toggleable wireframe overlays
+        const wireMat = new THREE.MeshBasicMaterial({
+          color: 0x2a1d17,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.34,
+          depthTest: true,
+          polygonOffset: true,
+          polygonOffsetFactor: -1,
+          polygonOffsetUnits: -1,
+        });
+
+        const origMeshes = [];
+        modelRoot.traverse((child) => {
+          if (child.isMesh) {
+            origMeshes.push(child);
+          }
+        });
+        origMeshes.forEach((child) => {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (!child.name.includes("Whiskers") && !child.name.includes("Mouth")) {
+            const wMesh = new THREE.Mesh(child.geometry, wireMat);
+            wMesh.visible = false;
+            wMesh.scale.setScalar(1.002);
+            child.add(wMesh);
+            wireframeOverlays.push(wMesh);
+          }
+        });
+
+        scene.add(modelRoot);
+        setCameraPreset("hero", true);
+        loaderOverlay.classList.add("hidden");
+        showcaseAPI.loaded = true;
+      }
+
+      function loadCalicoGLB() {
+        const loader = new THREE.GLTFLoader();
+        loader.load(
+          "./assets/calico_cat.glb",
+          onGLBLoaded,
+          undefined,
+          (err) => {
+            showcaseAPI.error = String(err);
+            loaderOverlay.textContent = "無法透過網址載入 3D 模型（請確認經由網頁伺服器開啟）：" + err;
+          }
+        );
+      }
+
+      function setCameraPreset(preset, instant) {
+        const target = new THREE.Vector3(0, modelCenterY, 0);
+        let pos;
+        if (preset === "front") {
+          pos = new THREE.Vector3(0.0, modelCenterY + camDist * 0.14, camDist * 1.48);
+        } else if (preset === "side") {
+          pos = new THREE.Vector3(camDist * 1.48, modelCenterY + camDist * 0.16, 0.12);
+        } else if (preset === "back") {
+          pos = new THREE.Vector3(camDist * 0.85, modelCenterY + camDist * 0.40, -camDist * 1.20);
+        } else {
+          // hero: front 3/4 view matching 2D concept
+          pos = new THREE.Vector3(-camDist * 0.56, modelCenterY + camDist * 0.24, camDist * 1.38);
+        }
+
+        if (instant) {
+          camera.position.copy(pos);
+          controls.target.copy(target);
+          controls.update();
+          camAnimTargetPos = null;
+          camAnimTargetLook = null;
+        } else {
+          camAnimTargetPos = pos;
+          camAnimTargetLook = target;
+        }
+
+        document.querySelectorAll("[data-cam]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.cam === preset);
+        });
+      }
+      showcaseAPI.setCameraPreset = setCameraPreset;
+
+      document.querySelectorAll("[data-cam]").forEach((btn) => {
+        btn.addEventListener("click", () => setCameraPreset(btn.dataset.cam, false));
+      });
+
+      const btnAutoRotate = document.getElementById("btnAutoRotate");
+      btnAutoRotate.addEventListener("click", () => {
+        autoRotateOn = !autoRotateOn;
+        controls.autoRotate = autoRotateOn;
+        btnAutoRotate.classList.toggle("accent-active", autoRotateOn);
+        btnAutoRotate.textContent = autoRotateOn ? "自動旋轉：開啟" : "自動旋轉：關閉";
+      });
+
+      const btnWireframe = document.getElementById("btnWireframe");
+      function setWireframe(flag) {
+        wireframeOn = !!flag;
+        wireframeOverlays.forEach((m) => { m.visible = wireframeOn; });
+        btnWireframe.classList.toggle("accent-active", wireframeOn);
+        btnWireframe.textContent = wireframeOn ? "線框拓樸：開啟" : "線框拓樸：關閉";
+      }
+      showcaseAPI.setWireframe = setWireframe;
+      btnWireframe.addEventListener("click", () => setWireframe(!wireframeOn));
+
+      function setMood(mood) {
+        viewerCard.classList.remove("mood-white", "mood-night");
+        if (mood === "white") {
+          viewerCard.classList.add("mood-white");
+          keyLight.color.setHex(0xffffff);
+          keyLight.intensity = 1.15;
+          fillLight.color.setHex(0xf3f6ff);
+          fillLight.intensity = 0.55;
+          rimLight.color.setHex(0xffffff);
+          rimLight.intensity = 0.65;
+          hemiLight.intensity = 0.50;
+          renderer.toneMappingExposure = 0.92;
+        } else if (mood === "night") {
+          viewerCard.classList.add("mood-night");
+          keyLight.color.setHex(0xffbe7b);
+          keyLight.intensity = 1.10;
+          fillLight.color.setHex(0x6e85c8);
+          fillLight.intensity = 0.38;
+          rimLight.color.setHex(0x95b8ff);
+          rimLight.intensity = 1.15;
+          hemiLight.intensity = 0.25;
+          renderer.toneMappingExposure = 1.02;
+        } else {
+          keyLight.color.setHex(0xfff5e6);
+          keyLight.intensity = 1.18;
+          fillLight.color.setHex(0xffe6cf);
+          fillLight.intensity = 0.36;
+          rimLight.color.setHex(0xfff8f0);
+          rimLight.intensity = 0.68;
+          hemiLight.intensity = 0.34;
+          renderer.toneMappingExposure = 0.94;
+        }
+        document.querySelectorAll("[data-mood]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.mood === mood);
+        });
+      }
+      showcaseAPI.setMood = setMood;
+      document.querySelectorAll("[data-mood]").forEach((btn) => {
+        btn.addEventListener("click", () => setMood(btn.dataset.mood));
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        if (camAnimTargetPos && camAnimTargetLook) {
+          camera.position.lerp(camAnimTargetPos, 0.12);
+          controls.target.lerp(camAnimTargetLook, 0.12);
+          if (camera.position.distanceTo(camAnimTargetPos) < 0.008) {
+            camera.position.copy(camAnimTargetPos);
+            controls.target.copy(camAnimTargetLook);
+            camAnimTargetPos = null;
+            camAnimTargetLook = null;
+          }
+        }
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      initThree();
+      updatePageUI();
+    })();
+  </script>
+</body>
+</html>
