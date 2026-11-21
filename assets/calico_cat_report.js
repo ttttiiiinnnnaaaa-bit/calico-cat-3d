@@ -19,9 +19,9 @@ window.CALICO_CAT_REPORT = {
     "materials_prefix_MAT": true
   },
   "total_objects": 19,
-  "total_vertices": 63650,
-  "total_faces": 63878,
-  "total_triangles": 126996,
+  "total_vertices": 63720,
+  "total_faces": 63948,
+  "total_triangles": 127136,
   "materials": [
     "MAT_Collar_Red",
     "MAT_Eye_Eyeliner",
@@ -61,8 +61,8 @@ window.CALICO_CAT_REPORT = {
     "height_z": 0.4633,
     "floor_z_min": 0.0
   },
-  "glb_size_bytes": 6940340,
-  "blend_size_bytes": 11729046,
+  "glb_size_bytes": 6928412,
+  "blend_size_bytes": 11719357,
   "meshes": [
     {
       "name": "SM_CalicoCat_Cushion",
@@ -141,8 +141,8 @@ window.CALICO_CAT_REPORT = {
     },
     {
       "name": "SM_CalicoCat_Mouth",
-      "vertices": 580,
-      "triangles": 1148
+      "vertices": 650,
+      "triangles": 1288
     },
     {
       "name": "SM_CalicoCat_Whiskers",
