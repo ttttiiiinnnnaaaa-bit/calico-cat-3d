@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>三花貓咪逗貓棒與撲抓大挑戰 | 3D 小遊戲</title>
+  <link rel="icon" href="data:," />
+  <script src="./libs/three.min.js"></script>
+  <script src="./libs/GLTFLoader.js"></script>
+  <style>
+    :root {
+      --ink: #251d18;
+      --ink-soft: #64564c;
+      --cream: #faf4ec;
+      --surface: rgba(255, 251, 246, 0.90);
+      --accent: #de6b28;
+      --accent-dark: #ba481c;
+      --gold: #e0a726;
+      --border: rgba(56, 38, 26, 0.12);
+      --shadow: 0 14px 36px rgba(48, 30, 16, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 25%, #fff9f1 0%, #f1e1ce 65%, #e4cbb0 100%);
+      color: var(--ink);
+      font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Segoe UI", system-ui, sans-serif;
+      user-select: none;
+    }
+
+    #gameCanvasWrap {
+      position: fixed;
+      inset: 0;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    #gameCanvasWrap canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ---------------- Top HUD ---------------- */
+    .hud-top {
+      position: fixed;
+      top: 14px;
+      left: 18px;
+      right: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .hud-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 15px;
+      border-radius: 999px;
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .back-btn:hover {
+      background: var(--ink);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .hud-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 15px;
+      border-radius: 999px;
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .score-num {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .combo-badge {
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #f3952f, #d94c24);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 800;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .combo-badge.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .timer-pill strong {
+      font-size: 16px;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+    }
+
+    .timer-pill.urgent strong {
+      color: #c82a2a;
+    }
+
+    .icon-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+
+    /* ---------------- Bottom Toy Dock ---------------- */
+    .hud-bottom {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .toy-dock {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      pointer-events: auto;
+    }
+
+    .toy-btn {
+      border: none;
+      background: transparent;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--ink-soft);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.16s ease;
+    }
+
+    .toy-btn:hover {
+      color: var(--ink);
+      background: rgba(38, 30, 24, 0.06);
+    }
+
+    .toy-btn.active {
+      background: linear-gradient(135deg, #2b2320, #463730);
+      color: #fff9f2;
+      box-shadow: 0 4px 12px rgba(36, 26, 20, 0.26);
+    }
+
+    .pet-btn {
+      border: none;
+      background: linear-gradient(135deg, #f37082, #d84b64);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(216, 75, 100, 0.28);
+      transition: transform 0.15s ease;
+    }
+
+    .pet-btn:hover {
+      transform: scale(1.04);
+    }
+
+    .toy-hint {
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(36, 28, 24, 0.72);
+      color: #fff9f2;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* ---------------- Floating Popups ---------------- */
+    #toastBanner {
+      position: fixed;
+      top: 74px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      padding: 7px 18px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #e57a2e, #c84426);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 10px 24px rgba(200, 68, 38, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 25;
+    }
+
+    #toastBanner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ---------------- Overlays (Start & Result) ---------------- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(32, 24, 20, 0.42);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 40;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .modal-card {
+      width: min(490px, 94vw);
+      padding: 28px 30px;
+      border-radius: 26px;
+      background: rgba(255, 251, 246, 0.96);
+      border: 1px solid rgba(58, 42, 32, 0.14);
+      box-shadow: 0 28px 70px rgba(28, 16, 8, 0.28);
+      text-align: center;
+    }
+
+    .modal-eyebrow {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(222, 107, 40, 0.14);
+      color: var(--accent-dark);
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .modal-card h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .modal-card p {
+      margin: 0 0 18px;
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--ink-soft);
+    }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .rule-item {
+      padding: 10px 11px;
+      border-radius: 14px;
+      background: rgba(38, 30, 24, 0.045);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .rule-item strong {
+      display: block;
+      font-size: 12.5px;
+      margin-bottom: 3px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #e57a2e, #c84426);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(200, 68, 38, 0.30);
+      transition: transform 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 12px 20px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .result-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0 20px;
+    }
+
+    .res-box {
+      padding: 12px 8px;
+      border-radius: 14px;
+      background: rgba(38, 30, 24, 0.05);
+    }
+
+    .res-box strong {
+      display: block;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .res-box span {
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      font-weight: 700;
+    }
+
+    @media (max-width: 720px) {
+      .hud-top { flex-wrap: wrap; top: 10px; left: 10px; right: 10px; }
+      .rules-grid { grid-template-columns: 1fr; }
+      .toy-btn { padding: 7px 11px; font-size: 12px; }
+      .pet-btn { padding: 7px 12px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="gameCanvasWrap"></div>
+
+  <!-- Top HUD -->
+  <header class="hud-top">
+    <div class="hud-group">
+      <a class="back-btn" href="./index.html">← 返回 3D 展廳</a>
+      <div class="hud-pill">
+        <span>得分</span>
+        <span class="score-num" id="scoreVal">0</span>
+        <span class="combo-badge" id="comboBadge">×2 COMBO</span>
+      </div>
+      <div class="hud-pill" id="bestPill">最高分：<strong id="bestVal">0</strong></div>
+    </div>
+    <div class="hud-group">
+      <div class="hud-pill timer-pill" id="timerPill">時間：<strong id="timerVal">60s</strong></div>
+      <button class="icon-btn" id="btnSound">🔊 音效：開</button>
+      <button class="icon-btn" id="btnRestartTop">↻ 重開</button>
+    </div>
+  </header>
+
+  <div id="toastBanner"></div>
+
+  <!-- Bottom Toy Dock -->
+  <footer class="hud-bottom">
+    <div class="toy-dock">
+      <button class="toy-btn active" data-toy="wand">🪶 羽毛逗貓棒</button>
+      <button class="toy-btn" data-toy="laser">🔴 雷射紅點</button>
+      <button class="toy-btn" data-toy="yarn">🧶 拋毛線球</button>
+      <button class="pet-btn" id="btnPetCat">💖 摸摸頭</button>
+    </div>
+    <div class="toy-hint" id="toyHint">移動滑鼠／手指引誘三花貓，點擊地板晃動羽毛讓牠高高撲抓！（快捷鍵 1 / 2 / 3）</div>
+  </footer>
+
+  <!-- Start Modal -->
+  <div class="modal-overlay" id="startModal">
+    <div class="modal-card">
+      <span class="modal-eyebrow">3D CALICO CAT · INTERACTIVE PLAYGROUND</span>
+      <h1>🧶 逗貓棒與撲抓大挑戰</h1>
+      <p>
+        我們把剛做好的 Blender 3D 三花貓咪裝上關節動起來了！移動游標或手指逗牠玩，牠會轉頭追視、搖尾巴、衝刺並飛撲上來抓玩具。
+      </p>
+      <div class="rules-grid">
+        <div class="rule-item">
+          <strong>🪶 羽毛逗貓棒</strong>
+          <span>緩緩晃動吸引跟隨，點擊揮舞羽毛讓貓咪跳起來撲抓（+20）</span>
+        </div>
+        <div class="rule-item">
+          <strong>🔴 雷射紅點</strong>
+          <span>移動紅點引導衝刺與連擊（+15），順便撿場上的小魚乾（+25）</span>
+        </div>
+        <div class="rule-item">
+          <strong>🧶 拋毛線球</strong>
+          <span>點擊地板丟出彈跳毛線球，三花貓會飛撲拍飛它（+30）</span>
+        </div>
+      </div>
+      <div id="loadingStatus" style="font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 14px;">
+        正在載入 3D 三花貓咪模型...
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="btnStartChallenge" disabled>🏆 開始 60 秒挑戰</button>
+        <button class="btn-secondary" id="btnStartFree" disabled>🧸 無限療癒模式</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Modal -->
+  <div class="modal-overlay hidden" id="resultModal">
+    <div class="modal-card">
+      <span class="modal-eyebrow">TIME'S UP · 遊戲結算</span>
+      <h1 id="resultRankTitle">🌟 超級逗貓大師！</h1>
+      <p id="resultSubText">三花貓咪玩得超開心，鈴鐺響個不停！</p>
+      <div class="result-stats">
+        <div class="res-box"><strong id="resScore">0</strong><span>總得分</span></div>
+        <div class="res-box"><strong id="resCatches">0</strong><span>成功撲抓</span></div>
+        <div class="res-box"><strong id="resBest">0</strong><span>歷史最高</span></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="btnPlayAgain">🔄 再玩一次 60 秒</button>
+        <button class="btn-secondary" id="btnSwitchFree">🧸 切換無限模式</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // ---------------------------------------------------------------------
+      // 1. Web Audio Synthesizer (Cute Cat Chirp, Bell Jingle, Bounce SFX)
+      // ---------------------------------------------------------------------
+      let audioCtx = null;
+      let soundOn = true;
+
+      function ensureAudio() {
+        if (!soundOn) return null;
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume().catch(() => {});
+        }
+        return audioCtx;
+      }
+
+      function playBellAndMeow(isJoy) {
+        const ctx = ensureAudio();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        // Shiny bell chime
+        [1567.98, 2093.0].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+          gain.gain.setValueAtTime(0.08, now + idx * 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.25);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(now + idx * 0.04);
+          osc.stop(now + idx * 0.04 + 0.26);
+        });
+        // Cute melodic chirp / purr
+        const chirp = ctx.createOscillator();
+        const cg = ctx.createGain();
+        chirp.type = "sine";
+        const f0 = isJoy ? 680 : 580;
+        const f1 = isJoy ? 1040 : 880;
+        chirp.frequency.setValueAtTime(f0, now + 0.02);
+        chirp.frequency.exponentialRampToValueAtTime(f1, now + 0.11);
+        chirp.frequency.exponentialRampToValueAtTime(f0 * 1.08, now + 0.22);
+        cg.gain.setValueAtTime(0.001, now + 0.02);
+        cg.gain.linearRampToValueAtTime(0.11, now + 0.06);
+        cg.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+        chirp.connect(cg).connect(ctx.destination);
+        chirp.start(now + 0.02);
+        chirp.stop(now + 0.25);
+      }
+
+      function playSoftBoing() {
+        const ctx = ensureAudio();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(240, now);
+        osc.frequency.exponentialRampToValueAtTime(420, now + 0.10);
+        gain.gain.setValueAtTime(0.07, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      }
+
+      // ---------------------------------------------------------------------
+      // 2. Game State & UI Refs
+      // ---------------------------------------------------------------------
+      const ARENA_RADIUS = 1.85;
+      const STORAGE_KEY = "calico_cat_game_best_v1";
+
+      const state = {
+        loaded: false,
+        playing: false,
+        mode: "challenge", // "challenge" | "free"
+        activeToy: "wand", // "wand" | "laser" | "yarn"
+        score: 0,
+        catches: 0,
+        combo: 0,
+        comboTimer: 0,
+        timeLeft: 60.0,
+        bestScore: parseInt(localStorage.getItem(STORAGE_KEY) || "0", 10) || 0,
+        pointerNDC: new THREE.Vector2(0, 0),
+        pointerWorld: new THREE.Vector3(0.45, 0.22, 0.45),
+        pointerDown: false,
+        wandDipTimer: 0,
+        pounceTimer: 0,
+        pounceCooldown: 0,
+        joySpinTimer: 0,
+        bonusTimer: 3.0,
+      };
+
+      const scoreEl = document.getElementById("scoreVal");
+      const comboEl = document.getElementById("comboBadge");
+      const bestEl = document.getElementById("bestVal");
+      const timerEl = document.getElementById("timerVal");
+      const timerPill = document.getElementById("timerPill");
+      const toastEl = document.getElementById("toastBanner");
+      const toyHintEl = document.getElementById("toyHint");
+      const startModal = document.getElementById("startModal");
+      const resultModal = document.getElementById("resultModal");
+      bestEl.textContent = String(state.bestScore);
+
+      let toastTimeout = null;
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toastEl.classList.remove("show"), 1400);
+      }
+
+      // ---------------------------------------------------------------------
+      // 3. Three.js Playroom Scene Setup
+      // ---------------------------------------------------------------------
+      const wrap = document.getElementById("gameCanvasWrap");
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 0.94;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      wrap.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+
+      // Studio PMREM Environment
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      pmrem.compileEquirectangularShader();
+      const envScene = new THREE.Scene();
+      envScene.background = new THREE.Color(0x7c6858);
+      const addSoftbox = (hex, sw, sh, pos, rot) => {
+        const p = new THREE.Mesh(
+          new THREE.PlaneGeometry(sw, sh),
+          new THREE.MeshBasicMaterial({ color: hex, side: THREE.DoubleSide })
+        );
+        p.position.set(pos[0], pos[1], pos[2]);
+        p.rotation.set(rot[0], rot[1], rot[2]);
+        envScene.add(p);
+      };
+      addSoftbox(0xfffaf2, 6, 6, [0, 6, 0], [Math.PI / 2, 0, 0]);
+      addSoftbox(0xffe9cf, 4.5, 4.5, [-5, 3, 5], [0, Math.PI / 4, 0]);
+      addSoftbox(0xdbe6ff, 4.5, 4.5, [5, 3, -4], [0, -Math.PI * 0.75, 0]);
+      scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+      pmrem.dispose();
+
+      const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.05, 40);
+      camera.position.set(0, 2.15, 3.15);
+      camera.lookAt(0, 0.22, 0.0);
+
+      // Lighting
+      const hemi = new THREE.HemisphereLight(0xfff5e8, 0xc9ab8d, 0.36);
+      scene.add(hemi);
+
+      const sunLight = new THREE.DirectionalLight(0xfff6ea, 1.15);
+      sunLight.position.set(-2.2, 3.8, 2.6);
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.set(1024, 1024);
+      sunLight.shadow.camera.near = 0.5;
+      sunLight.shadow.camera.far = 12;
+      sunLight.shadow.camera.left = -2.8;
+      sunLight.shadow.camera.right = 2.8;
+      sunLight.shadow.camera.top = 2.8;
+      sunLight.shadow.camera.bottom = -2.8;
+      sunLight.shadow.bias = -0.0005;
+      scene.add(sunLight);
+
+      const rimLight = new THREE.DirectionalLight(0xfff4e0, 0.55);
+      rimLight.position.set(2.0, 2.2, -2.5);
+      scene.add(rimLight);
+
+      // Procedural Warm Wood Floor + Playmat Rug
+      function createWoodFloorTexture() {
+        const c = document.createElement("canvas");
+        c.width = 512;
+        c.height = 512;
+        const g = c.getContext("2d");
+        g.fillStyle = "#e7ceb1";
+        g.fillRect(0, 0, 512, 512);
+        const plankH = 64;
+        for (let row = 0; row < 8; row++) {
+          const y = row * plankH;
+          const shade = (row % 2 === 0) ? "#e8cfb3" : "#e1c4a4";
+          g.fillStyle = shade;
+          g.fillRect(0, y, 512, plankH - 2);
+          g.fillStyle = "rgba(120, 82, 52, 0.14)";
+          g.fillRect(0, y + plankH - 2, 512, 2);
+          const xJoint = ((row * 173) % 440) + 32;
+          g.fillRect(xJoint, y, 2, plankH);
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(4, 4);
+        tex.encoding = THREE.sRGBEncoding;
+        return tex;
+      }
+
+      const floorMesh = new THREE.Mesh(
+        new THREE.CircleGeometry(7.5, 64),
+        new THREE.MeshStandardMaterial({ map: createWoodFloorTexture(), roughness: 0.78, metalness: 0.02 })
+      );
+      floorMesh.rotation.x = -Math.PI / 2;
+      floorMesh.receiveShadow = true;
+      scene.add(floorMesh);
+
+      // Cozy cream-sage circular playmat rug
+      const rugMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(ARENA_RADIUS + 0.08, ARENA_RADIUS + 0.12, 0.016, 64),
+        new THREE.MeshStandardMaterial({ color: 0xf6efe4, roughness: 0.92 })
+      );
+      rugMesh.position.y = 0.008;
+      rugMesh.receiveShadow = true;
+      scene.add(rugMesh);
+
+      const rugBorder = new THREE.Mesh(
+        new THREE.RingGeometry(ARENA_RADIUS - 0.02, ARENA_RADIUS + 0.04, 64),
+        new THREE.MeshStandardMaterial({ color: 0xdfb996, roughness: 0.85, side: THREE.DoubleSide })
+      );
+      rugBorder.rotation.x = -Math.PI / 2;
+      rugBorder.position.y = 0.018;
+      scene.add(rugBorder);
+
+      // Invisible raycast floor plane
+      const rayFloorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.02);
+      const raycaster = new THREE.Raycaster();
+
+      // ---------------------------------------------------------------------
+      // 4. Interactive 3D Toys (Feather Wand, Laser Dot, Yarn Balls, Bonus)
+      // ---------------------------------------------------------------------
+      // 4A. Feather Wand Toy
+      const wandGroup = new THREE.Group();
+      scene.add(wandGroup);
+
+      const stickMat = new THREE.MeshStandardMaterial({ color: 0xc58e58, roughness: 0.45 });
+      const stickMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.016, 1.35, 12), stickMat);
+      stickMesh.rotation.x = Math.PI / 2;
+      stickMesh.position.set(0.18, 0.36, 0.70);
+      stickMesh.rotation.y = 0.25;
+      stickMesh.castShadow = true;
+      wandGroup.add(stickMesh);
+
+      const wandTipGroup = new THREE.Group();
+      wandGroup.add(wandTipGroup);
+
+      const cordMat = new THREE.LineBasicMaterial({ color: 0x5c4738 });
+      const cordGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, -0.25, 0)]);
+      const cordLine = new THREE.Line(cordGeo, cordMat);
+      wandGroup.add(cordLine);
+
+      const featherColors = [0xe86b38, 0xf2b632, 0x3fa7a3];
+      featherColors.forEach((hex, idx) => {
+        const fMesh = new THREE.Mesh(
+          new THREE.ConeGeometry(0.032, 0.14, 8),
+          new THREE.MeshStandardMaterial({ color: hex, roughness: 0.65 })
+        );
+        fMesh.position.set((idx - 1) * 0.024, -0.04, 0);
+        fMesh.rotation.z = (idx - 1) * 0.35;
+        fMesh.rotation.x = 0.25;
+        fMesh.castShadow = true;
+        wandTipGroup.add(fMesh);
+      });
+      const wandBell = new THREE.Mesh(
+        new THREE.SphereGeometry(0.022, 14, 12),
+        new THREE.MeshStandardMaterial({ color: 0xeeb934, metalness: 0.88, roughness: 0.22 })
+      );
+      wandBell.position.y = 0.02;
+      wandTipGroup.add(wandBell);
+
+      // 4B. Laser Dot Toy
+      const laserGroup = new THREE.Group();
+      laserGroup.visible = false;
+      scene.add(laserGroup);
+      const laserCore = new THREE.Mesh(
+        new THREE.CircleGeometry(0.045, 24),
+        new THREE.MeshBasicMaterial({ color: 0xff2828 })
+      );
+      laserCore.rotation.x = -Math.PI / 2;
+      laserCore.position.y = 0.022;
+      laserGroup.add(laserCore);
+      const laserHalo = new THREE.Mesh(
+        new THREE.RingGeometry(0.05, 0.11, 24),
+        new THREE.MeshBasicMaterial({ color: 0xff6247, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+      );
+      laserHalo.rotation.x = -Math.PI / 2;
+      laserHalo.position.y = 0.021;
+      laserGroup.add(laserHalo);
+
+      // 4C. Yarn Balls + Bonus Collectibles + Heart Particles
+      const yarnBalls = [];
+      const yarnPalette = [0xe67332, 0xe86d8a, 0xebb134, 0x4ca39d];
+
+      function createYarnBallTexture(hexColor) {
+        const c = document.createElement("canvas");
+        c.width = 128;
+        c.height = 128;
+        const g = c.getContext("2d");
+        g.fillStyle = "#" + hexColor.toString(16).padStart(6, "0");
+        g.fillRect(0, 0, 128, 128);
+        g.strokeStyle = "rgba(255,255,255,0.28)";
+        g.lineWidth = 3;
+        for (let i = -32; i < 160; i += 10) {
+          g.beginPath();
+          g.moveTo(0, i);
+          g.lineTo(128, i + 36);
+          g.stroke();
+          g.beginPath();
+          g.moveTo(i, 0);
+          g.lineTo(i + 24, 128);
+          g.stroke();
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.encoding = THREE.sRGBEncoding;
+        return tex;
+      }
+
+      function spawnYarnBall(targetPos) {
+        const colorHex = yarnPalette[yarnBalls.length % yarnPalette.length];
+        const radius = 0.085;
+        const mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(radius, 20, 16),
+          new THREE.MeshStandardMaterial({ map: createYarnBallTexture(colorHex), roughness: 0.85 })
+        );
+        mesh.castShadow = true;
+        mesh.position.set(targetPos.x * 0.45, 0.45, Math.min(ARENA_RADIUS, targetPos.z + 0.75));
+        scene.add(mesh);
+
+        const dir = new THREE.Vector3(targetPos.x - mesh.position.x, 0, targetPos.z - mesh.position.z);
+        if (dir.length() < 0.05) dir.set(0, 0, -1);
+        const speed = Math.min(2.6, dir.length() * 2.1);
+        dir.normalize();
+        yarnBalls.push({
+          mesh,
+          radius,
+          vx: dir.x * speed,
+          vy: 1.9,
+          vz: dir.z * speed,
+          swatCooldown: 0,
+          life: 16.0,
+        });
+        playSoftBoing();
+
+        if (yarnBalls.length > 5) {
+          const old = yarnBalls.shift();
+          scene.remove(old.mesh);
+        }
+      }
+
+      const bonusItems = [];
+      function spawnBonusItem() {
+        if (bonusItems.length >= 2) return;
+        const angle = Math.random() * Math.PI * 2;
+        const r = 0.45 + Math.random() * (ARENA_RADIUS - 0.75);
+        const isGoldYarn = Math.random() > 0.6;
+        const group = new THREE.Group();
+        group.position.set(Math.cos(angle) * r, 0.14, Math.sin(angle) * r);
+
+        if (isGoldYarn) {
+          const ball = new THREE.Mesh(
+            new THREE.SphereGeometry(0.078, 16, 14),
+            new THREE.MeshStandardMaterial({ color: 0xf3b834, roughness: 0.35, metalness: 0.25, emissive: 0x6b4304, emissiveIntensity: 0.35 })
+          );
+          ball.castShadow = true;
+          group.add(ball);
+        } else {
+          // Cute stylized golden fish treat
+          const body = new THREE.Mesh(
+            new THREE.SphereGeometry(0.065, 14, 10),
+            new THREE.MeshStandardMaterial({ color: 0xf59d3d, roughness: 0.4, emissive: 0x552905, emissiveIntensity: 0.28 })
+          );
+          body.scale.set(1.45, 0.72, 0.42);
+          body.castShadow = true;
+          group.add(body);
+          const tail = new THREE.Mesh(
+            new THREE.ConeGeometry(0.048, 0.075, 4),
+            new THREE.MeshStandardMaterial({ color: 0xf59d3d, roughness: 0.4 })
+          );
+          tail.rotation.z = -Math.PI / 2;
+          tail.position.x = -0.095;
+          group.add(tail);
+        }
+
+        const aura = new THREE.Mesh(
+          new THREE.RingGeometry(0.11, 0.15, 24),
+          new THREE.MeshBasicMaterial({ color: 0xf3b834, transparent: true, opacity: 0.6, side: THREE.DoubleSide })
+        );
+        aura.rotation.x = -Math.PI / 2;
+        aura.position.y = -0.11;
+        group.add(aura);
+
+        scene.add(group);
+        bonusItems.push({
+          group,
+          points: isGoldYarn ? 40 : 25,
+          label: isGoldYarn ? "🧶 黃金毛線球 +40" : "🐟 美味小魚乾 +25",
+          age: 0,
+        });
+      }
+
+      const particles = [];
+      function spawnHeartBurst(pos, count) {
+        const colors = [0xff6b8b, 0xffb833, 0xff7b42, 0xffffff];
+        for (let i = 0; i < count; i++) {
+          const p = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.032, 0),
+            new THREE.MeshBasicMaterial({ color: colors[i % colors.length] })
+          );
+          p.position.copy(pos);
+          p.position.y += 0.22;
+          const a = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+          const sp = 0.6 + Math.random() * 1.1;
+          scene.add(p);
+          particles.push({
+            mesh: p,
+            vx: Math.cos(a) * sp,
+            vy: 1.4 + Math.random() * 1.1,
+            vz: Math.sin(a) * sp,
+            life: 0.75 + Math.random() * 0.3,
+            maxLife: 1.0,
+          });
+        }
+      }
+
+      // ---------------------------------------------------------------------
+      // 5. Articulated 3D Calico Cat Rig (Loaded from Blender GLB)
+      // ---------------------------------------------------------------------
+      const catRoot = new THREE.Group();
+      scene.add(catRoot);
+
+      const catBodyGroup = new THREE.Group();
+      const headPivot = new THREE.Group();
+      headPivot.position.set(0, 0.282, 0.015);
+      const tailPivot = new THREE.Group();
+      tailPivot.position.set(0, 0.122, -0.095);
+      const pawFLPivot = new THREE.Group();
+      pawFLPivot.position.set(-0.036, 0.21, 0.058);
+      const pawFRPivot = new THREE.Group();
+      pawFRPivot.position.set(0.036, 0.21, 0.058);
+      const pawBLPivot = new THREE.Group();
+      pawBLPivot.position.set(-0.076, 0.14, -0.005);
+      const pawBRPivot = new THREE.Group();
+      pawBRPivot.position.set(0.076, 0.14, -0.005);
+      const bellPivot = new THREE.Group();
+      bellPivot.position.set(0, 0.264, 0.091);
+
+      catRoot.add(catBodyGroup, headPivot, tailPivot, pawFLPivot, pawFRPivot, pawBLPivot, pawBRPivot, bellPivot);
+
+      const catPhysics = {
+        x: 0,
+        z: 0,
+        yaw: 0,
+        speed: 0,
+        stridePhase: 0,
+        hopY: 0,
+        hopVy: 0,
+        headYaw: 0,
+        headPitch: 0,
+      };
+
+      function buildCatFromGLB(gltf) {
+        const root = gltf.scene;
+        root.updateMatrixWorld(true);
+
+        // Compute paw floor min Y so the cat stands flush on rug without cushion
+        let pawMinY = 0.088;
+        const allMeshes = [];
+        root.traverse((obj) => {
+          if (obj.isMesh) {
+            obj.castShadow = true;
+            obj.receiveShadow = true;
+            allMeshes.push(obj);
+          }
+        });
+
+        // Separate cushion prop vs cat anatomical parts
+        const cushionMeshes = [];
+        const catMeshes = [];
+        allMeshes.forEach((m) => {
+          const n = m.name + "|" + (m.parent ? m.parent.name : "");
+          if (n.includes("Cushion")) {
+            cushionMeshes.push(m);
+          } else {
+            catMeshes.push(m);
+            if (n.includes("Paw_FL")) {
+              const b = new THREE.Box3().setFromObject(m);
+              pawMinY = b.min.y;
+            }
+          }
+        });
+
+        // Place cozy cushion prop at back-left corner of rug (move AFTER attach!)
+        const cushionGroup = new THREE.Group();
+        scene.add(cushionGroup);
+        cushionGroup.updateMatrixWorld(true);
+        cushionMeshes.forEach((m) => cushionGroup.attach(m));
+        cushionGroup.position.set(-1.18, 0.016, -0.95);
+
+        // Shift cat pivots down by pawMinY so paws rest right on rug top (0.016)
+        const floorOffset = -pawMinY + 0.016;
+        [catBodyGroup, headPivot, tailPivot, pawFLPivot, pawFRPivot, pawBLPivot, pawBRPivot, bellPivot].forEach((p) => {
+          p.position.y += floorOffset;
+        });
+        catRoot.updateMatrixWorld(true);
+
+        // Attach each mesh into its exact anatomical pivot while preserving world transforms
+        catMeshes.forEach((m) => {
+          // Offset mesh in world temporarily by floorOffset so attach() lands right in shifted pivots
+          const wp = new THREE.Vector3();
+          const wq = new THREE.Quaternion();
+          const ws = new THREE.Vector3();
+          m.matrixWorld.decompose(wp, wq, ws);
+          scene.attach(m);
+          m.position.y += floorOffset;
+          m.updateMatrixWorld(true);
+
+          const fullName = m.name + "|" + (m.parent ? m.parent.name : "");
+          if (fullName.includes("Head") || fullName.includes("Ear") || fullName.includes("Eye") || fullName.includes("Nose") || fullName.includes("Mouth") || fullName.includes("Whiskers")) {
+            headPivot.attach(m);
+          } else if (fullName.includes("Tail")) {
+            tailPivot.attach(m);
+          } else if (fullName.includes("Paw_FL")) {
+            pawFLPivot.attach(m);
+          } else if (fullName.includes("Paw_FR")) {
+            pawFRPivot.attach(m);
+          } else if (fullName.includes("Paw_BL")) {
+            pawBLPivot.attach(m);
+          } else if (fullName.includes("Paw_BR")) {
+            pawBRPivot.attach(m);
+          } else if (fullName.includes("Bell")) {
+            bellPivot.attach(m);
+          } else {
+            catBodyGroup.attach(m);
+          }
+        });
+
+        // Scale cat slightly up (~1.22x) for delightful visibility on the playmat
+        catRoot.scale.setScalar(1.22);
+
+        state.loaded = true;
+        document.getElementById("loadingStatus").textContent = "3D 三花貓咪就緒，選一種模式開始逗貓！";
+        document.getElementById("btnStartChallenge").disabled = false;
+        document.getElementById("btnStartFree").disabled = false;
+      }
+
+      const loader = new THREE.GLTFLoader();
+      function loadModel() {
+        const tryEmbedded = () => {
+          if (window.CALICO_CAT_GLB_B64) {
+            const bin = atob(window.CALICO_CAT_GLB_B64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            loader.parse(bytes.buffer, "", buildCatFromGLB, (err) => {
+              document.getElementById("loadingStatus").textContent = "模型解析失敗：" + err;
+            });
+          }
+        };
+        if (location.protocol === "file:" && window.CALICO_CAT_GLB_B64) {
+          tryEmbedded();
+        } else {
+          loader.load("./assets/calico_cat.glb", buildCatFromGLB, undefined, () => tryEmbedded());
+        }
+      }
+      loadModel();
+
+      // ---------------------------------------------------------------------
+      // 6. Scoring, Modes, Toys & Input Handlers
+      // ---------------------------------------------------------------------
+      function addScore(pts, msg, burstPos) {
+        state.catches += 1;
+        state.combo = Math.min(5, state.combo + 1);
+        state.comboTimer = 3.2;
+        const mult = state.combo >= 5 ? 5 : state.combo >= 3 ? 3 : state.combo >= 2 ? 2 : 1;
+        const gained = pts * mult;
+        state.score += gained;
+        scoreEl.textContent = String(state.score);
+        if (state.score > state.bestScore) {
+          state.bestScore = state.score;
+          bestEl.textContent = String(state.bestScore);
+          localStorage.setItem(STORAGE_KEY, String(state.bestScore));
+        }
+        if (mult > 1) {
+          comboEl.textContent = `×${mult} COMBO`;
+          comboEl.classList.add("visible");
+        } else {
+          comboEl.classList.remove("visible");
+        }
+        showToast(mult > 1 ? `${msg} (×${mult} 連擊 +${gained})` : msg);
+        spawnHeartBurst(burstPos || catRoot.position, 10);
+        playBellAndMeow(mult >= 3);
+      }
+
+      function selectToy(toy) {
+        state.activeToy = toy;
+        wandGroup.visible = toy === "wand";
+        laserGroup.visible = toy === "laser";
+        document.querySelectorAll("[data-toy]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.toy === toy);
+        });
+        if (toy === "wand") {
+          toyHintEl.textContent = "移動滑鼠／手指引誘三花貓，點擊揮舞羽毛讓牠飛撲抓！（快捷鍵 1 / 2 / 3）";
+        } else if (toy === "laser") {
+          toyHintEl.textContent = "滑動雷射紅點帶三花貓高速衝刺、搶吃場上小魚乾！（快捷鍵 1 / 2 / 3）";
+        } else {
+          toyHintEl.textContent = "點擊地板任何位置丟出毛線球，三花貓會追過去一掌拍飛！（快捷鍵 1 / 2 / 3）";
+        }
+      }
+
+      function petCat() {
+        if (!state.loaded) return;
+        state.joySpinTimer = 0.85;
+        catPhysics.hopVy = 2.0;
+        spawnHeartBurst(catRoot.position, 14);
+        playBellAndMeow(true);
+        if (state.playing) {
+          addScore(10, "💖 呼嚕呼嚕摸摸頭 +10", catRoot.position);
+        } else {
+          showToast("💖 三花貓咪開心地喵了一聲～");
+        }
+      }
+
+      function startGame(mode) {
+        ensureAudio();
+        state.mode = mode;
+        state.playing = true;
+        state.score = 0;
+        state.catches = 0;
+        state.combo = 0;
+        state.comboTimer = 0;
+        state.timeLeft = 60.0;
+        state.bonusTimer = 2.0;
+        catPhysics.x = 0;
+        catPhysics.z = 0;
+        catPhysics.yaw = 0;
+        scoreEl.textContent = "0";
+        comboEl.classList.remove("visible");
+        timerPill.classList.remove("urgent");
+        timerEl.textContent = mode === "challenge" ? "60s" : "∞ 無限";
+
+        bonusItems.forEach((b) => scene.remove(b.group));
+        bonusItems.length = 0;
+        yarnBalls.forEach((y) => scene.remove(y.mesh));
+        yarnBalls.length = 0;
+
+        startModal.classList.add("hidden");
+        resultModal.classList.add("hidden");
+        spawnBonusItem();
+      }
+
+      function endChallenge() {
+        state.playing = false;
+        document.getElementById("resScore").textContent = String(state.score);
+        document.getElementById("resCatches").textContent = String(state.catches);
+        document.getElementById("resBest").textContent = String(state.bestScore);
+        let title = "🐾 溫柔鏟屎官";
+        if (state.score >= 600) title = "👑 傳奇逗貓宗師！";
+        else if (state.score >= 300) title = "🌟 超級逗貓達人！";
+        else if (state.score >= 120) title = "🧶 活力貓咪玩伴！";
+        document.getElementById("resultRankTitle").textContent = title;
+        resultModal.classList.remove("hidden");
+      }
+
+      document.getElementById("btnStartChallenge").addEventListener("click", () => startGame("challenge"));
+      document.getElementById("btnStartFree").addEventListener("click", () => startGame("free"));
+      document.getElementById("btnPlayAgain").addEventListener("click", () => startGame("challenge"));
+      document.getElementById("btnSwitchFree").addEventListener("click", () => startGame("free"));
+      document.getElementById("btnRestartTop").addEventListener("click", () => startGame(state.mode));
+      document.getElementById("btnPetCat").addEventListener("click", petCat);
+
+      const btnSound = document.getElementById("btnSound");
+      btnSound.addEventListener("click", () => {
+        soundOn = !soundOn;
+        btnSound.textContent = soundOn ? "🔊 音效：開" : "🔇 音效：關";
+      });
+
+      document.querySelectorAll("[data-toy]").forEach((btn) => {
+        btn.addEventListener("click", () => selectToy(btn.dataset.toy));
+      });
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "1") selectToy("wand");
+        if (e.key === "2") selectToy("laser");
+        if (e.key === "3") selectToy("yarn");
+      });
+
+      function updatePointerRay(clientX, clientY) {
+        state.pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
+        state.pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(state.pointerNDC, camera);
+        const hit = new THREE.Vector3();
+        if (raycaster.ray.intersectPlane(rayFloorPlane, hit)) {
+          const r = Math.hypot(hit.x, hit.z);
+          if (r > ARENA_RADIUS) {
+            hit.x *= ARENA_RADIUS / r;
+            hit.z *= ARENA_RADIUS / r;
+          }
+          state.pointerWorld.copy(hit);
+        }
+      }
+
+      wrap.addEventListener("pointermove", (e) => updatePointerRay(e.clientX, e.clientY));
+      wrap.addEventListener("pointerdown", (e) => {
+        ensureAudio();
+        updatePointerRay(e.clientX, e.clientY);
+        state.pointerDown = true;
+        if (!state.playing) return;
+        if (state.activeToy === "wand") {
+          state.wandDipTimer = 0.42;
+          playSoftBoing();
+        } else if (state.activeToy === "yarn") {
+          spawnYarnBall(state.pointerWorld);
+        } else if (state.activeToy === "laser") {
+          // Clicking in laser mode triggers an eager pounce hop if close
+          const d = Math.hypot(state.pointerWorld.x - catPhysics.x, state.pointerWorld.z - catPhysics.z);
+          if (d < 0.85 && state.pounceCooldown <= 0) {
+            state.pounceTimer = 0.45;
+            state.pounceCooldown = 0.55;
+            catPhysics.hopVy = 2.3;
+          }
+        }
+      });
+      wrap.addEventListener("pointerup", () => { state.pointerDown = false; });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Expose state for verification
+      window.__CAT_GAME__ = {
+        get loaded() { return state.loaded; },
+        get playing() { return state.playing; },
+        get score() { return state.score; },
+        get activeToy() { return state.activeToy; },
+        get catPos() { return { x: catPhysics.x, z: catPhysics.z }; },
+        startChallenge: () => startGame("challenge"),
+        selectToy,
+        petCat,
+      };
+
+      // ---------------------------------------------------------------------
+      // 7. Main Animation & Cat AI Loop
+      // ---------------------------------------------------------------------
+      const wandSmoothPos = new THREE.Vector3(0.45, 0.36, 0.45);
+      let prevTime = performance.now();
+
+      function shortestAngleDiff(a, b) {
+        let d = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
+        if (d < -Math.PI) d += Math.PI * 2;
+        return d;
+      }
+
+      function animate(now) {
+        requestAnimationFrame(animate);
+        const dt = Math.min(0.05, (now - prevTime) / 1000);
+        prevTime = now;
+        const t = now / 1000;
+
+        // Timer & combo countdown
+        if (state.playing) {
+          if (state.mode === "challenge") {
+            state.timeLeft = Math.max(0, state.timeLeft - dt);
+            const sec = Math.ceil(state.timeLeft);
+            timerEl.textContent = sec + "s";
+            timerPill.classList.toggle("urgent", sec <= 10);
+            if (state.timeLeft <= 0) endChallenge();
+          }
+          if (state.comboTimer > 0) {
+            state.comboTimer -= dt;
+            if (state.comboTimer <= 0) {
+              state.combo = 0;
+              comboEl.classList.remove("visible");
+            }
+          }
+          state.bonusTimer -= dt;
+          if (state.bonusTimer <= 0) {
+            state.bonusTimer = 5.5 + Math.random() * 3.0;
+            spawnBonusItem();
+          }
+        }
+
+        // Update Feather Wand 3D motion
+        if (state.wandDipTimer > 0) state.wandDipTimer -= dt;
+        const wandTargetY = state.wandDipTimer > 0
+          ? 0.14 + 0.08 * Math.sin(t * 26)
+          : 0.34 + 0.05 * Math.sin(t * 3.5);
+        wandSmoothPos.lerp(new THREE.Vector3(state.pointerWorld.x, wandTargetY, state.pointerWorld.z), 0.22);
+        wandTipGroup.position.copy(wandSmoothPos);
+        wandTipGroup.rotation.z = Math.sin(t * 9.0) * 0.24;
+        wandTipGroup.rotation.x = Math.cos(t * 7.5) * 0.18;
+
+        const handleBase = new THREE.Vector3(wandSmoothPos.x * 0.55 + 0.45, 0.72, wandSmoothPos.z * 0.55 + 0.65);
+        stickMesh.position.lerpVectors(handleBase, new THREE.Vector3(wandSmoothPos.x, wandSmoothPos.y + 0.28, wandSmoothPos.z), 0.52);
+        stickMesh.lookAt(wandSmoothPos.x, wandSmoothPos.y + 0.26, wandSmoothPos.z);
+        stickMesh.rotateX(Math.PI / 2);
+        const cordTop = new THREE.Vector3(wandSmoothPos.x, wandSmoothPos.y + 0.26, wandSmoothPos.z);
+        cordGeo.setFromPoints([cordTop, wandSmoothPos]);
+
+        // Update Laser Dot pulse
+        laserGroup.position.set(state.pointerWorld.x, 0, state.pointerWorld.z);
+        const lScale = 1.0 + 0.22 * Math.sin(t * 14.0);
+        laserHalo.scale.setScalar(lScale);
+
+        // Update Yarn Balls physics
+        for (let i = yarnBalls.length - 1; i >= 0; i--) {
+          const yb = yarnBalls[i];
+          if (yb.swatCooldown > 0) yb.swatCooldown -= dt;
+          yb.vy -= 9.5 * dt;
+          yb.mesh.position.x += yb.vx * dt;
+          yb.mesh.position.y += yb.vy * dt;
+          yb.mesh.position.z += yb.vz * dt;
+          yb.mesh.rotation.x += yb.vz * 6.0 * dt;
+          yb.mesh.rotation.z -= yb.vx * 6.0 * dt;
+
+          const floorY = yb.radius + 0.016;
+          if (yb.mesh.position.y < floorY) {
+            yb.mesh.position.y = floorY;
+            if (Math.abs(yb.vy) > 0.35) {
+              yb.vy = -yb.vy * 0.55;
+            } else {
+              yb.vy = 0;
+            }
+            yb.vx *= Math.pow(0.28, dt);
+            yb.vz *= Math.pow(0.28, dt);
+          }
+          const br = Math.hypot(yb.mesh.position.x, yb.mesh.position.z);
+          if (br > ARENA_RADIUS) {
+            const nx = yb.mesh.position.x / br;
+            const nz = yb.mesh.position.z / br;
+            yb.mesh.position.x = nx * ARENA_RADIUS;
+            yb.mesh.position.z = nz * ARENA_RADIUS;
+            const dot = yb.vx * nx + yb.vz * nz;
+            if (dot > 0) {
+              yb.vx -= 1.7 * dot * nx;
+              yb.vz -= 1.7 * dot * nz;
+            }
+          }
+          yb.life -= dt;
+          if (yb.life <= 0) {
+            scene.remove(yb.mesh);
+            yarnBalls.splice(i, 1);
+          }
+        }
+
+        // Update Bonus Collectibles + Cat pickup check
+        for (let i = bonusItems.length - 1; i >= 0; i--) {
+          const b = bonusItems[i];
+          b.age += dt;
+          b.group.rotation.y += dt * 2.2;
+          b.group.position.y = 0.14 + Math.sin(t * 4.2 + i) * 0.035;
+          const dist = Math.hypot(b.group.position.x - catPhysics.x, b.group.position.z - catPhysics.z);
+          if (state.playing && dist < 0.34) {
+            addScore(b.points, b.label, b.group.position);
+            scene.remove(b.group);
+            bonusItems.splice(i, 1);
+          } else if (b.age > 12.0) {
+            scene.remove(b.group);
+            bonusItems.splice(i, 1);
+          }
+        }
+
+        // Cat AI Target Selection & Locomotion
+        if (state.loaded) {
+          if (state.pounceCooldown > 0) state.pounceCooldown -= dt;
+          if (state.pounceTimer > 0) state.pounceTimer -= dt;
+          if (state.joySpinTimer > 0) state.joySpinTimer -= dt;
+
+          const targetPos = new THREE.Vector3(state.pointerWorld.x, 0.25, state.pointerWorld.z);
+          let targetYarn = null;
+          if (state.activeToy === "yarn" && yarnBalls.length > 0) {
+            // Chase closest active yarn ball
+            let bestDist = 1e9;
+            yarnBalls.forEach((yb) => {
+              const d = Math.hypot(yb.mesh.position.x - catPhysics.x, yb.mesh.position.z - catPhysics.z);
+              if (d < bestDist) {
+                bestDist = d;
+                targetYarn = yb;
+              }
+            });
+            if (targetYarn) {
+              targetPos.copy(targetYarn.mesh.position);
+            }
+          } else if (state.activeToy === "wand") {
+            targetPos.copy(wandSmoothPos);
+          }
+
+          const dx = targetPos.x - catPhysics.x;
+          const dz = targetPos.z - catPhysics.z;
+          const dist = Math.hypot(dx, dz);
+
+          const desiredYaw = Math.atan2(dx, dz);
+          if (state.joySpinTimer > 0) {
+            catPhysics.yaw += dt * 10.5;
+          } else if (dist > 0.06) {
+            const diff = shortestAngleDiff(catPhysics.yaw, desiredYaw);
+            catPhysics.yaw += diff * Math.min(1.0, dt * 8.5);
+          }
+
+          // Move toward active target
+          let moveSpeed = 0;
+          const stopDist = state.activeToy === "wand" ? 0.24 : 0.14;
+          const maxSpd = state.activeToy === "laser" ? 2.55 : (state.activeToy === "yarn" ? 2.30 : 1.75);
+          if (state.playing && dist > stopDist && state.joySpinTimer <= 0) {
+            moveSpeed = Math.min(maxSpd, dist * 3.0);
+            catPhysics.x += (dx / dist) * moveSpeed * dt;
+            catPhysics.z += (dz / dist) * moveSpeed * dt;
+          } else if (!state.playing) {
+            // Gentle idle preview rotation when modal open
+            catPhysics.yaw = Math.sin(t * 0.7) * 0.45;
+          }
+          catPhysics.speed = THREE.MathUtils.lerp(catPhysics.speed, moveSpeed, 0.18);
+
+          // Clamp inside rug arena
+          const cr = Math.hypot(catPhysics.x, catPhysics.z);
+          if (cr > ARENA_RADIUS - 0.15) {
+            catPhysics.x *= (ARENA_RADIUS - 0.15) / cr;
+            catPhysics.z *= (ARENA_RADIUS - 0.15) / cr;
+          }
+
+          // Pounce / Catch Trigger Logic
+          if (state.playing && state.pounceCooldown <= 0) {
+            if (state.activeToy === "wand" && dist < 0.46 && (state.wandDipTimer > 0 || dist < 0.28)) {
+              state.pounceTimer = 0.48;
+              state.pounceCooldown = 0.65;
+              catPhysics.hopVy = 2.45;
+              addScore(20, "🪶 撲中羽毛逗貓棒 +20", wandSmoothPos);
+            } else if (state.activeToy === "laser" && dist < 0.22) {
+              state.pounceTimer = 0.36;
+              state.pounceCooldown = 0.52;
+              catPhysics.hopVy = 1.65;
+              addScore(15, "🔴 抓到雷射紅點 +15", targetPos);
+            } else if (state.activeToy === "yarn" && targetYarn && targetYarn.swatCooldown <= 0 && dist < 0.30) {
+              state.pounceTimer = 0.42;
+              state.pounceCooldown = 0.48;
+              catPhysics.hopVy = 2.1;
+              targetYarn.swatCooldown = 0.85;
+              // Bat the yarn ball across the playmat!
+              const swatAng = Math.atan2(targetYarn.mesh.position.z - catPhysics.z, targetYarn.mesh.position.x - catPhysics.x) + (Math.random() - 0.5) * 0.8;
+              targetYarn.vx = Math.cos(swatAng) * 2.5;
+              targetYarn.vz = Math.sin(swatAng) * 2.5;
+              targetYarn.vy = 2.4;
+              addScore(30, "🧶 拍飛毛線球 +30", targetYarn.mesh.position);
+            }
+          }
+
+          // Vertical Hop & Trot Stride Bounce
+          if (catPhysics.hopY > 0 || catPhysics.hopVy > 0) {
+            catPhysics.hopVy -= 10.5 * dt;
+            catPhysics.hopY += catPhysics.hopVy * dt;
+            if (catPhysics.hopY <= 0) {
+              catPhysics.hopY = 0;
+              catPhysics.hopVy = 0;
+            }
+          }
+          catPhysics.stridePhase += (2.5 + catPhysics.speed * 7.2) * dt;
+          const trotBob = catPhysics.speed > 0.15 ? Math.abs(Math.sin(catPhysics.stridePhase)) * 0.042 : 0;
+
+          catRoot.position.set(catPhysics.x, catPhysics.hopY + trotBob, catPhysics.z);
+          catRoot.rotation.y = catPhysics.yaw;
+          // Slight pounce tilt forward
+          const targetPitch = state.pounceTimer > 0 ? 0.22 : (catPhysics.speed > 0.2 ? 0.08 : 0);
+          catRoot.rotation.x = THREE.MathUtils.lerp(catRoot.rotation.x, targetPitch, 0.22);
+
+          // Head tracking toward toy
+          const relYaw = THREE.MathUtils.clamp(shortestAngleDiff(catPhysics.yaw, desiredYaw), -0.72, 0.72);
+          const relPitch = THREE.MathUtils.clamp(-(targetPos.y - 0.28) * 0.9, -0.42, 0.24);
+          catPhysics.headYaw = THREE.MathUtils.lerp(catPhysics.headYaw, state.playing ? relYaw : Math.sin(t * 1.4) * 0.18, 0.16);
+          catPhysics.headPitch = THREE.MathUtils.lerp(catPhysics.headPitch, state.playing ? relPitch : Math.sin(t * 2.0) * 0.06, 0.14);
+          headPivot.rotation.y = catPhysics.headYaw;
+          headPivot.rotation.x = catPhysics.headPitch;
+          headPivot.rotation.z = Math.sin(t * 2.5) * 0.04 + (state.pounceTimer > 0 ? 0.12 : 0);
+
+          // Tail happy swish (faster when excited/chasing!)
+          const tailSpeed = 4.0 + catPhysics.speed * 3.8 + (state.pounceTimer > 0 ? 7.0 : 0);
+          tailPivot.rotation.y = Math.sin(t * tailSpeed) * (0.28 + Math.min(0.25, catPhysics.speed * 0.12));
+          tailPivot.rotation.x = Math.cos(t * tailSpeed * 0.5) * 0.08 + (state.pounceTimer > 0 ? 0.18 : 0);
+
+          // Front paws swat / running stride
+          if (state.pounceTimer > 0) {
+            pawFLPivot.rotation.x = THREE.MathUtils.lerp(pawFLPivot.rotation.x, -0.78, 0.35);
+            pawFRPivot.rotation.x = THREE.MathUtils.lerp(pawFRPivot.rotation.x, -0.78, 0.35);
+          } else if (catPhysics.speed > 0.15) {
+            pawFLPivot.rotation.x = Math.sin(catPhysics.stridePhase) * 0.36;
+            pawFRPivot.rotation.x = -Math.sin(catPhysics.stridePhase) * 0.36;
+          } else {
+            pawFLPivot.rotation.x = THREE.MathUtils.lerp(pawFLPivot.rotation.x, 0, 0.2);
+            pawFRPivot.rotation.x = THREE.MathUtils.lerp(pawFRPivot.rotation.x, 0, 0.2);
+          }
+
+          // Bell swing jingle
+          bellPivot.rotation.z = Math.sin(catPhysics.stridePhase * 1.3) * (0.06 + catPhysics.speed * 0.12);
+          bellPivot.rotation.x = Math.cos(catPhysics.stridePhase) * (0.04 + catPhysics.speed * 0.08);
+
+          // Gentle camera follow
+          camera.position.x = THREE.MathUtils.lerp(camera.position.x, catPhysics.x * 0.28, 0.05);
+          camera.lookAt(catPhysics.x * 0.22, 0.24, catPhysics.z * 0.18);
+        }
+
+        // Update particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const pt = particles[i];
+          pt.vy -= 4.5 * dt;
+          pt.mesh.position.x += pt.vx * dt;
+          pt.mesh.position.y += pt.vy * dt;
+          pt.mesh.position.z += pt.vz * dt;
+          pt.mesh.rotation.y += 5.0 * dt;
+          pt.life -= dt;
+          pt.mesh.scale.setScalar(Math.max(0.01, pt.life / pt.maxLife));
+          if (pt.life <= 0) {
+            scene.remove(pt.mesh);
+            particles.splice(i, 1);
+          }
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      requestAnimationFrame(animate);
+    })();
+  </script>
+</body>
+</html>

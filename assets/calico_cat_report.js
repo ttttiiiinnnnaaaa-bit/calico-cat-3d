@@ -61,8 +61,8 @@ window.CALICO_CAT_REPORT = {
     "height_z": 0.4854,
     "floor_z_min": 0.0
   },
-  "glb_size_bytes": 7027072,
-  "blend_size_bytes": 11734662,
+  "glb_size_bytes": 6998296,
+  "blend_size_bytes": 11707695,
   "meshes": [
     {
       "name": "SM_CalicoCat_Cushion",
