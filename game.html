@@ -3,20 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>三花貓跳跳樂 3D · 跳一跳挑戰 | Calico Cat 3D</title>
+  <title>客廳接魚乾・閃小黃瓜 | 3D 三花貓小遊戲</title>
   <link rel="icon" href="data:," />
   <script src="./libs/three.min.js"></script>
   <script src="./libs/GLTFLoader.js"></script>
   <style>
     :root {
-      --ink: #261d17;
-      --ink-soft: #6c5b50;
+      --ink: #271d16;
+      --ink-soft: #6c5b4f;
       --surface: rgba(255, 251, 246, 0.90);
       --accent: #de6b28;
-      --accent-deep: #be4719;
-      --gold: #f0ad26;
+      --accent-deep: #bf4618;
       --border: rgba(58, 38, 26, 0.12);
-      --shadow: 0 12px 32px rgba(48, 30, 16, 0.16);
+      --shadow: 0 10px 28px rgba(48, 30, 16, 0.16);
     }
 
     * {
@@ -31,7 +30,7 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: radial-gradient(circle at 50% 22%, #fffaf2 0%, #f5e4cd 58%, #e6caa7 100%);
+      background: radial-gradient(circle at 50% 18%, #fffbf3 0%, #f5e2c8 60%, #e7caa3 100%);
       color: var(--ink);
       font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Segoe UI", system-ui, sans-serif;
       user-select: none;
@@ -44,7 +43,7 @@
       inset: 0;
       z-index: 1;
       touch-action: none;
-      cursor: pointer;
+      cursor: ew-resize;
     }
 
     #gameViewport canvas {
@@ -54,16 +53,16 @@
       touch-action: none;
     }
 
-    /* ---------------- Top HUD ---------------- */
+    /* ---------------- Compact Top HUD (Desktop + Mobile Safe) ---------------- */
     .hud-top {
       position: fixed;
-      top: max(12px, env(safe-area-inset-top));
-      left: max(12px, env(safe-area-inset-left));
-      right: max(12px, env(safe-area-inset-right));
+      top: max(10px, env(safe-area-inset-top));
+      left: max(10px, env(safe-area-inset-left));
+      right: max(10px, env(safe-area-inset-right));
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
       z-index: 20;
       pointer-events: none;
     }
@@ -71,23 +70,23 @@
     .hud-side {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       pointer-events: auto;
-      min-width: 0;
+      flex-shrink: 0;
     }
 
     .back-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      height: 40px;
-      padding: 0 14px;
+      gap: 5px;
+      height: 38px;
+      padding: 0 13px;
       border-radius: 999px;
       background: var(--surface);
       backdrop-filter: blur(10px);
       border: 1px solid var(--border);
       color: var(--ink);
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 800;
       text-decoration: none;
       white-space: nowrap;
@@ -98,110 +97,117 @@
     .back-btn:hover {
       background: var(--ink);
       color: #fff;
-      transform: translateY(-1px);
     }
 
-    .score-center {
+    .hud-center {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 4px;
-      pointer-events: none;
-    }
-
-    .score-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 18px;
-      border-radius: 999px;
-      background: var(--surface);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      white-space: nowrap;
-    }
-
-    .score-label {
-      font-size: 11.5px;
-      font-weight: 800;
-      color: var(--ink-soft);
-      letter-spacing: 0.04em;
-    }
-
-    .score-val {
-      font-size: 24px;
-      line-height: 1;
-      font-weight: 900;
-      color: var(--accent);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .combo-pill {
-      padding: 3px 11px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #f3952f, #d94c24);
-      color: #fff;
-      font-size: 11.5px;
-      font-weight: 900;
-      letter-spacing: 0.03em;
-      box-shadow: 0 4px 12px rgba(217, 76, 36, 0.35);
-      opacity: 0;
-      transform: translateY(-4px) scale(0.86);
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      white-space: nowrap;
-    }
-
-    .combo-pill.visible {
-      opacity: 1;
-      transform: translateY(0) scale(1);
+      justify-content: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      min-width: 0;
     }
 
     .hud-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      height: 40px;
-      padding: 0 13px;
+      gap: 5px;
+      height: 38px;
+      padding: 0 12px;
       border-radius: 999px;
       background: var(--surface);
       backdrop-filter: blur(10px);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 800;
       white-space: nowrap;
-    }
-
-    .hud-pill strong {
-      color: var(--accent-deep);
       font-variant-numeric: tabular-nums;
     }
 
+    .score-num {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--accent-deep);
+    }
+
+    .timer-pill.urgent {
+      background: #fff0ee;
+      border-color: #df4d3b;
+      color: #b72318;
+      animation: pulseUrgent 0.65s infinite alternate;
+    }
+
+    @keyframes pulseUrgent {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); }
+    }
+
+    .hearts-pill {
+      letter-spacing: 1px;
+      font-size: 14px;
+    }
+
     .icon-btn {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       border: 1px solid var(--border);
       background: var(--surface);
       backdrop-filter: blur(10px);
-      font-size: 16px;
+      font-size: 15px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       box-shadow: var(--shadow);
-      transition: transform 0.14s ease;
     }
 
-    .icon-btn:active {
-      transform: scale(0.94);
+    /* ---------------- Status Badges & Popups ---------------- */
+    .status-stack {
+      position: fixed;
+      top: calc(max(10px, env(safe-area-inset-top)) + 48px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 19;
+      pointer-events: none;
     }
 
-    /* ---------------- Floating Popups ---------------- */
+    .status-chip {
+      padding: 4px 13px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      display: none;
+      white-space: nowrap;
+    }
+
+    .status-chip.combo {
+      background: linear-gradient(135deg, #f3982e, #dd4d23);
+    }
+
+    .status-chip.fever {
+      background: linear-gradient(135deg, #eab322, #d47c0f);
+      animation: pulseUrgent 0.45s infinite alternate;
+    }
+
+    .status-chip.rush {
+      background: linear-gradient(135deg, #d84b70, #a82447);
+    }
+
+    .status-chip.visible {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     #floatPopup {
       position: fixed;
-      top: 24%;
+      top: 25%;
       left: 50%;
       transform: translate(-50%, 0) scale(0.85);
       padding: 8px 18px;
@@ -210,24 +216,24 @@
       color: #fff8ef;
       font-size: 16px;
       font-weight: 900;
-      letter-spacing: 0.03em;
       white-space: nowrap;
-      box-shadow: 0 10px 26px rgba(32, 20, 12, 0.26);
+      box-shadow: 0 10px 24px rgba(32, 20, 12, 0.26);
       pointer-events: none;
       opacity: 0;
       z-index: 25;
-      transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    #floatPopup.perfect {
-      background: linear-gradient(135deg, #f3a126, #df5322);
-      color: #fff;
-      font-size: 18px;
+    #floatPopup.good {
+      background: linear-gradient(135deg, #eb862a, #d44d22);
     }
 
-    #floatPopup.bonus {
-      background: linear-gradient(135deg, #279d6c, #187a52);
-      color: #fff;
+    #floatPopup.fever {
+      background: linear-gradient(135deg, #f1b627, #dd7d15);
+    }
+
+    #floatPopup.bad {
+      background: linear-gradient(135deg, #c93333, #8f1d1d);
     }
 
     #floatPopup.show {
@@ -235,96 +241,52 @@
       transform: translate(-50%, -14px) scale(1);
     }
 
-    /* ---------------- Bottom Power Dock ---------------- */
+    /* ---------------- Bottom Control Bar ---------------- */
     .hud-bottom {
       position: fixed;
-      bottom: max(14px, env(safe-area-inset-bottom));
+      bottom: max(12px, env(safe-area-inset-bottom));
       left: 50%;
       transform: translateX(-50%);
-      width: min(390px, calc(100vw - 28px));
+      width: min(420px, calc(100vw - 24px));
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      z-index: 20;
+      gap: 6px;
+      z-index: 18;
       pointer-events: none;
     }
 
-    .charge-card {
+    .touch-rail {
       width: 100%;
-      padding: 10px 14px;
-      border-radius: 18px;
-      background: var(--surface);
-      backdrop-filter: blur(12px);
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 251, 246, 0.82);
+      backdrop-filter: blur(10px);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      pointer-events: auto;
-      cursor: pointer;
-      transition: transform 0.12s ease;
-    }
-
-    .charge-card.charging {
-      transform: scale(0.985);
-      border-color: rgba(222, 107, 40, 0.45);
-    }
-
-    .charge-top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      text-align: center;
       font-size: 12px;
       font-weight: 800;
       color: var(--ink-soft);
-    }
-
-    .charge-top-row strong {
-      color: var(--accent-deep);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .charge-track {
-      width: 100%;
-      height: 11px;
-      border-radius: 999px;
-      background: rgba(38, 29, 23, 0.09);
-      overflow: hidden;
-      padding: 2px;
-    }
-
-    .charge-fill {
-      width: 0%;
-      height: 100%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #f3b547 0%, #e97524 62%, #d83923 100%);
-      transition: width 0.04s linear;
-    }
-
-    .hint-chip {
-      padding: 5px 14px;
-      border-radius: 999px;
-      background: rgba(38, 28, 22, 0.74);
-      color: #fff8f0;
-      font-size: 11.5px;
-      font-weight: 700;
-      text-align: center;
       white-space: nowrap;
     }
 
-    /* ---------------- Modals (Start / Game Over / Loader) ---------------- */
+    .touch-rail strong {
+      color: var(--accent-deep);
+    }
+
+    /* ---------------- Modals ---------------- */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(32, 22, 16, 0.42);
+      background: rgba(32, 22, 16, 0.44);
       backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 16px;
       z-index: 40;
-      transition: opacity 0.24s ease;
+      transition: opacity 0.22s ease;
     }
 
     .modal-backdrop.hidden {
@@ -333,8 +295,8 @@
     }
 
     .modal-card {
-      width: min(440px, 100%);
-      padding: 24px 22px;
+      width: min(450px, 100%);
+      padding: 22px 20px;
       border-radius: 24px;
       background: #fffcf7;
       border: 1px solid var(--border);
@@ -352,12 +314,12 @@
       color: var(--accent-deep);
       font-size: 11.5px;
       font-weight: 800;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .modal-card h1 {
       margin: 0 0 8px;
-      font-size: 25px;
+      font-size: 24px;
       font-weight: 900;
       letter-spacing: -0.02em;
     }
@@ -365,42 +327,46 @@
     .modal-card p {
       margin: 0 0 14px;
       font-size: 13.5px;
-      line-height: 1.6;
+      line-height: 1.55;
       color: var(--ink-soft);
     }
 
-    .rule-grid {
+    .legend-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       text-align: left;
     }
 
-    .rule-box {
-      padding: 10px 9px;
+    .legend-box {
+      padding: 10px;
       border-radius: 14px;
       background: #f8eee2;
-      font-size: 11.5px;
-      line-height: 1.45;
+      font-size: 12px;
+      line-height: 1.5;
     }
 
-    .rule-box strong {
+    .legend-box.danger {
+      background: #fdedec;
+      color: #6b221e;
+    }
+
+    .legend-box strong {
       display: block;
       font-size: 12.5px;
       margin-bottom: 2px;
-      color: var(--ink);
     }
 
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 9px;
-      margin: 14px 0 18px;
+      gap: 8px;
+      margin: 14px 0 16px;
     }
 
     .stat-tile {
-      padding: 11px 8px;
+      padding: 10px 6px;
       border-radius: 14px;
       background: #f7ece0;
     }
@@ -430,12 +396,6 @@
       font-weight: 900;
       cursor: pointer;
       box-shadow: 0 8px 22px rgba(198, 68, 34, 0.34);
-      transition: transform 0.14s ease, box-shadow 0.14s ease;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 11px 26px rgba(198, 68, 34, 0.42);
     }
 
     .btn-primary:active {
@@ -444,15 +404,11 @@
 
     .btn-secondary-link {
       display: inline-block;
-      margin-top: 12px;
+      margin-top: 11px;
       font-size: 13px;
       font-weight: 800;
       color: var(--ink-soft);
       text-decoration: none;
-    }
-
-    .btn-secondary-link:hover {
-      color: var(--ink);
     }
 
     .loader-pill {
@@ -464,44 +420,50 @@
       font-weight: 800;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 560px) {
       .back-btn {
-        height: 36px;
-        padding: 0 11px;
-        font-size: 12px;
-      }
-
-      .score-pill {
-        padding: 5px 14px;
-      }
-
-      .score-val {
-        font-size: 20px;
-      }
-
-      .hud-pill {
-        height: 36px;
+        height: 34px;
         padding: 0 10px;
         font-size: 11.5px;
       }
 
-      .icon-btn {
-        width: 36px;
-        height: 36px;
-        font-size: 15px;
+      .hud-pill {
+        height: 34px;
+        padding: 0 9px;
+        font-size: 11.5px;
+        gap: 4px;
       }
 
-      .rule-grid {
+      .score-num {
+        font-size: 15.5px;
+      }
+
+      .hearts-pill {
+        font-size: 12px;
+        letter-spacing: 0;
+      }
+
+      .icon-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+      }
+
+      .legend-grid {
         grid-template-columns: 1fr;
-        gap: 6px;
       }
 
       .modal-card {
-        padding: 20px 16px;
+        padding: 18px 15px;
       }
 
       .modal-card h1 {
-        font-size: 22px;
+        font-size: 21px;
+      }
+
+      .touch-rail {
+        font-size: 11px;
+        padding: 7px 10px;
       }
     }
   </style>
@@ -509,86 +471,79 @@
 <body>
   <div id="gameViewport"></div>
 
-  <!-- Top HUD -->
+  <!-- Compact Top HUD -->
   <header class="hud-top">
     <div class="hud-side">
-      <a class="back-btn" href="./index.html" id="backLink">← 回展廳</a>
+      <a class="back-btn" href="./index.html">← 回展廳</a>
     </div>
 
-    <div class="score-center">
-      <div class="score-pill">
-        <span class="score-label">SCORE</span>
-        <span class="score-val" id="scoreVal">0</span>
-      </div>
-      <div class="combo-pill" id="comboPill">✨ PERFECT ×1</div>
+    <div class="hud-center">
+      <div class="hud-pill">🏆 <span class="score-num" id="scoreVal">0</span></div>
+      <div class="hud-pill timer-pill" id="timerPill">⏱️ <strong id="timerVal">45</strong>s</div>
+      <div class="hud-pill hearts-pill" id="heartsVal">❤️❤️❤️</div>
     </div>
 
     <div class="hud-side">
-      <div class="hud-pill">🏆 <strong id="bestVal">0</strong></div>
       <button class="icon-btn" id="btnSound" title="音效開關" aria-label="音效開關">🔊</button>
     </div>
   </header>
 
-  <div id="floatPopup">✨ PERFECT!</div>
+  <div class="status-stack">
+    <span class="status-chip combo" id="comboChip">🔥 COMBO ×2</span>
+    <span class="status-chip fever" id="feverChip">🔔 雙倍時間 5s</span>
+    <span class="status-chip rush" id="rushChip">🎉 最後狂歡雨！</span>
+  </div>
 
-  <!-- Bottom Tactile Charge Dock -->
+  <div id="floatPopup">+10</div>
+
   <div class="hud-bottom">
-    <div class="charge-card" id="chargeCard">
-      <div class="charge-top-row">
-        <span id="chargeActionLabel">🐾 按住蓄力・放開起跳</span>
-        <strong id="chargePctLabel">0%</strong>
-      </div>
-      <div class="charge-track">
-        <div class="charge-fill" id="chargeFill"></div>
-      </div>
+    <div class="touch-rail">
+      <strong>👆 左右滑動螢幕</strong>（或鍵盤 <strong>← / → / A / D</strong>）操控三花貓！
     </div>
-    <div class="hint-chip" id="hintChip">按住畫面或空白鍵蓄力 · 跳到中心觸發連擊加倍！</div>
   </div>
 
   <!-- Loader Modal -->
   <div class="modal-backdrop" id="loaderModal">
-    <div class="loader-pill" id="loaderText">正在召喚可愛 3D 三花貓咪與紙箱關卡...</div>
+    <div class="loader-pill" id="loaderText">正在布置客廳與召喚 3D 三花貓咪...</div>
   </div>
 
   <!-- Start Modal -->
   <div class="modal-backdrop hidden" id="startModal">
     <div class="modal-card">
-      <div class="modal-badge">📦 BLENDER 3D 跳跳樂</div>
-      <h1>三花貓跳跳樂 🐾</h1>
+      <div class="modal-badge">🍣 45 秒快節奏接物大作戰</div>
+      <h1>客廳接魚乾・閃小黃瓜 🐱</h1>
       <p>
-        親自操控圓滾滾的三花貓咪！按住蓄力、算好距離放開起跳，在紙箱、軟墊、書疊與貓跳台之間接力向前！
+        滑動手指或用鍵盤帶三花貓左右快跑！接住美味零食拿高分，千萬小心會把貓嚇飛的小黃瓜！
       </p>
-      <div class="rule-grid">
-        <div class="rule-box">
-          <strong>👆 一指就能玩</strong>
-          手機按住螢幕、電腦按住左鍵或空白鍵即可蓄力起跳。
+      <div class="legend-grid">
+        <div class="legend-box">
+          <strong>✅ 美味加分（快接住！）</strong>
+          🐟 小魚乾 <b>+10</b> · 🍤 炸蝦 <b>+30</b><br />
+          🔔 金鈴鐺 <b>雙倍分數 5 秒！</b>
         </div>
-        <div class="rule-box">
-          <strong>✨ 完美中心連擊</strong>
-          跳正中紅心連續 +2、+4、+6… 分數飆升還有華麗轉圈！
-        </div>
-        <div class="rule-box">
-          <strong>🐟 驚喜點心盒</strong>
-          偶爾會出現小魚乾 (+5) 與金鈴鐺 (+10)，記得接住它！
+        <div class="legend-box danger">
+          <strong>⚠️ 貓咪天敵（快閃開！）</strong>
+          🥒 小黃瓜（碰到嚇得彈飛 -1❤️）<br />
+          💧 小水滴（討厭濕答答 -1❤️）
         </div>
       </div>
-      <button class="btn-primary" id="btnStartGame">開始跳跳大挑戰！</button>
-      <a class="btn-secondary-link" href="./index.html">← 先回 3D 三花貓展廳逛逛</a>
+      <button class="btn-primary" id="btnStartGame">開始接魚乾大作戰！</button>
+      <a class="btn-secondary-link" href="./index.html">← 回 3D 三花貓互動展廳</a>
     </div>
   </div>
 
-  <!-- Game Over Modal -->
-  <div class="modal-backdrop hidden" id="gameOverModal">
+  <!-- Result / Game Over Modal -->
+  <div class="modal-backdrop hidden" id="resultModal">
     <div class="modal-card">
-      <div class="modal-badge" id="gameOverBadge">🐾 喵嗚！踩空啦</div>
-      <h1 id="gameOverTitle">三花貓翻滾落地！</h1>
-      <p id="gameOverSubtitle">再調整一點蓄力節奏，一定能跳得更遠！</p>
+      <div class="modal-badge" id="resultBadge">⏱️ 時間到！肚子吃飽飽</div>
+      <h1 id="resultTitle">三花貓滿載而歸！</h1>
+      <p id="resultSub">最後十秒的點心雨是不是超過癮？</p>
       <div class="stats-row">
         <div class="stat-tile"><strong id="finalScore">0</strong><span>本局分數</span></div>
         <div class="stat-tile"><strong id="finalBest">0</strong><span>最高紀錄</span></div>
-        <div class="stat-tile"><strong id="finalMaxStreak">0</strong><span>最大連擊</span></div>
+        <div class="stat-tile"><strong id="finalCaught">0</strong><span>接到零食</span></div>
       </div>
-      <button class="btn-primary" id="btnRestartGame">再跳一局 🐾</button>
+      <button class="btn-primary" id="btnRestartGame">再玩一次（45秒）🐾</button>
       <a class="btn-secondary-link" href="./index.html">← 返回 3D 三花貓互動展廳</a>
     </div>
   </div>
@@ -597,31 +552,31 @@
     (function () {
       "use strict";
 
-      const BEST_KEY = "calico_hop_best_v1";
+      const BEST_KEY = "calico_catch_best_v1";
+      const LANE_LIMIT = 2.35;
+      const MATCH_DURATION = 45.0;
+
       const viewportEl = document.getElementById("gameViewport");
       const scoreValEl = document.getElementById("scoreVal");
-      const bestValEl = document.getElementById("bestVal");
-      const comboPillEl = document.getElementById("comboPill");
+      const timerPillEl = document.getElementById("timerPill");
+      const timerValEl = document.getElementById("timerVal");
+      const heartsValEl = document.getElementById("heartsVal");
+      const comboChipEl = document.getElementById("comboChip");
+      const feverChipEl = document.getElementById("feverChip");
+      const rushChipEl = document.getElementById("rushChip");
       const floatPopupEl = document.getElementById("floatPopup");
-      const chargeCardEl = document.getElementById("chargeCard");
-      const chargeActionEl = document.getElementById("chargeActionLabel");
-      const chargePctEl = document.getElementById("chargePctLabel");
-      const chargeFillEl = document.getElementById("chargeFill");
-      const hintChipEl = document.getElementById("hintChip");
 
       const loaderModal = document.getElementById("loaderModal");
       const loaderText = document.getElementById("loaderText");
       const startModal = document.getElementById("startModal");
-      const gameOverModal = document.getElementById("gameOverModal");
+      const resultModal = document.getElementById("resultModal");
       const btnSound = document.getElementById("btnSound");
 
       // ---------------------------------------------------------------------
-      // 1. Web Audio Synthesizer (Tactile Pop / Bell / Perfect Chimes)
+      // 1. Cozy Web Audio SFX
       // ---------------------------------------------------------------------
       let audioCtx = null;
       let soundOn = true;
-      let chargeOsc = null;
-      let chargeGain = null;
 
       function ensureAudio() {
         if (!soundOn) return null;
@@ -635,7 +590,7 @@
         return audioCtx;
       }
 
-      function playTone(freq, duration, type = "sine", vol = 0.14, delay = 0, endFreq = null) {
+      function tone(freq, dur, type = "sine", vol = 0.14, delay = 0, endFreq = null) {
         if (!soundOn) return;
         const ctx = ensureAudio();
         if (!ctx) return;
@@ -645,87 +600,47 @@
         osc.type = type;
         osc.frequency.setValueAtTime(freq, t);
         if (endFreq !== null) {
-          osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), t + duration);
+          osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFreq), t + dur);
         }
         g.gain.setValueAtTime(0.0001, t);
         g.gain.linearRampToValueAtTime(vol, t + 0.015);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
         osc.connect(g);
         g.connect(ctx.destination);
         osc.start(t);
-        osc.stop(t + duration + 0.02);
+        osc.stop(t + dur + 0.02);
       }
 
-      function startChargeHum() {
-        if (!soundOn) return;
-        const ctx = ensureAudio();
-        if (!ctx || chargeOsc) return;
-        chargeOsc = ctx.createOscillator();
-        chargeGain = ctx.createGain();
-        chargeOsc.type = "triangle";
-        chargeOsc.frequency.setValueAtTime(220, ctx.currentTime);
-        chargeGain.gain.setValueAtTime(0.001, ctx.currentTime);
-        chargeGain.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 0.06);
-        chargeOsc.connect(chargeGain);
-        chargeGain.connect(ctx.destination);
-        chargeOsc.start();
+      function sfxCatch(isBig) {
+        tone(587.33, 0.12, "sine", 0.14, 0);
+        tone(880.0, 0.16, "triangle", 0.13, 0.05);
+        if (isBig) tone(1174.66, 0.22, "sine", 0.13, 0.10);
       }
 
-      function updateChargeHum(ratio) {
-        if (chargeOsc && audioCtx) {
-          chargeOsc.frequency.setTargetAtTime(220 + ratio * 340, audioCtx.currentTime, 0.03);
-        }
+      function sfxFever() {
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
+          tone(f, 0.20, "triangle", 0.13, idx * 0.055);
+        });
       }
 
-      function stopChargeHum() {
-        if (chargeOsc && chargeGain && audioCtx) {
-          try {
-            chargeGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.02);
-            chargeOsc.stop(audioCtx.currentTime + 0.06);
-          } catch (_) {}
-        }
-        chargeOsc = null;
-        chargeGain = null;
+      function sfxCucumberScare() {
+        // Hilarious startled spring boing!
+        tone(320, 0.22, "sawtooth", 0.09, 0, 960);
+        tone(560, 0.25, "triangle", 0.12, 0.08, 260);
       }
 
-      function sfxJump() {
-        stopChargeHum();
-        playTone(340, 0.16, "sine", 0.14, 0, 620);
-      }
-
-      function sfxLandGood() {
-        playTone(280, 0.12, "triangle", 0.14, 0, 190);
-        playTone(523.25, 0.14, "sine", 0.08, 0.02);
-      }
-
-      function sfxLandPerfect(streak) {
-        const scale = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66];
-        const base = scale[Math.min(scale.length - 1, Math.max(0, streak - 1))];
-        playTone(base, 0.22, "sine", 0.16, 0);
-        playTone(base * 1.25, 0.24, "triangle", 0.11, 0.05);
-      }
-
-      function sfxBonus() {
-        playTone(659.25, 0.14, "triangle", 0.13, 0);
-        playTone(880.0, 0.16, "triangle", 0.14, 0.06);
-        playTone(1174.66, 0.22, "sine", 0.13, 0.12);
-      }
-
-      function sfxFail() {
-        stopChargeHum();
-        playTone(460, 0.22, "sawtooth", 0.08, 0, 180);
-        playTone(220, 0.28, "triangle", 0.11, 0.12, 110);
+      function sfxWater() {
+        tone(440, 0.16, "sine", 0.12, 0, 170);
       }
 
       btnSound.addEventListener("click", (e) => {
         e.stopPropagation();
         soundOn = !soundOn;
-        if (!soundOn) stopChargeHum();
         btnSound.textContent = soundOn ? "🔊" : "🔇";
       });
 
       // ---------------------------------------------------------------------
-      // 2. Three.js Scene, Lighting, Warm Living Room Backdrop
+      // 2. Three.js Cozy Sunlit Living Room Stage & Responsive Camera
       // ---------------------------------------------------------------------
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -738,9 +653,9 @@
       viewportEl.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
-      scene.fog = new THREE.Fog(0xf2dfc6, 24, 54);
+      scene.fog = new THREE.Fog(0xf4dfc4, 24, 52);
 
-      // Soft studio PMREM environment for glossy cat eyes & golden treats
+      // Soft studio PMREM environment for clean warm sheen
       const pmrem = new THREE.PMREMGenerator(renderer);
       pmrem.compileEquirectangularShader();
       const envScene = new THREE.Scene();
@@ -760,393 +675,171 @@
       scene.environment = pmrem.fromScene(envScene, 0.04).texture;
       pmrem.dispose();
 
-      const camera = new THREE.PerspectiveCamera(34, window.innerWidth / window.innerHeight, 0.1, 90);
-      const camCurrentTarget = new THREE.Vector3(0.8, 0.22, 0.0);
-      const camDesiredTarget = new THREE.Vector3(0.8, 0.22, 0.0);
+      const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 80);
 
-      function getResponsiveCamOffset() {
-        const aspect = window.innerWidth / Math.max(1, window.innerHeight);
-        // On narrow mobile portrait screens, step camera farther back so BOTH current & next platforms fit comfortably
-        const zoom = aspect < 0.92 ? Math.min(2.15, Math.max(1.06, 0.88 / Math.max(0.42, aspect))) : 1.0;
-        return new THREE.Vector3(-5.5 * zoom, 5.85 * zoom, 5.5 * zoom);
+      function updateResponsiveCamera() {
+        const w = window.innerWidth;
+        const h = Math.max(1, window.innerHeight);
+        const aspect = w / h;
+        camera.aspect = aspect;
+        if (aspect < 0.98) {
+          camera.fov = 48;
+          const halfFovRad = THREE.MathUtils.degToRad(24);
+          const camZ = Math.min(15.5, Math.max(8.2, 2.75 / (Math.max(0.40, aspect) * Math.tan(halfFovRad))));
+          camera.position.set(0, 2.85, camZ);
+          camera.lookAt(0, 2.25, 0);
+        } else {
+          camera.fov = 40;
+          camera.position.set(0, 2.45, 7.9);
+          camera.lookAt(0, 1.80, 0);
+        }
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
       }
+      updateResponsiveCamera();
 
-      scene.add(new THREE.HemisphereLight(0xfff6ea, 0xc49f7d, 0.42));
+      // Three-point warm sunlit living room lighting
+      scene.add(new THREE.HemisphereLight(0xfff6eb, 0xc9a480, 0.42));
 
-      const sunLight = new THREE.DirectionalLight(0xfff5e7, 1.06);
-      sunLight.position.set(-4.5, 9.5, 6.0);
+      const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.08);
+      sunLight.position.set(-4.2, 9.2, 6.4);
       sunLight.castShadow = true;
       sunLight.shadow.mapSize.set(1024, 1024);
       sunLight.shadow.camera.near = 1;
-      sunLight.shadow.camera.far = 28;
-      sunLight.shadow.camera.left = -8;
-      sunLight.shadow.camera.right = 8;
-      sunLight.shadow.camera.top = 8;
-      sunLight.shadow.camera.bottom = -8;
+      sunLight.shadow.camera.far = 24;
+      sunLight.shadow.camera.left = -5;
+      sunLight.shadow.camera.right = 5;
+      sunLight.shadow.camera.top = 7;
+      sunLight.shadow.camera.bottom = -4;
       sunLight.shadow.bias = -0.0005;
       scene.add(sunLight);
-      scene.add(sunLight.target);
 
-      const rimLight = new THREE.DirectionalLight(0xfff1de, 0.42);
-      rimLight.position.set(5.5, 4.5, -5.0);
+      const rimLight = new THREE.DirectionalLight(0xfff0dc, 0.45);
+      rimLight.position.set(4.5, 4.0, -5.0);
       scene.add(rimLight);
 
-      // Warm cozy subtle parquet floor plane (follows player smoothly)
-      const FLOOR_Y = -0.68;
-      function makeFloorTexture() {
+      // Warm Honey Oak Living Room Floor
+      function makeWoodFloorTexture() {
         const c = document.createElement("canvas");
         c.width = 512;
         c.height = 512;
         const ctx = c.getContext("2d");
-        ctx.fillStyle = "#f2dfc7";
+        ctx.fillStyle = "#e8c8a0";
         ctx.fillRect(0, 0, 512, 512);
-        ctx.strokeStyle = "rgba(182, 138, 96, 0.14)";
-        ctx.lineWidth = 2;
-        const step = 64;
-        for (let i = 0; i <= 512; i += step) {
-          ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
+        const plankH = 64;
+        for (let row = 0; row < 8; row++) {
+          ctx.fillStyle = row % 2 === 0 ? "rgba(210, 165, 118, 0.16)" : "rgba(255, 240, 220, 0.12)";
+          ctx.fillRect(0, row * plankH, 512, plankH);
+          ctx.fillStyle = "rgba(138, 92, 52, 0.16)";
+          ctx.fillRect(0, row * plankH, 512, 2);
+          const seam = ((row * 173) % 420) + 40;
+          ctx.fillRect(seam, row * plankH, 2, plankH);
         }
         const tex = new THREE.CanvasTexture(c);
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(22, 22);
+        tex.repeat.set(9, 9);
         tex.encoding = THREE.sRGBEncoding;
         return tex;
       }
 
-      const floorTex = makeFloorTexture();
       const floorMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(80, 80),
-        new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.94, metalness: 0.0 })
+        new THREE.PlaneGeometry(42, 42),
+        new THREE.MeshStandardMaterial({ map: makeWoodFloorTexture(), roughness: 0.86 })
       );
       floorMesh.rotation.x = -Math.PI / 2;
-      floorMesh.position.y = FLOOR_Y;
       floorMesh.receiveShadow = true;
       scene.add(floorMesh);
 
-      // ---------------------------------------------------------------------
-      // 3. Shared Textures & Platform Builders (5 Cozy Themes)
-      // ---------------------------------------------------------------------
-      function makePawStampTexture() {
-        const c = document.createElement("canvas");
-        c.width = 256;
-        c.height = 256;
-        const ctx = c.getContext("2d");
-        ctx.fillStyle = "#d9a570";
-        ctx.fillRect(0, 0, 256, 256);
-        // Box center flap seam
-        ctx.strokeStyle = "rgba(128, 78, 36, 0.25)";
-        ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.moveTo(0, 128); ctx.lineTo(256, 128); ctx.stroke();
-        // Packing tape strip
-        ctx.fillStyle = "#f3e1c4";
-        ctx.fillRect(102, 0, 52, 256);
-        // Subtle paw icon in corner
-        ctx.fillStyle = "rgba(116, 68, 32, 0.34)";
-        const drawCircle = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
-        drawCircle(52, 198, 13);
-        drawCircle(36, 178, 5.5);
-        drawCircle(52, 173, 5.5);
-        drawCircle(68, 178, 5.5);
-        const tex = new THREE.CanvasTexture(c);
-        tex.encoding = THREE.sRGBEncoding;
-        return tex;
-      }
-      const boxTopTex = makePawStampTexture();
-
-      const platformList = [];
-      const activeRipples = [];
-      const activeParticles = [];
-
-      function createCollectible(type) {
-        const g = new THREE.Group();
-        if (type === "bell") {
-          const goldMat = new THREE.MeshStandardMaterial({ color: 0xf4bd2e, roughness: 0.22, metalness: 0.82, emissive: 0x623b00, emissiveIntensity: 0.25 });
-          const orb = new THREE.Mesh(new THREE.SphereGeometry(0.14, 18, 14), goldMat);
-          const ridge = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.022, 8, 20), goldMat);
-          ridge.rotation.x = Math.PI / 2;
-          const ring = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.015, 8, 16), goldMat);
-          ring.position.y = 0.16;
-          g.add(orb, ridge, ring);
-          g.userData = { points: 10, label: "🔔 金鈴鐺 +10" };
-        } else {
-          // Cute golden-orange fish biscuit
-          const fishMat = new THREE.MeshStandardMaterial({ color: 0xf39337, roughness: 0.34, metalness: 0.12, emissive: 0x5c2400, emissiveIntensity: 0.18 });
-          const body = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12), fishMat);
-          body.scale.set(1.35, 0.72, 0.48);
-          const tail = new THREE.Mesh(new THREE.ConeGeometry(0.095, 0.14, 4), fishMat);
-          tail.rotation.z = -Math.PI / 2;
-          tail.scale.set(1.0, 1.0, 0.45);
-          tail.position.x = -0.20;
-          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), new THREE.MeshBasicMaterial({ color: 0x261a14 }));
-          eye.position.set(0.10, 0.03, 0.055);
-          const eye2 = eye.clone();
-          eye2.position.z = -0.055;
-          g.add(body, tail, eye, eye2);
-          g.userData = { points: 5, label: "🐟 小魚乾 +5" };
-        }
-        g.traverse((c) => { if (c.isMesh) c.castShadow = true; });
-        return g;
-      }
-
-      function spawnPlatform(index, posX, posZ, halfW, halfD) {
-        const group = new THREE.Group();
-        group.position.set(posX, 0, posZ);
-
-        const bodyGroup = new THREE.Group();
-        group.add(bodyGroup);
-
-        const platHeight = 0.68; // So bottom sits cleanly at FLOOR_Y = -0.68
-        const isTreatBox = index > 0 && index % 4 === 0;
-        const theme = isTreatBox ? 4 : (index === 0 ? 0 : Math.floor(Math.random() * 4));
-
-        if (theme === 0) {
-          // Cardboard Box
-          const sideMat = new THREE.MeshStandardMaterial({ color: 0xcf965d, roughness: 0.85 });
-          const topMat = new THREE.MeshStandardMaterial({ map: boxTopTex, roughness: 0.82 });
-          const box = new THREE.Mesh(
-            new THREE.BoxGeometry(halfW * 2, platHeight, halfD * 2),
-            [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]
-          );
-          box.position.y = -platHeight / 2;
-          box.castShadow = true;
-          box.receiveShadow = true;
-          bodyGroup.add(box);
-        } else if (theme === 1) {
-          // Soft Pastel Cushion
-          const palette = [
-            { main: 0xf4d2b8, trim: 0xdf8252 },
-            { main: 0xd9e8d2, trim: 0x739c68 },
-            { main: 0xf7e3d4, trim: 0xd86655 },
-          ];
-          const pal = palette[index % palette.length];
-          const cushMat = new THREE.MeshStandardMaterial({ color: pal.main, roughness: 0.88 });
-          const trimMat = new THREE.MeshStandardMaterial({ color: pal.trim, roughness: 0.72 });
-
-          const base = new THREE.Mesh(
-            new THREE.BoxGeometry(halfW * 1.92, 0.34, halfD * 1.92),
-            new THREE.MeshStandardMaterial({ color: 0xe6d3bc, roughness: 0.86 })
-          );
-          base.position.y = -0.51;
-          const topPad = new THREE.Mesh(
-            new THREE.CylinderGeometry(halfW * 1.04, halfW * 1.08, 0.36, 28),
-            cushMat
-          );
-          topPad.scale.set(1.0, 1.0, halfD / halfW);
-          topPad.position.y = -0.18;
-          const piping = new THREE.Mesh(new THREE.TorusGeometry(halfW * 1.04, 0.032, 10, 32), trimMat);
-          piping.rotation.x = Math.PI / 2;
-          piping.scale.set(1.0, halfD / halfW, 1.0);
-          piping.position.y = -0.02;
-          [base, topPad, piping].forEach((m) => {
-            m.castShadow = true;
-            m.receiveShadow = true;
-            bodyGroup.add(m);
-          });
-        } else if (theme === 2) {
-          // Cozy Hardcover Book Stack
-          const coverPairs = [
-            [0x3c5d78, 0xe87b4a],
-            [0x8c443c, 0x5c8b72],
-            [0x534c6b, 0xdda147],
-          ];
-          const pair = coverPairs[index % coverPairs.length];
-          const paperMat = new THREE.MeshStandardMaterial({ color: 0xfaf2e4, roughness: 0.85 });
-          const b1Mat = new THREE.MeshStandardMaterial({ color: pair[0], roughness: 0.55 });
-          const b2Mat = new THREE.MeshStandardMaterial({ color: pair[1], roughness: 0.55 });
-
-          const makeBook = (w, h, d, coverMat) => {
-            const bg = new THREE.Group();
-            const covTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), coverMat);
-            covTop.position.y = h / 2 - 0.02;
-            const covBot = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, d), coverMat);
-            covBot.position.y = -h / 2 + 0.02;
-            const spine = new THREE.Mesh(new THREE.BoxGeometry(0.045, h, d), coverMat);
-            spine.position.x = -w / 2 + 0.022;
-            const pages = new THREE.Mesh(new THREE.BoxGeometry(w * 0.94, h - 0.07, d * 0.92), paperMat);
-            pages.position.x = 0.015;
-            [covTop, covBot, spine, pages].forEach((m) => {
-              m.castShadow = true;
-              m.receiveShadow = true;
-              bg.add(m);
-            });
-            return bg;
-          };
-
-          const botBook = makeBook(halfW * 2.06, 0.34, halfD * 2.06, b1Mat);
-          botBook.position.y = -0.51;
-          botBook.rotation.y = 0.06;
-          const topBook = makeBook(halfW * 2.0, 0.34, halfD * 2.0, b2Mat);
-          topBook.position.y = -0.17;
-          topBook.rotation.y = -0.04;
-          bodyGroup.add(botBook, topBook);
-        } else if (theme === 3) {
-          // Cat Tree Sisal Pillar + Plush Top
-          const woodMat = new THREE.MeshStandardMaterial({ color: 0xb98252, roughness: 0.72 });
-          const ropeMat = new THREE.MeshStandardMaterial({ color: 0xdec49e, roughness: 0.92 });
-          const plushMat = new THREE.MeshStandardMaterial({ color: 0xfff3e6, roughness: 0.88 });
-
-          const plinth = new THREE.Mesh(new THREE.BoxGeometry(halfW * 1.9, 0.14, halfD * 1.9), woodMat);
-          plinth.position.y = -0.61;
-          const post = new THREE.Mesh(new THREE.CylinderGeometry(Math.min(halfW, halfD) * 0.56, Math.min(halfW, halfD) * 0.58, 0.42, 24), ropeMat);
-          post.position.y = -0.34;
-          const cap = new THREE.Mesh(new THREE.CylinderGeometry(halfW * 1.03, halfW * 1.03, 0.14, 28), plushMat);
-          cap.scale.set(1.0, 1.0, halfD / halfW);
-          cap.position.y = -0.07;
-          [plinth, post, cap].forEach((m) => {
-            m.castShadow = true;
-            m.receiveShadow = true;
-            bodyGroup.add(m);
-          });
-        } else {
-          // Golden Gift Treat Box
-          const boxMat = new THREE.MeshStandardMaterial({ color: 0xf7c552, roughness: 0.42, metalness: 0.12 });
-          const ribMat = new THREE.MeshStandardMaterial({ color: 0xd9383a, roughness: 0.36 });
-          const box = new THREE.Mesh(new THREE.BoxGeometry(halfW * 2, platHeight, halfD * 2), boxMat);
-          box.position.y = -platHeight / 2;
-          const rib1 = new THREE.Mesh(new THREE.BoxGeometry(halfW * 2.03, platHeight + 0.015, 0.20), ribMat);
-          rib1.position.y = -platHeight / 2;
-          const rib2 = new THREE.Mesh(new THREE.BoxGeometry(0.20, platHeight + 0.015, halfD * 2.03), ribMat);
-          rib2.position.y = -platHeight / 2;
-          [box, rib1, rib2].forEach((m) => {
-            m.castShadow = true;
-            m.receiveShadow = true;
-            bodyGroup.add(m);
-          });
-        }
-
-        // Subtle bullseye dot on top center for visual feedback
-        const dotMat = new THREE.MeshBasicMaterial({ color: isTreatBox ? 0xffffff : 0x5c3e2a, transparent: true, opacity: 0.24 });
-        const centerDot = new THREE.Mesh(new THREE.CircleGeometry(0.11, 20), dotMat);
-        centerDot.rotation.x = -Math.PI / 2;
-        centerDot.position.y = 0.008;
-        bodyGroup.add(centerDot);
-
-        // Optional Treat Collectible floating above box
-        let collectible = null;
-        if (index > 0 && (isTreatBox || Math.random() < 0.34)) {
-          collectible = createCollectible(isTreatBox ? "bell" : "fish");
-          collectible.position.set(0, 0.56, 0);
-          group.add(collectible);
-        }
-
-        // Gentle spawn pop-in animation
-        bodyGroup.scale.set(0.7, 0.7, 0.7);
-        bodyGroup.position.y = index === 0 ? 0 : 0.45;
-
-        scene.add(group);
-        const plat = {
-          index,
-          group,
-          bodyGroup,
-          x: posX,
-          z: posZ,
-          halfW,
-          halfD,
-          pressY: 0,
-          targetPressY: 0,
-          collectible,
-          collected: false,
-          spawnAnim: index === 0 ? 1 : 0,
-        };
-        platformList.push(plat);
-        return plat;
-      }
-
-      // ---------------------------------------------------------------------
-      // 4. Helper FX: Charge Ring, Tutorial Dotted Arc, Ripples & Particles
-      // ---------------------------------------------------------------------
-      const chargeRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.22, 0.30, 32),
-        new THREE.MeshBasicMaterial({ color: 0xf4a82a, side: THREE.DoubleSide, transparent: true, opacity: 0.0 })
+      // Cozy Cream Living Room Rug marking the play arena
+      const rugOuter = new THREE.Mesh(
+        new THREE.CylinderGeometry(3.05, 3.08, 0.035, 48),
+        new THREE.MeshStandardMaterial({ color: 0xfbf4e8, roughness: 0.94 })
       );
-      chargeRing.rotation.x = -Math.PI / 2;
-      chargeRing.position.y = 0.015;
-      scene.add(chargeRing);
+      rugOuter.scale.set(1.0, 1.0, 0.54);
+      rugOuter.position.set(0, 0.017, 0);
+      rugOuter.receiveShadow = true;
+      scene.add(rugOuter);
 
-      // Gentle helper landing guide shown ONLY for the player's first 2 jumps
-      const guideDotMat = new THREE.MeshBasicMaterial({ color: 0xe66824, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
-      const guideRing = new THREE.Mesh(new THREE.RingGeometry(0.13, 0.19, 28), guideDotMat);
-      guideRing.rotation.x = -Math.PI / 2;
-      guideRing.position.y = 0.018;
-      scene.add(guideRing);
+      const rugBorder = new THREE.Mesh(
+        new THREE.TorusGeometry(2.85, 0.035, 10, 48),
+        new THREE.MeshStandardMaterial({ color: 0xe49257, roughness: 0.82 })
+      );
+      rugBorder.rotation.x = Math.PI / 2;
+      rugBorder.scale.set(1.0, 0.54, 1.0);
+      rugBorder.position.set(0, 0.038, 0);
+      scene.add(rugBorder);
 
-      function spawnRipple(x, z, radius, colorHex) {
-        const mesh = new THREE.Mesh(
-          new THREE.RingGeometry(radius * 0.5, radius, 32),
-          new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
-        );
-        mesh.rotation.x = -Math.PI / 2;
-        mesh.position.set(x, 0.016, z);
-        scene.add(mesh);
-        activeRipples.push({ mesh, age: 0, dur: 0.55 });
-      }
+      // Decorative Cozy Living Room Backdrop Props (Couch Pillows & Warm Back Wall)
+      const backWall = new THREE.Mesh(
+        new THREE.BoxGeometry(26, 9, 0.4),
+        new THREE.MeshStandardMaterial({ color: 0xf9ebd8, roughness: 0.92 })
+      );
+      backWall.position.set(0, 4.5, -3.2);
+      backWall.receiveShadow = true;
+      scene.add(backWall);
 
-      function spawnBurstParticles(x, y, z, colorHex, count = 14) {
-        const geo = new THREE.SphereGeometry(0.042, 8, 6);
-        for (let i = 0; i < count; i++) {
-          const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95 });
-          const p = new THREE.Mesh(geo, mat);
-          p.position.set(x, y, z);
-          const ang = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-          const spd = 1.2 + Math.random() * 1.9;
-          scene.add(p);
-          activeParticles.push({
-            mesh: p,
-            vx: Math.cos(ang) * spd,
-            vy: 1.8 + Math.random() * 2.2,
-            vz: Math.sin(ang) * spd,
-            age: 0,
-            dur: 0.52 + Math.random() * 0.25,
-          });
-        }
-      }
+      const baseboard = new THREE.Mesh(
+        new THREE.BoxGeometry(26, 0.32, 0.46),
+        new THREE.MeshStandardMaterial({ color: 0xfff8ef, roughness: 0.72 })
+      );
+      baseboard.position.set(0, 0.16, -3.18);
+      scene.add(baseboard);
+
+      // Subtle Sofa Silhouette in back center
+      const sofaGroup = new THREE.Group();
+      const sofaMat = new THREE.MeshStandardMaterial({ color: 0xdcc4a8, roughness: 0.88 });
+      const sofaSeat = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.55, 1.15), sofaMat);
+      sofaSeat.position.set(0, 0.28, -2.35);
+      const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.15, 0.35), sofaMat);
+      sofaBack.position.set(0, 0.78, -2.78);
+      const pillowMat = new THREE.MeshStandardMaterial({ color: 0xe6844e, roughness: 0.85 });
+      const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.58, 0.22), pillowMat);
+      p1.position.set(-1.35, 0.76, -2.52);
+      p1.rotation.set(-0.18, 0.12, 0.12);
+      const p2 = p1.clone();
+      p2.position.x = 1.35;
+      p2.rotation.set(-0.18, -0.12, -0.12);
+      sofaGroup.add(sofaSeat, sofaBack, p1, p2);
+      sofaGroup.traverse((c) => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+      scene.add(sofaGroup);
 
       // ---------------------------------------------------------------------
-      // 5. Load Cute 3D Calico Cat GLB (Strip Cushion & Ground Feet Cleanly)
+      // 3. Cute 3D Calico Cat Player Setup
       // ---------------------------------------------------------------------
       const catRoot = new THREE.Group();
       const catTiltGroup = new THREE.Group();
-      const catSquashGroup = new THREE.Group();
-      const catFlipGroup = new THREE.Group();
-      const catModelHolder = new THREE.Group();
-
-      // Rotate flip around cat center height (~0.36) so mid-air somersault spins in place
-      catFlipGroup.position.set(0, 0.36, 0);
-      catModelHolder.position.set(0, -0.36, 0);
-      catFlipGroup.add(catModelHolder);
-      catSquashGroup.add(catFlipGroup);
-      catTiltGroup.add(catSquashGroup);
       catRoot.add(catTiltGroup);
 
-      // Soft contact shadow directly under cat paws
       const catShadow = new THREE.Mesh(
-        new THREE.CircleGeometry(0.32, 24),
-        new THREE.MeshBasicMaterial({ color: 0x26170e, transparent: true, opacity: 0.26 })
+        new THREE.CircleGeometry(0.42, 28),
+        new THREE.MeshBasicMaterial({ color: 0x26170e, transparent: true, opacity: 0.25 })
       );
       catShadow.rotation.x = -Math.PI / 2;
-      catShadow.position.y = 0.012;
+      catShadow.position.y = 0.04;
       scene.add(catShadow);
       scene.add(catRoot);
+
+      // Golden Fever Halo around cat when bell bonus active
+      const feverHalo = new THREE.Mesh(
+        new THREE.TorusGeometry(0.55, 0.028, 10, 36),
+        new THREE.MeshBasicMaterial({ color: 0xf8c22e, transparent: true, opacity: 0.0 })
+      );
+      feverHalo.rotation.x = Math.PI / 2;
+      feverHalo.position.y = 0.06;
+      catRoot.add(feverHalo);
 
       let catTailMesh = null;
       let catReady = false;
 
       function attachCatGLTF(gltf) {
         const raw = gltf.scene;
-        const toRemove = [];
+        const removeList = [];
         raw.traverse((obj) => {
-          if (obj.name && obj.name.includes("Cushion")) {
-            toRemove.push(obj);
-          }
-          if (obj.name && obj.name.includes("Tail")) {
-            catTailMesh = obj;
-          }
+          if (obj.name && obj.name.includes("Cushion")) removeList.push(obj);
+          if (obj.name && obj.name.includes("Tail")) catTailMesh = obj;
         });
-        toRemove.forEach((obj) => {
-          if (obj.parent) obj.parent.remove(obj);
-        });
+        removeList.forEach((o) => { if (o.parent) o.parent.remove(o); });
 
         raw.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(raw);
@@ -1155,7 +848,7 @@
         box.getCenter(center);
         box.getSize(size);
 
-        const targetHeight = 0.78;
+        const targetHeight = 1.15;
         const scale = targetHeight / Math.max(0.001, size.y);
         raw.scale.setScalar(scale);
         raw.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
@@ -1167,7 +860,7 @@
           }
         });
 
-        catModelHolder.add(raw);
+        catTiltGroup.add(raw);
         catReady = true;
         loaderModal.classList.add("hidden");
         startModal.classList.remove("hidden");
@@ -1197,399 +890,355 @@
       }
 
       // ---------------------------------------------------------------------
-      // 6. Core Jump Gameplay State Machine
+      // 4. Falling 3D Items (Treats & Hazards) + Particles
+      // ---------------------------------------------------------------------
+      const fallingItems = [];
+      const particles = [];
+
+      function buildItemMesh(type) {
+        const g = new THREE.Group();
+        if (type === "fish") {
+          const mat = new THREE.MeshStandardMaterial({ color: 0xf29336, roughness: 0.36 });
+          const body = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), mat);
+          body.scale.set(1.42, 0.76, 0.50);
+          const tail = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.22, 4), mat);
+          tail.rotation.z = -Math.PI / 2;
+          tail.scale.set(1, 1, 0.45);
+          tail.position.x = -0.32;
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), new THREE.MeshBasicMaterial({ color: 0x261a14 }));
+          eye.position.set(0.18, 0.05, 0.085);
+          const eye2 = eye.clone();
+          eye2.position.z = -0.085;
+          g.add(body, tail, eye, eye2);
+        } else if (type === "shrimp") {
+          const mat = new THREE.MeshStandardMaterial({ color: 0xf4a92d, roughness: 0.42 });
+          const tailMat = new THREE.MeshStandardMaterial({ color: 0xd93c28, roughness: 0.38 });
+          const arc = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.085, 10, 18, Math.PI * 1.25), mat);
+          arc.rotation.z = 0.2;
+          const fin = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.16, 4), tailMat);
+          fin.position.set(-0.18, -0.05, 0);
+          fin.rotation.z = 0.7;
+          g.add(arc, fin);
+        } else if (type === "bell") {
+          const mat = new THREE.MeshStandardMaterial({ color: 0xf5be2c, roughness: 0.20, metalness: 0.85, emissive: 0x623b00, emissiveIntensity: 0.25 });
+          const orb = new THREE.Mesh(new THREE.SphereGeometry(0.21, 18, 14), mat);
+          const ring = new THREE.Mesh(new THREE.TorusGeometry(0.215, 0.03, 8, 20), mat);
+          ring.rotation.x = Math.PI / 2;
+          const top = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.02, 8, 16), mat);
+          top.position.y = 0.24;
+          g.add(orb, ring, top);
+        } else if (type === "heart") {
+          const mat = new THREE.MeshStandardMaterial({ color: 0xe94c6f, roughness: 0.34, emissive: 0x5c1022, emissiveIntensity: 0.22 });
+          const l1 = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), mat);
+          l1.position.set(-0.095, 0.06, 0);
+          const l2 = l1.clone();
+          l2.position.x = 0.095;
+          const tip = new THREE.Mesh(new THREE.ConeGeometry(0.185, 0.26, 16), mat);
+          tip.rotation.z = Math.PI;
+          tip.position.y = -0.09;
+          g.add(l1, l2, tip);
+        } else if (type === "cucumber") {
+          // Iconic green striped cucumber with bumpy nubs
+          const mat = new THREE.MeshStandardMaterial({ color: 0x3b8c32, roughness: 0.56 });
+          const stripeMat = new THREE.MeshStandardMaterial({ color: 0x20521b, roughness: 0.55 });
+          const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.125, 0.56, 16), mat);
+          const cap1 = new THREE.Mesh(new THREE.SphereGeometry(0.115, 14, 10), mat);
+          cap1.position.y = 0.28;
+          const cap2 = new THREE.Mesh(new THREE.SphereGeometry(0.125, 14, 10), mat);
+          cap2.position.y = -0.28;
+          g.add(cyl, cap1, cap2);
+          for (let i = 0; i < 4; i++) {
+            const ang = (i * Math.PI) / 2;
+            const rib = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.48, 6), stripeMat);
+            rib.position.set(Math.cos(ang) * 0.115, 0, Math.sin(ang) * 0.115);
+            g.add(rib);
+          }
+          g.rotation.z = 0.35;
+        } else {
+          // Glossy Blue Water Droplet
+          const mat = new THREE.MeshStandardMaterial({ color: 0x399be8, roughness: 0.12, metalness: 0.1, emissive: 0x0c3c66, emissiveIntensity: 0.2 });
+          const dropBase = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 14), mat);
+          dropBase.position.y = -0.05;
+          const dropTip = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.30, 16), mat);
+          dropTip.position.y = 0.14;
+          g.add(dropBase, dropTip);
+        }
+        g.traverse((c) => { if (c.isMesh) c.castShadow = true; });
+        return g;
+      }
+
+      function spawnItem(forcedType = null, forcedX = null, forcedY = null) {
+        let type = forcedType;
+        if (!type) {
+          const r = Math.random();
+          const rush = timeLeft <= 10.0;
+          const dangerChance = rush ? 0.24 : 0.34;
+          if (r < dangerChance) {
+            type = Math.random() < 0.65 ? "cucumber" : "water";
+          } else if (hearts < 3 && Math.random() < 0.09) {
+            type = "heart";
+          } else if (r < dangerChance + 0.09) {
+            type = "bell";
+          } else if (r < dangerChance + 0.26) {
+            type = "shrimp";
+          } else {
+            type = "fish";
+          }
+        }
+
+        const isHazard = type === "cucumber" || type === "water";
+        const x = forcedX !== null ? forcedX : THREE.MathUtils.randFloat(-LANE_LIMIT, LANE_LIMIT);
+        const y = forcedY !== null ? forcedY : (window.innerWidth / window.innerHeight < 1 ? 6.2 : 4.9);
+        const speed = (isHazard ? 2.55 : 2.35) + Math.min(1.3, (MATCH_DURATION - timeLeft) * 0.025) + Math.random() * 0.6;
+
+        const mesh = buildItemMesh(type);
+        mesh.position.set(x, y, 0);
+        scene.add(mesh);
+
+        // Floor shadow / danger target ring directly beneath falling item
+        const ringGeo = isHazard ? new THREE.RingGeometry(0.24, 0.34, 24) : new THREE.CircleGeometry(0.26, 20);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: isHazard ? 0xd93030 : 0xd8872c,
+          transparent: true,
+          opacity: isHazard ? 0.55 : 0.24,
+          side: THREE.DoubleSide,
+        });
+        const marker = new THREE.Mesh(ringGeo, ringMat);
+        marker.rotation.x = -Math.PI / 2;
+        marker.position.set(x, 0.04, 0);
+        scene.add(marker);
+
+        fallingItems.push({
+          type,
+          isHazard,
+          mesh,
+          marker,
+          x,
+          y,
+          speed,
+          spinY: THREE.MathUtils.randFloat(1.5, 3.4),
+          spinZ: isHazard ? THREE.MathUtils.randFloat(-1.5, 1.5) : 0,
+        });
+      }
+
+      function spawnBurst(x, y, z, colorHex, count = 14) {
+        const geo = new THREE.SphereGeometry(0.055, 8, 6);
+        for (let i = 0; i < count; i++) {
+          const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95 });
+          const p = new THREE.Mesh(geo, mat);
+          p.position.set(x, y, z);
+          const ang = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+          const spd = 1.6 + Math.random() * 2.2;
+          scene.add(p);
+          particles.push({
+            mesh: p,
+            vx: Math.cos(ang) * spd,
+            vy: 2.0 + Math.random() * 2.4,
+            vz: Math.sin(ang) * spd,
+            age: 0,
+            dur: 0.48 + Math.random() * 0.22,
+          });
+        }
+      }
+
+      function clearItems() {
+        while (fallingItems.length > 0) {
+          const it = fallingItems.pop();
+          scene.remove(it.mesh);
+          scene.remove(it.marker);
+        }
+      }
+
+      // ---------------------------------------------------------------------
+      // 5. Game State Machine (45s Arcade + Startled Cucumber Bounce!)
       // ---------------------------------------------------------------------
       let bestScore = parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0;
-      bestValEl.textContent = String(bestScore);
-
-      let gameState = "start"; // "start" | "idle" | "charging" | "jumping" | "tipping" | "falling" | "gameover"
+      let gameState = "start"; // "start" | "playing" | "ended"
       let score = 0;
-      let perfectStreak = 0;
-      let maxStreak = 0;
-      let jumpCount = 0;
-      let consecutiveAxisCount = 0;
-      let lastAxis = "+X";
+      let timeLeft = MATCH_DURATION;
+      let hearts = 3;
+      let combo = 0;
+      let caughtCount = 0;
+      let feverTimer = 0;
+      let rushAnnounced = false;
+      let spawnCooldown = 0.35;
 
-      let currIdx = 0;
-      let chargeRatio = 0;
-      const MAX_CHARGE_SEC = 1.25;
-      const MIN_DIST = 0.65;
-      const MAX_DIST = 4.35;
+      // Player motion & startled hop physics
+      let catX = 0;
+      let targetCatX = 0;
+      let catVelX = 0;
+      let runPhase = 0;
+      let scareY = 0;
+      let scareVelY = 0;
+      let scareSpin = 0;
+      let invulnTimer = 0;
 
-      // Active jump trajectory state
-      let jumpElapsed = 0;
-      let jumpDuration = 0.44;
-      let jumpStartPos = new THREE.Vector3();
-      let jumpEndPos = new THREE.Vector3();
-      let jumpApexH = 1.15;
-      let jumpDoFlip = true;
-      let jumpTargetOutcome = null;
-
-      // Edge tip-over state
-      let tipAngleTarget = 0;
-      let tipAxis = new THREE.Vector3(1, 0, 0);
-      let tipTimer = 0;
-      let fallVelY = 0;
-      let fallDrift = new THREE.Vector3();
-
-      let currentCatYaw = Math.PI / 2;
-      let targetCatYaw = Math.PI / 2;
+      const keys = { left: false, right: false };
       let popupTimer = null;
 
       function showPopup(text, variant) {
         floatPopupEl.textContent = text;
-        floatPopupEl.className = variant ? variant : "";
+        floatPopupEl.className = variant || "";
         void floatPopupEl.offsetWidth;
         floatPopupEl.classList.add("show");
         clearTimeout(popupTimer);
-        popupTimer = setTimeout(() => floatPopupEl.classList.remove("show"), 950);
+        popupTimer = setTimeout(() => floatPopupEl.classList.remove("show"), 880);
+      }
+
+      function getComboMult() {
+        let m = 1;
+        if (combo >= 12) m = 3;
+        else if (combo >= 5) m = 2;
+        if (feverTimer > 0) m *= 2;
+        return m;
       }
 
       function updateHUD() {
         scoreValEl.textContent = String(score);
-        bestValEl.textContent = String(bestScore);
-        if (perfectStreak >= 2) {
-          comboPillEl.textContent = `✨ PERFECT ×${perfectStreak}`;
-          comboPillEl.classList.add("visible");
+        const tInt = Math.max(0, Math.ceil(timeLeft));
+        timerValEl.textContent = String(tInt);
+        timerPillEl.classList.toggle("urgent", gameState === "playing" && timeLeft <= 10.0);
+
+        heartsValEl.textContent = "❤️".repeat(hearts) + "🤍".repeat(Math.max(0, 3 - hearts));
+
+        const cm = combo >= 12 ? 3 : combo >= 5 ? 2 : 1;
+        if (combo >= 3) {
+          comboChipEl.textContent = `🔥 ${combo} 連擊` + (cm > 1 ? ` (×${cm})` : "");
+          comboChipEl.classList.add("visible");
         } else {
-          comboPillEl.classList.remove("visible");
+          comboChipEl.classList.remove("visible");
         }
+
+        if (feverTimer > 0) {
+          feverChipEl.textContent = `🔔 雙倍得分 ${Math.ceil(feverTimer)}s`;
+          feverChipEl.classList.add("visible");
+        } else {
+          feverChipEl.classList.remove("visible");
+        }
+
+        rushChipEl.classList.toggle("visible", gameState === "playing" && timeLeft <= 10.0 && timeLeft > 0);
+
+        gameAPI.state = gameState;
         gameAPI.score = score;
         gameAPI.bestScore = bestScore;
-        gameAPI.perfectStreak = perfectStreak;
-        gameAPI.jumps = jumpCount;
-        gameAPI.state = gameState;
-      }
-
-      function spawnNextPlatform() {
-        const prev = platformList[platformList.length - 1];
-        let axis;
-        if (platformList.length === 1) {
-          axis = "+X";
-        } else {
-          const wantFlip = consecutiveAxisCount >= 2 ? true : Math.random() < 0.62;
-          axis = wantFlip ? (lastAxis === "+X" ? "-Z" : "+X") : lastAxis;
-        }
-        if (axis === lastAxis) consecutiveAxisCount += 1;
-        else { lastAxis = axis; consecutiveAxisCount = 1; }
-
-        const early = platformList.length <= 3;
-        const gap = early ? (1.85 + Math.random() * 0.65) : (1.72 + Math.random() * 1.48);
-        const halfBase = early
-          ? 0.72
-          : Math.max(0.46, 0.70 - Math.min(0.16, score * 0.0028) - Math.random() * 0.14);
-
-        const nx = axis === "+X" ? prev.x + gap : prev.x;
-        const nz = axis === "-Z" ? prev.z - gap : prev.z;
-        spawnPlatform(platformList.length, nx, nz, halfBase, halfBase);
-
-        // Trim far-back platforms to keep mobile framerate ultra smooth
-        while (platformList.length > 9 && currIdx > 2) {
-          const old = platformList.shift();
-          scene.remove(old.group);
-          currIdx -= 1;
-        }
-      }
-
-      function aimCatAtNext() {
-        const curr = platformList[currIdx];
-        const next = platformList[currIdx + 1];
-        if (!curr || !next) return;
-        const dx = next.x - catRoot.position.x;
-        const dz = next.z - catRoot.position.z;
-        targetCatYaw = Math.atan2(dx, dz);
-        camDesiredTarget.set((curr.x + next.x) * 0.5, 0.22, (curr.z + next.z) * 0.5);
-      }
-
-      function resetWorld() {
-        while (platformList.length > 0) {
-          scene.remove(platformList.pop().group);
-        }
-        score = 0;
-        perfectStreak = 0;
-        maxStreak = 0;
-        jumpCount = 0;
-        currIdx = 0;
-        consecutiveAxisCount = 0;
-        lastAxis = "+X";
-
-        spawnPlatform(0, 0, 0, 0.74, 0.74);
-        spawnNextPlatform();
-        spawnNextPlatform();
-
-        catRoot.position.set(0, 0, 0);
-        catTiltGroup.rotation.set(0, 0, 0);
-        catSquashGroup.scale.set(1, 1, 1);
-        catFlipGroup.rotation.set(0, 0, 0);
-
-        aimCatAtNext();
-        currentCatYaw = targetCatYaw;
-        catRoot.rotation.y = currentCatYaw;
-        camCurrentTarget.copy(camDesiredTarget);
-        chargeRatio = 0;
-        chargeFillEl.style.width = "0%";
-        chargePctEl.textContent = "0%";
-        chargeCardEl.classList.remove("charging");
-        chargeRing.material.opacity = 0;
-        guideRing.material.opacity = 0;
-        hintChipEl.style.display = "";
-        updateHUD();
+        gameAPI.timeLeft = Number(timeLeft.toFixed(1));
+        gameAPI.hearts = hearts;
+        gameAPI.combo = combo;
+        gameAPI.caughtCount = caughtCount;
       }
 
       function startGame() {
         ensureAudio();
-        resetWorld();
-        gameState = "idle";
+        clearItems();
+        score = 0;
+        timeLeft = MATCH_DURATION;
+        hearts = 3;
+        combo = 0;
+        caughtCount = 0;
+        feverTimer = 0;
+        rushAnnounced = false;
+        spawnCooldown = 0.25;
+        catX = 0;
+        targetCatX = 0;
+        catVelX = 0;
+        scareY = 0;
+        scareVelY = 0;
+        scareSpin = 0;
+        invulnTimer = 0;
+        catRoot.visible = true;
+        catTiltGroup.rotation.set(0, 0, 0);
+        catTiltGroup.scale.set(1, 1, 1);
+
+        gameState = "playing";
         startModal.classList.add("hidden");
-        gameOverModal.classList.add("hidden");
+        resultModal.classList.add("hidden");
+        spawnItem("fish", 0.0, 3.6);
         updateHUD();
       }
 
-      function evaluateLanding(endPos) {
-        const curr = platformList[currIdx];
-        const next = platformList[currIdx + 1];
+      function endGame(reason) {
+        gameState = "ended";
+        clearItems();
+        catRoot.visible = true;
 
-        const inBox = (p, pt, margin) =>
-          Math.abs(pt.x - p.x) <= p.halfW + margin && Math.abs(pt.z - p.z) <= p.halfD + margin;
-
-        // 1. Landed on Next Platform? (generous paw margin +0.13)
-        if (inBox(next, endPos, 0.13)) {
-          const dx = Math.abs(endPos.x - next.x);
-          const dz = Math.abs(endPos.z - next.z);
-          const radial = Math.hypot(dx, dz);
-          const minHalf = Math.min(next.halfW, next.halfD);
-          const isPerfect = radial <= minHalf * 0.36;
-          const isEdgeSave = dx > next.halfW + 0.02 || dz > next.halfD + 0.02;
-          return { result: "next", isPerfect, isEdgeSave, plat: next };
+        if (score > bestScore) {
+          bestScore = score;
+          try { localStorage.setItem(BEST_KEY, String(bestScore)); } catch (_) {}
         }
 
-        // 2. Undershot back onto Current Platform?
-        if (inBox(curr, endPos, 0.08)) {
-          return { result: "curr", plat: curr };
-        }
-
-        // 3. Missed! Determine whether grazing outer edge (teeter) or clean miss
-        const nearCurrEdge =
-          Math.abs(endPos.x - curr.x) <= curr.halfW + 0.28 && Math.abs(endPos.z - curr.z) <= curr.halfD + 0.28;
-        const nearNextEdge =
-          Math.abs(endPos.x - next.x) <= next.halfW + 0.28 && Math.abs(endPos.z - next.z) <= next.halfD + 0.28;
-        const teeterPlat = nearNextEdge ? next : (nearCurrEdge ? curr : null);
-        return { result: "miss", teeterPlat };
-      }
-
-      function beginCharge() {
-        if (gameState !== "idle") return;
-        gameState = "charging";
-        chargeRatio = 0;
-        chargeCardEl.classList.add("charging");
-        chargeActionEl.textContent = "🔥 蓄力中… 放開起跳！";
-        startChargeHum();
-        updateHUD();
-      }
-
-      function releaseJump(overrideRatio = null) {
-        if (gameState !== "charging" && overrideRatio === null) return;
-        const ratio = overrideRatio !== null ? Math.max(0.04, Math.min(1, overrideRatio)) : Math.max(0.05, chargeRatio);
-        stopChargeHum();
-        chargeCardEl.classList.remove("charging");
-        chargeActionEl.textContent = "🐾 按住蓄力・放開起跳";
-        chargeFillEl.style.width = "0%";
-        chargePctEl.textContent = "0%";
-        chargeRing.material.opacity = 0;
-        guideRing.material.opacity = 0;
-
-        const curr = platformList[currIdx];
-        const next = platformList[currIdx + 1];
-        curr.targetPressY = 0;
-
-        const dir = new THREE.Vector3(next.x - catRoot.position.x, 0, next.z - catRoot.position.z).normalize();
-        const dist = MIN_DIST + ratio * (MAX_DIST - MIN_DIST);
-
-        jumpStartPos.copy(catRoot.position);
-        jumpEndPos.copy(jumpStartPos).addScaledVector(dir, dist);
-        jumpEndPos.y = 0;
-        jumpApexH = 0.85 + ratio * 0.72;
-        jumpDuration = 0.36 + ratio * 0.14;
-        jumpElapsed = 0;
-        jumpDoFlip = ratio > 0.22;
-        jumpTargetOutcome = evaluateLanding(jumpEndPos);
-
-        targetCatYaw = Math.atan2(dir.x, dir.z);
-        currentCatYaw = targetCatYaw;
-        catRoot.rotation.y = currentCatYaw;
-        catSquashGroup.scale.set(0.86, 1.20, 0.86);
-
-        gameState = "jumping";
-        sfxJump();
-        updateHUD();
-      }
-
-      function finishJumpLanding() {
-        catFlipGroup.rotation.set(0, 0, 0);
-        catSquashGroup.scale.set(1.18, 0.76, 1.18);
-
-        const out = jumpTargetOutcome;
-        if (out.result === "next") {
-          currIdx += 1;
-          jumpCount += 1;
-          const plat = out.plat;
-          plat.pressY = -0.10;
-
-          let pts = 1;
-          if (out.isPerfect) {
-            perfectStreak += 1;
-            maxStreak = Math.max(maxStreak, perfectStreak);
-            pts = 2 * perfectStreak;
-            score += pts;
-            showPopup(`✨ PERFECT ×${perfectStreak}  +${pts}`, "perfect");
-            spawnRipple(plat.x, plat.z, Math.max(plat.halfW, plat.halfD) * 1.1, 0xf4a82a);
-            spawnBurstParticles(catRoot.position.x, 0.25, catRoot.position.z, 0xf6b93b, 16);
-            sfxLandPerfect(perfectStreak);
-          } else {
-            perfectStreak = 0;
-            score += 1;
-            showPopup(out.isEdgeSave ? "😅 驚險踩邊 +1！" : "+1", "");
-            spawnRipple(catRoot.position.x, catRoot.position.z, 0.42, 0xffffff);
-            sfxLandGood();
-          }
-
-          // Collect floating fish / golden bell!
-          if (plat.collectible && !plat.collected) {
-            plat.collected = true;
-            const bonusPts = plat.collectible.userData.points || 5;
-            const bonusLabel = plat.collectible.userData.label || `+${bonusPts}`;
-            score += bonusPts;
-            spawnBurstParticles(plat.x, 0.55, plat.z, 0xffd147, 20);
-            setTimeout(() => showPopup(bonusLabel, "bonus"), 180);
-            sfxBonus();
-            plat.group.remove(plat.collectible);
-            plat.collectible = null;
-          }
-
-          if (score > bestScore) {
-            bestScore = score;
-            try { localStorage.setItem(BEST_KEY, String(bestScore)); } catch (_) {}
-          }
-
-          if (jumpCount >= 2) {
-            hintChipEl.style.display = "none";
-          }
-
-          spawnNextPlatform();
-          aimCatAtNext();
-          gameState = "idle";
-          updateHUD();
-        } else if (out.result === "curr") {
-          out.plat.pressY = -0.07;
-          perfectStreak = 0;
-          sfxLandGood();
-          aimCatAtNext();
-          gameState = "idle";
-          updateHUD();
-        } else {
-          // Missed -> edge wobble if grazed, otherwise fall right down!
-          sfxFail();
-          const refPlat = out.teeterPlat;
-          if (refPlat) {
-            const away = new THREE.Vector3(jumpEndPos.x - refPlat.x, 0, jumpEndPos.z - refPlat.z);
-            if (away.lengthSq() < 1e-4) away.set(1, 0, 0);
-            away.normalize();
-            tipAxis.set(away.z, 0, -away.x).normalize();
-            tipAngleTarget = Math.PI * 0.48;
-            fallDrift.copy(away).multiplyScalar(1.3);
-            tipTimer = 0.24;
-            gameState = "tipping";
-          } else {
-            fallDrift.copy(jumpEndPos).sub(jumpStartPos).normalize().multiplyScalar(1.2);
-            fallVelY = -0.6;
-            gameState = "falling";
-          }
-          updateHUD();
-        }
-      }
-
-      function triggerGameOver() {
-        gameState = "gameover";
-        const badge = document.getElementById("gameOverBadge");
-        const title = document.getElementById("gameOverTitle");
-        const sub = document.getElementById("gameOverSubtitle");
-        if (score >= bestScore && score > 0) {
+        const badge = document.getElementById("resultBadge");
+        const title = document.getElementById("resultTitle");
+        const sub = document.getElementById("resultSub");
+        if (reason === "hearts") {
+          badge.textContent = "🥒 愛心用完啦！";
+          title.textContent = "三花貓嚇得逃回紙箱啦！";
+          sub.textContent = "小黃瓜跟水滴可以從紅圈預測位置閃開喔～";
+        } else if (score >= bestScore && score > 0) {
           badge.textContent = "🎉 刷新個人最高紀錄！";
-          title.textContent = "太強了，三花貓飛天紀錄！";
-          sub.textContent = "分享給朋友，看看誰能跳破你的紀錄！";
-        } else if (score >= 15) {
-          badge.textContent = "🐾 好身手！差一點點";
-          title.textContent = "差半步就踩穩了！";
-          sub.textContent = "再抓一下節奏，準備挑戰連擊新高分！";
+          title.textContent = "肚皮圓滾滾大豐收！";
+          sub.textContent = "太厲害了，快分享給朋友挑戰看看誰接得多！";
         } else {
-          badge.textContent = "🐾 喵嗚！踩空啦";
-          title.textContent = "三花貓滾進柔軟地板啦～";
-          sub.textContent = "試著放短或放長一點蓄力，很快就能連擊！";
+          badge.textContent = "⏱️ 45 秒時間到！";
+          title.textContent = "美味零食滿載而歸！";
+          sub.textContent = "多搶金鈴鐺觸發雙倍時間，輕鬆衝破紀錄！";
         }
         document.getElementById("finalScore").textContent = String(score);
         document.getElementById("finalBest").textContent = String(bestScore);
-        document.getElementById("finalMaxStreak").textContent = String(maxStreak);
-        gameOverModal.classList.remove("hidden");
+        document.getElementById("finalCaught").textContent = String(caughtCount);
+        resultModal.classList.remove("hidden");
         updateHUD();
       }
 
       // ---------------------------------------------------------------------
-      // 7. Input Bindings (Mobile Touch + Desktop Mouse + Spacebar)
+      // 6. Direct Touch / Pointer Raycast & Keyboard Controls
       // ---------------------------------------------------------------------
-      let activePointerId = null;
+      const raycaster = new THREE.Raycaster();
+      const pointerNDC = new THREE.Vector2();
+      const hitPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // z = 0 vertical catching plane
+      const planeHitPt = new THREE.Vector3();
+      let pointerActive = false;
 
-      function handlePressStart(e) {
-        if (e.target.closest("a, button, .modal-backdrop")) return;
-        if (gameState !== "idle") return;
-        e.preventDefault();
-        activePointerId = e.pointerId;
-        beginCharge();
-      }
-
-      function handlePressEnd(e) {
-        if (activePointerId !== null && e.pointerId !== activePointerId) return;
-        activePointerId = null;
-        if (gameState === "charging") {
-          releaseJump();
+      function steerFromClientXY(clientX, clientY) {
+        pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
+        pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointerNDC, camera);
+        if (raycaster.ray.intersectPlane(hitPlane, planeHitPt)) {
+          targetCatX = THREE.MathUtils.clamp(planeHitPt.x, -LANE_LIMIT, LANE_LIMIT);
         }
       }
 
-      window.addEventListener("pointerdown", handlePressStart, { passive: false });
-      window.addEventListener("pointerup", handlePressEnd);
-      window.addEventListener("pointercancel", handlePressEnd);
+      viewportEl.addEventListener("pointerdown", (e) => {
+        if (gameState !== "playing") return;
+        e.preventDefault();
+        ensureAudio();
+        pointerActive = true;
+        steerFromClientXY(e.clientX, e.clientY);
+      }, { passive: false });
+
+      window.addEventListener("pointermove", (e) => {
+        if (!pointerActive || gameState !== "playing") return;
+        steerFromClientXY(e.clientX, e.clientY);
+      });
+
+      window.addEventListener("pointerup", () => { pointerActive = false; });
+      window.addEventListener("pointercancel", () => { pointerActive = false; });
       window.addEventListener("contextmenu", (e) => e.preventDefault());
 
       window.addEventListener("keydown", (e) => {
-        if (e.code === "Space" && !e.repeat) {
-          e.preventDefault();
-          if (gameState === "start" || gameState === "gameover") {
-            if (catReady) startGame();
-          } else if (gameState === "idle") {
-            beginCharge();
-          }
-        }
+        if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
+        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
       });
-
       window.addEventListener("keyup", (e) => {
-        if (e.code === "Space") {
-          e.preventDefault();
-          if (gameState === "charging") releaseJump();
-        }
+        if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = false;
+        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = false;
       });
 
       document.getElementById("btnStartGame").addEventListener("click", startGame);
       document.getElementById("btnRestartGame").addEventListener("click", startGame);
-
-      window.addEventListener("resize", () => {
-        const w = window.innerWidth;
-        const h = Math.max(1, window.innerHeight);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      });
+      window.addEventListener("resize", updateResponsiveCamera);
 
       // ---------------------------------------------------------------------
-      // 8. Main Animation Loop
+      // 7. Main Game Loop
       // ---------------------------------------------------------------------
       let prevTime = performance.now();
 
@@ -1599,201 +1248,228 @@
         prevTime = now;
         const tSec = now * 0.001;
 
-        // Smooth cat yaw rotation toward next target
-        const yawDiff = ((targetCatYaw - currentCatYaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-        currentCatYaw += yawDiff * Math.min(1, dt * 12);
-        catRoot.rotation.y = currentCatYaw;
-
-        // Gentle tail wag on cute 3D model
-        if (catTailMesh) {
-          catTailMesh.rotation.z = Math.sin(tSec * 4.2) * 0.04;
-        }
-
-        // Charging update
-        if (gameState === "charging") {
-          chargeRatio = Math.min(1.0, chargeRatio + dt / MAX_CHARGE_SEC);
-          updateChargeHum(chargeRatio);
-          chargeFillEl.style.width = `${Math.round(chargeRatio * 100)}%`;
-          chargePctEl.textContent = `${Math.round(chargeRatio * 100)}%`;
-
-          // Cute cat crouch + platform compression
-          const sx = 1.0 + chargeRatio * 0.22;
-          const sy = 1.0 - chargeRatio * 0.38;
-          catSquashGroup.scale.set(sx, sy, sx);
-
-          const curr = platformList[currIdx];
-          if (curr) {
-            curr.pressY = -chargeRatio * 0.14;
-            catRoot.position.y = curr.pressY;
+        if (gameState === "playing") {
+          timeLeft -= dt;
+          if (timeLeft <= 10.0 && !rushAnnounced) {
+            rushAnnounced = true;
+            showPopup("🎉 最後 10 秒！魚乾狂歡雨！", "fever");
+            sfxFever();
+          }
+          if (timeLeft <= 0) {
+            timeLeft = 0;
+            endGame("time");
           }
 
-          // Expanding glowing paw ring
-          chargeRing.position.set(catRoot.position.x, catRoot.position.y + 0.015, catRoot.position.z);
-          chargeRing.scale.setScalar(0.85 + chargeRatio * 1.15);
-          chargeRing.material.opacity = 0.25 + chargeRatio * 0.55;
-
-          // First 2 jumps friendly aiming helper dot so new players master the distance easily
-          const next = platformList[currIdx + 1];
-          if (jumpCount < 2 && next) {
-            const dir = new THREE.Vector3(next.x - catRoot.position.x, 0, next.z - catRoot.position.z).normalize();
-            const dist = MIN_DIST + chargeRatio * (MAX_DIST - MIN_DIST);
-            guideRing.position.set(catRoot.position.x + dir.x * dist, 0.02, catRoot.position.z + dir.z * dist);
-            guideRing.material.opacity = 0.78;
+          if (feverTimer > 0) {
+            feverTimer = Math.max(0, feverTimer - dt);
           }
-        } else if (gameState === "jumping") {
-          jumpElapsed += dt;
-          const u = Math.min(1.0, jumpElapsed / jumpDuration);
-          catRoot.position.x = THREE.MathUtils.lerp(jumpStartPos.x, jumpEndPos.x, u);
-          catRoot.position.z = THREE.MathUtils.lerp(jumpStartPos.z, jumpEndPos.z, u);
-          catRoot.position.y = 4.0 * jumpApexH * u * (1.0 - u);
-
-          // Mid-air stretch + cute 360 forward flip
-          const stretch = 1.0 + Math.sin(u * Math.PI) * 0.12;
-          catSquashGroup.scale.set(1.0 / Math.sqrt(stretch), stretch, 1.0 / Math.sqrt(stretch));
-          if (jumpDoFlip) {
-            const flipEase = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
-            catFlipGroup.rotation.x = flipEase * Math.PI * 2;
-          }
-          if (u >= 1.0) {
-            catRoot.position.y = 0;
-            finishJumpLanding();
-          }
-        } else if (gameState === "tipping") {
-          tipTimer -= dt;
-          catTiltGroup.rotateOnAxis(tipAxis, (tipAngleTarget / 0.24) * dt);
-          catRoot.position.addScaledVector(fallDrift, dt * 0.4);
-          if (tipTimer <= 0) {
-            fallVelY = -0.8;
-            gameState = "falling";
-          }
-        } else if (gameState === "falling") {
-          fallVelY -= 14.0 * dt;
-          catRoot.position.y += fallVelY * dt;
-          catRoot.position.addScaledVector(fallDrift, dt * 0.6);
-          catTiltGroup.rotateOnAxis(tipAxis, 3.2 * dt);
-          if (catRoot.position.y <= FLOOR_Y) {
-            catRoot.position.y = FLOOR_Y;
-            spawnRipple(catRoot.position.x, catRoot.position.z, 0.45, 0xc87040);
-            triggerGameOver();
-          }
-        } else {
-          // Idle squash recovery + spring back on current platform
-          catSquashGroup.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 11));
-          const curr = platformList[currIdx];
-          if (curr && gameState !== "gameover") {
-            catRoot.position.y = curr.pressY;
-          }
-        }
-
-        // Update platform springs, spawn animations, and floating treats
-        for (const p of platformList) {
-          if (p.spawnAnim < 1) {
-            p.spawnAnim = Math.min(1, p.spawnAnim + dt * 5.0);
-            const e = 1 - Math.pow(1 - p.spawnAnim, 3);
-            p.bodyGroup.scale.setScalar(0.7 + 0.3 * e);
-            p.bodyGroup.position.y = (1 - e) * 0.45;
+          if (invulnTimer > 0) {
+            invulnTimer = Math.max(0, invulnTimer - dt);
+            catRoot.visible = Math.floor(invulnTimer * 16) % 2 === 0;
           } else {
-            if (gameState !== "charging" || platformList[currIdx] !== p) {
-              p.pressY += (0 - p.pressY) * Math.min(1, dt * 14);
+            catRoot.visible = true;
+          }
+
+          // Keyboard steering
+          const keyDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+          if (keyDir !== 0) {
+            targetCatX = THREE.MathUtils.clamp(targetCatX + keyDir * 5.2 * dt, -LANE_LIMIT, LANE_LIMIT);
+          }
+
+          // Smooth brisk cat sprint along X
+          const diff = targetCatX - catX;
+          const prevX = catX;
+          catX += diff * Math.min(1, dt * 15);
+          catVelX = (catX - prevX) / dt;
+
+          // Cute trotting hop & lean when running
+          const speedAbs = Math.abs(catVelX);
+          if (speedAbs > 0.15) {
+            runPhase += dt * (8.5 + Math.min(8, speedAbs * 1.1));
+          }
+          const trotHop = speedAbs > 0.2 && scareY <= 0.01 ? Math.abs(Math.sin(runPhase)) * 0.11 : 0;
+
+          // Startled jump physics
+          if (scareY > 0 || scareVelY !== 0) {
+            scareVelY -= 20.0 * dt;
+            scareY += scareVelY * dt;
+            scareSpin += dt * 14.0;
+            if (scareY <= 0) {
+              scareY = 0;
+              scareVelY = 0;
+              scareSpin = 0;
             }
-            p.bodyGroup.position.y = p.pressY;
           }
-          if (p.collectible) {
-            p.collectible.rotation.y += dt * 2.2;
-            p.collectible.position.y = 0.56 + Math.sin(tSec * 3.4 + p.index) * 0.08;
+
+          catRoot.position.set(catX, 0.035 + trotHop + scareY, 0);
+          catTiltGroup.rotation.z = THREE.MathUtils.lerp(
+            catTiltGroup.rotation.z,
+            THREE.MathUtils.clamp(-catVelX * 0.032, -0.24, 0.24),
+            Math.min(1, dt * 14)
+          );
+          catTiltGroup.rotation.y = THREE.MathUtils.lerp(
+            catTiltGroup.rotation.y,
+            scareSpin > 0 ? scareSpin : THREE.MathUtils.clamp(catVelX * 0.055, -0.45, 0.45),
+            Math.min(1, dt * 14)
+          );
+
+          // Spawn cadence
+          spawnCooldown -= dt;
+          if (spawnCooldown <= 0) {
+            spawnItem();
+            const rush = timeLeft <= 10.0;
+            spawnCooldown = rush ? THREE.MathUtils.randFloat(0.24, 0.40) : THREE.MathUtils.randFloat(0.46, 0.72);
           }
+
+          // Update falling items & check catch collision
+          for (let i = fallingItems.length - 1; i >= 0; i--) {
+            const it = fallingItems[i];
+            it.y -= it.speed * dt;
+            it.mesh.position.y = it.y;
+            it.mesh.rotation.y += it.spinY * dt;
+            it.mesh.rotation.z += it.spinZ * dt;
+
+            // Scale floor shadow as item approaches rug
+            const hNorm = Math.max(0.2, Math.min(1.0, 1.0 - it.y * 0.09));
+            it.marker.scale.setScalar(hNorm);
+
+            // Catch box around cat head & paws
+            const hitX = Math.abs(it.x - catX) < 0.56;
+            const hitY = it.y >= 0.06 && it.y <= 1.24 + scareY;
+
+            if (hitX && hitY) {
+              if (it.isHazard) {
+                if (invulnTimer <= 0) {
+                  hearts -= 1;
+                  combo = 0;
+                  invulnTimer = 1.3;
+                  scareVelY = 6.8;
+                  scareSpin = 0.4;
+                  if (it.type === "cucumber") {
+                    showPopup("😱 小黃瓜好可怕！！", "bad");
+                    sfxCucumberScare();
+                    spawnBurst(catX, 0.75, 0.1, 0x5dc44f, 16);
+                  } else {
+                    showPopup("💦 討厭碰水！！", "bad");
+                    sfxWater();
+                    spawnBurst(catX, 0.75, 0.1, 0x45a8f0, 16);
+                  }
+                  if (hearts <= 0) {
+                    scene.remove(it.mesh);
+                    scene.remove(it.marker);
+                    fallingItems.splice(i, 1);
+                    endGame("hearts");
+                    break;
+                  }
+                }
+              } else {
+                caughtCount += 1;
+                combo += 1;
+                const mult = getComboMult();
+                if (it.type === "bell") {
+                  feverTimer = 5.0;
+                  const pts = 20 * mult;
+                  score += pts;
+                  showPopup(`🔔 雙倍時間！ +${pts}`, "fever");
+                  sfxFever();
+                  spawnBurst(catX, 0.9, 0.1, 0xffcf36, 20);
+                } else if (it.type === "heart") {
+                  hearts = Math.min(3, hearts + 1);
+                  score += 15 * mult;
+                  showPopup("❤️ 愛心補滿 +1！", "good");
+                  sfxCatch(true);
+                  spawnBurst(catX, 0.9, 0.1, 0xf25b7e, 18);
+                } else if (it.type === "shrimp") {
+                  const pts = 30 * mult;
+                  score += pts;
+                  showPopup(`🍤 黃金炸蝦 +${pts}`, "good");
+                  sfxCatch(true);
+                  spawnBurst(catX, 0.9, 0.1, 0xf6b132, 16);
+                } else {
+                  const pts = 10 * mult;
+                  score += pts;
+                  showPopup(mult > 1 ? `🐟 +${pts} (×${mult})` : "🐟 +10", "good");
+                  sfxCatch(false);
+                  spawnBurst(catX, 0.85, 0.1, 0xf5953c, 12);
+                }
+              }
+              scene.remove(it.mesh);
+              scene.remove(it.marker);
+              fallingItems.splice(i, 1);
+              continue;
+            }
+
+            if (it.y <= 0.04) {
+              if (!it.isHazard) {
+                combo = 0; // Dropped treat resets combo streak gently
+              }
+              scene.remove(it.mesh);
+              scene.remove(it.marker);
+              fallingItems.splice(i, 1);
+            }
+          }
+
+          updateHUD();
+        } else {
+          // Gentle idle tail sway & hover on start/result screen
+          catRoot.position.set(0, 0.035, 0);
         }
 
-        // Update shadow under cat (shrinks/fades with height above platform)
-        const shadowHeight = Math.max(0, catRoot.position.y);
+        // Gentle tail wag on cat
+        if (catTailMesh) {
+          catTailMesh.rotation.z = Math.sin(tSec * 5.0) * 0.045;
+        }
+
+        // Update Fever halo & contact shadow
+        if (feverTimer > 0 && gameState === "playing") {
+          feverHalo.material.opacity = 0.65 + Math.sin(tSec * 10) * 0.25;
+          feverHalo.scale.setScalar(1.0 + Math.sin(tSec * 8) * 0.06);
+        } else {
+          feverHalo.material.opacity = 0;
+        }
         catShadow.position.x = catRoot.position.x;
-        catShadow.position.z = catRoot.position.z;
-        const curr = platformList[currIdx];
-        catShadow.position.y = curr && gameState !== "falling" ? curr.pressY + 0.014 : FLOOR_Y + 0.014;
-        const shScale = Math.max(0.38, 1.0 - shadowHeight * 0.42);
-        catShadow.scale.setScalar(shScale);
-        catShadow.material.opacity = Math.max(0.06, 0.28 - shadowHeight * 0.14);
+        const sh = Math.max(0.4, 1.0 - scareY * 0.35);
+        catShadow.scale.setScalar(sh);
 
-        // Update ripples
-        for (let i = activeRipples.length - 1; i >= 0; i--) {
-          const r = activeRipples[i];
-          r.age += dt;
-          const u = r.age / r.dur;
-          if (u >= 1) {
-            scene.remove(r.mesh);
-            r.mesh.geometry.dispose();
-            r.mesh.material.dispose();
-            activeRipples.splice(i, 1);
+        // Burst particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.age += dt;
+          if (p.age >= p.dur) {
+            scene.remove(p.mesh);
+            p.mesh.material.dispose();
+            particles.splice(i, 1);
           } else {
-            r.mesh.scale.setScalar(1.0 + u * 1.45);
-            r.mesh.material.opacity = 0.85 * (1 - u);
+            p.vy -= 10.0 * dt;
+            p.mesh.position.x += p.vx * dt;
+            p.mesh.position.y += p.vy * dt;
+            p.mesh.position.z += p.vz * dt;
+            p.mesh.material.opacity = 1.0 - p.age / p.dur;
           }
         }
-
-        // Update burst particles
-        for (let i = activeParticles.length - 1; i >= 0; i--) {
-          const pt = activeParticles[i];
-          pt.age += dt;
-          if (pt.age >= pt.dur) {
-            scene.remove(pt.mesh);
-            pt.mesh.material.dispose();
-            activeParticles.splice(i, 1);
-          } else {
-            pt.vy -= 9.5 * dt;
-            pt.mesh.position.x += pt.vx * dt;
-            pt.mesh.position.y += pt.vy * dt;
-            pt.mesh.position.z += pt.vz * dt;
-            pt.mesh.material.opacity = 1 - pt.age / pt.dur;
-          }
-        }
-
-        // Smooth camera follow + floor tile offset wrap so world feels endless
-        camCurrentTarget.lerp(camDesiredTarget, Math.min(1, dt * 5.2));
-        const offset = getResponsiveCamOffset();
-        camera.position.copy(camCurrentTarget).add(offset);
-        camera.lookAt(camCurrentTarget);
-
-        sunLight.position.set(camCurrentTarget.x - 4.5, 9.5, camCurrentTarget.z + 6.0);
-        sunLight.target.position.copy(camCurrentTarget);
-        sunLight.target.updateMatrixWorld();
-
-        const tileStep = 80 / 22;
-        const fx = Math.round(camCurrentTarget.x / tileStep) * tileStep;
-        const fz = Math.round(camCurrentTarget.z / tileStep) * tileStep;
-        floorMesh.position.x = fx;
-        floorMesh.position.z = fz;
 
         renderer.render(scene, camera);
       }
 
-      // Exposed test & automation hook
       const gameAPI = {
         loaded: false,
         state: gameState,
         score: 0,
         bestScore,
-        perfectStreak: 0,
-        jumps: 0,
+        timeLeft: MATCH_DURATION,
+        hearts: 3,
+        combo: 0,
+        caughtCount: 0,
         startGame,
-        getPlatforms: () => platformList.map((p) => ({
-          index: p.index, x: p.x, z: p.z, halfW: p.halfW, halfD: p.halfD, hasCollectible: !!p.collectible,
-        })),
-        simulateJump: (ratio) => {
-          if (gameState !== "idle") return false;
-          beginCharge();
-          releaseJump(ratio);
-          return true;
+        moveCatTo: (x) => {
+          targetCatX = THREE.MathUtils.clamp(x, -LANE_LIMIT, LANE_LIMIT);
+          catX = targetCatX;
         },
-        computeExactRatioToNext: () => {
-          const next = platformList[currIdx + 1];
-          if (!next) return 0.5;
-          const dist = Math.hypot(next.x - catRoot.position.x, next.z - catRoot.position.z);
-          return Math.max(0.05, Math.min(1.0, (dist - MIN_DIST) / (MAX_DIST - MIN_DIST)));
-        },
+        spawnTestItem: (type, x, y) => spawnItem(type, x, y),
+        getItems: () => fallingItems.map((i) => ({ type: i.type, x: i.x, y: i.y })),
       };
       window.__CAT_GAME__ = gameAPI;
 
-      resetWorld();
       loadCatAsset();
       requestAnimationFrame(tick);
     })();
