@@ -490,38 +490,38 @@
     }
 
     .controls-card {
-      padding: 22px;
+      padding: 16px 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 12px;
+      gap: 8px;
     }
 
     .ctrl-block {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 5px;
     }
 
     .btn-grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 7px;
     }
 
     .btn-grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 7px;
+      gap: 6px;
     }
 
     .ctrl-btn {
       border: 1px solid var(--border);
       background: rgba(255, 255, 255, 0.8);
       color: var(--ink);
-      border-radius: 11px;
-      padding: 9px 10px;
-      font-size: 12.5px;
+      border-radius: 10px;
+      padding: 7px 8px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.16s ease;
@@ -998,14 +998,23 @@
 
             <div class="card controls-card" data-no-page-drag="true">
               <div>
-                <div class="eyebrow">Step 02 · Blender 3D + Three.js</div>
-                <h2 class="page-heading" style="font-size: 22px; margin-bottom: 6px;">3D 三花貓咪互動控制台</h2>
-                <p class="page-desc" style="font-size: 13px; margin-bottom: 12px;">
-                  以 Blender 4.5 雕刻建模並烘焙 2048px 三花皮毛貼圖（<code>T_CalicoCat_BC.png</code>），導出乾淨的 GLB 資產於網頁端 360° 互動檢視。
+                <div class="eyebrow" style="margin-bottom: 4px;">Step 02 · Blender 3D + Three.js</div>
+                <h2 class="page-heading" style="font-size: 20px; margin-bottom: 4px;">3D 三花貓咪互動控制台</h2>
+                <p class="page-desc" style="font-size: 12.5px; line-height: 1.5; margin-bottom: 9px;">
+                  以 Blender 4.5 建模並烘焙 2048px 三花貼圖，結合網頁端即時多層絨毛外殼（Shell Fur）呈現毛茸茸觸感。
                 </p>
 
-                <div class="ctrl-block" style="margin-bottom: 12px;">
-                  <div class="section-label" style="margin-bottom: 2px;">鏡頭視角切換</div>
+                <div class="ctrl-block" style="margin-bottom: 8px;">
+                  <div class="section-label" style="margin-bottom: 1px;">毛絨質感（Shell Fur）</div>
+                  <div class="btn-grid-3">
+                    <button class="ctrl-btn accent-active" data-fur="short">短密絨毛</button>
+                    <button class="ctrl-btn" data-fur="fluffy">長毛蓬鬆</button>
+                    <button class="ctrl-btn" data-fur="off">平滑原模</button>
+                  </div>
+                </div>
+
+                <div class="ctrl-block" style="margin-bottom: 8px;">
+                  <div class="section-label" style="margin-bottom: 1px;">鏡頭視角切換</div>
                   <div class="btn-grid-2">
                     <button class="ctrl-btn active" data-cam="hero">45° 主視角</button>
                     <button class="ctrl-btn" data-cam="front">正面特寫</button>
@@ -1014,8 +1023,8 @@
                   </div>
                 </div>
 
-                <div class="ctrl-block" style="margin-bottom: 12px;">
-                  <div class="section-label" style="margin-bottom: 2px;">模型檢視模式</div>
+                <div class="ctrl-block" style="margin-bottom: 8px;">
+                  <div class="section-label" style="margin-bottom: 1px;">模型檢視模式</div>
                   <div class="btn-grid-2">
                     <button class="ctrl-btn accent-active" id="btnAutoRotate">自動旋轉：開啟</button>
                     <button class="ctrl-btn" id="btnWireframe">線框拓樸：關閉</button>
@@ -1023,7 +1032,7 @@
                 </div>
 
                 <div class="ctrl-block">
-                  <div class="section-label" style="margin-bottom: 2px;">棚拍燈光氛圍</div>
+                  <div class="section-label" style="margin-bottom: 1px;">棚拍燈光氛圍</div>
                   <div class="btn-grid-3">
                     <button class="ctrl-btn active" data-mood="warm">暖陽棚拍</button>
                     <button class="ctrl-btn" data-mood="white">純白柔光</button>
@@ -1033,14 +1042,14 @@
               </div>
 
               <div>
-                <div class="stats-strip" id="statsStrip">
+                <div class="stats-strip" id="statsStrip" style="padding: 8px;">
                   <div class="stat-box"><strong id="statTris">--</strong><span>Triangles</span></div>
                   <div class="stat-box"><strong id="statMats">--</strong><span>Materials</span></div>
                   <div class="stat-box"><strong id="statGlb">--</strong><span>GLB 檔案</span></div>
                 </div>
-                <div class="cta-row" style="margin-top: 10px;">
+                <div class="cta-row" style="margin-top: 8px; padding-top: 9px;">
                   <button class="ctrl-btn" data-goto="0">← 回 2D 原畫</button>
-                  <button class="primary-btn" data-goto="2">工藝對比 →</button>
+                  <button class="primary-btn" style="padding: 8px 16px;" data-goto="2">工藝對比 →</button>
                 </div>
               </div>
             </div>
@@ -1350,6 +1359,7 @@
         setCameraPreset: null,
         setWireframe: null,
         setMood: null,
+        setFurMode: null,
       };
       window.__CAT_SHOWCASE__ = showcaseAPI;
 
@@ -1357,12 +1367,171 @@
       let keyLight, fillLight, rimLight, hemiLight, shadowPlane;
       let modelRoot = null;
       let wireframeOverlays = [];
+      let furShellMeshes = [];
+      let furMaterials = [];
+      let furMode = "short";
       let wireframeOn = false;
       let autoRotateOn = true;
       let modelCenterY = 0.25;
       let camDist = 0.85;
       let camAnimTargetPos = null;
       let camAnimTargetLook = null;
+
+      const FUR_LAYERS = 16;
+      const furUniformsShared = {
+        uFurLength: { value: 0.0068 },
+        uModelOffset: { value: new THREE.Vector3() },
+        uKeyDir: { value: new THREE.Vector3(-1.3, 1.9, 1.5).normalize() },
+        uKeyColor: { value: new THREE.Color(0xfff5e6).multiplyScalar(1.18) },
+        uFillDir: { value: new THREE.Vector3(1.5, 0.9, 1.2).normalize() },
+        uFillColor: { value: new THREE.Color(0xffe6cf).multiplyScalar(0.36) },
+        uRimDir: { value: new THREE.Vector3(0.6, 1.5, -1.6).normalize() },
+        uRimColor: { value: new THREE.Color(0xfff8f0).multiplyScalar(0.68) },
+        uAmbientColor: { value: new THREE.Color(0xf6e6d3).multiplyScalar(0.86) },
+        uExposure: { value: 0.94 },
+      };
+
+      const FUR_VERT_SHADER = `
+        uniform float uLayer;
+        uniform float uFurLength;
+        uniform vec3 uModelOffset;
+        varying vec2 vUv;
+        varying vec3 vRootPos;
+        varying vec3 vWorldNormal;
+        varying vec3 vWorldPos;
+
+        void main() {
+          vUv = uv;
+          vec3 worldPre = (modelMatrix * vec4(position, 1.0)).xyz;
+          vec3 rootPos = worldPre - uModelOffset;
+          vRootPos = rootPos;
+
+          // Keep delicate facial features & red collar crisp without fur clipping
+          float eyeR = smoothstep(0.025, 0.042, length(rootPos - vec3(-0.042, 0.354, 0.108)));
+          float eyeL = smoothstep(0.025, 0.042, length(rootPos - vec3(0.042, 0.354, 0.108)));
+          float noseMuzzle = smoothstep(0.016, 0.036, length(rootPos - vec3(0.0, 0.326, 0.128)));
+          float collarBand = 1.0 - 0.85 * exp(-pow((rootPos.y - 0.281) / 0.018, 2.0));
+
+          // Extra plush cheek tufts and curled fluffy tail
+          float cheekBoost = 1.0 + 0.22 * smoothstep(0.072, 0.102, abs(rootPos.x)) * smoothstep(0.30, 0.37, rootPos.y);
+          float tailBoost = 1.0 + 0.26 * smoothstep(0.10, 0.16, rootPos.x) * (1.0 - smoothstep(0.24, 0.29, rootPos.y));
+
+          float trimMask = eyeR * eyeL * noseMuzzle * collarBand * cheekBoost * tailBoost;
+          float disp = uFurLength * uLayer * trimMask;
+
+          vec3 wNorm = normalize(mat3(modelMatrix) * normal);
+          vec3 droop = vec3(0.0, -1.0, 0.0) * (uFurLength * 0.24 * uLayer * uLayer * trimMask);
+          vec3 displacedWorld = worldPre + wNorm * disp + droop;
+
+          vWorldNormal = wNorm;
+          vWorldPos = displacedWorld;
+          gl_Position = projectionMatrix * viewMatrix * vec4(displacedWorld, 1.0);
+        }
+      `;
+
+      const FUR_FRAG_SHADER = `
+        uniform sampler2D uBaseMap;
+        uniform float uLayer;
+        uniform vec3 uKeyDir;
+        uniform vec3 uKeyColor;
+        uniform vec3 uFillDir;
+        uniform vec3 uFillColor;
+        uniform vec3 uRimDir;
+        uniform vec3 uRimColor;
+        uniform vec3 uAmbientColor;
+        uniform float uExposure;
+
+        varying vec2 vUv;
+        varying vec3 vRootPos;
+        varying vec3 vWorldNormal;
+        varying vec3 vWorldPos;
+
+        float hash31(vec3 p) {
+          return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
+        }
+
+        vec3 hash33(vec3 p) {
+          p = vec3(
+            dot(p, vec3(127.1, 311.7, 74.7)),
+            dot(p, vec3(269.5, 183.3, 246.1)),
+            dot(p, vec3(113.5, 271.9, 124.6))
+          );
+          return fract(sin(p) * 43758.5453123);
+        }
+
+        float clumpNoise(vec3 p) {
+          vec3 i = floor(p);
+          vec3 f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          float n000 = hash31(i + vec3(0.0, 0.0, 0.0));
+          float n100 = hash31(i + vec3(1.0, 0.0, 0.0));
+          float n010 = hash31(i + vec3(0.0, 1.0, 0.0));
+          float n110 = hash31(i + vec3(1.0, 1.0, 0.0));
+          float n001 = hash31(i + vec3(0.0, 0.0, 1.0));
+          float n101 = hash31(i + vec3(1.0, 0.0, 1.0));
+          float n011 = hash31(i + vec3(0.0, 1.0, 1.0));
+          float n111 = hash31(i + vec3(1.0, 1.0, 1.0));
+          float nx00 = mix(n000, n100, f.x);
+          float nx10 = mix(n010, n110, f.x);
+          float nx01 = mix(n001, n101, f.x);
+          float nx11 = mix(n011, n111, f.x);
+          return mix(mix(nx00, nx10, f.y), mix(nx01, nx11, f.y), f.z);
+        }
+
+        vec3 acesFilmic(vec3 x) {
+          float a = 2.51;
+          float b = 0.03;
+          float c = 2.43;
+          float d = 0.59;
+          float e = 0.14;
+          return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+        }
+
+        void main() {
+          // Isotropic 3D cellular hair-strand field in rootPos space (zero planar grid lines)
+          vec3 N = normalize(vWorldNormal);
+          vec3 V = normalize(cameraPosition - vWorldPos);
+          vec3 furCoord = (vRootPos + vec3(0.0, uLayer * 0.004, 0.0)) * 340.0;
+          vec3 cellId = floor(furCoord);
+          vec3 cellUv = fract(furCoord) - 0.5;
+          vec3 rnd = hash33(cellId);
+
+          float clump = clumpNoise(vRootPos * 42.0);
+          float strandH = clamp(0.32 + 0.48 * rnd.x + 0.28 * clump, 0.25, 1.0);
+          if (uLayer > strandH) discard;
+
+          // Project cell offset perpendicular to surface normal so strands look round from every angle
+          vec3 jitter3 = (rnd - 0.5) * 0.42;
+          vec3 rel = cellUv - jitter3;
+          vec3 perp = rel - N * dot(rel, N);
+          float dist = length(perp);
+          float tipT = clamp((strandH - uLayer) / max(strandH, 0.05), 0.0, 1.0);
+          float radius = mix(0.64, 0.18, uLayer) * (0.42 + 0.58 * tipT);
+          if (dist > radius) discard;
+
+          // Map color consistently with MeshStandardMaterial + translucent hair fiber scattering
+          vec3 texSRGB = texture2D(uBaseMap, vUv).rgb;
+          vec3 albedoRaw = pow(max(texSRGB, vec3(0.001)), vec3(2.2));
+          vec3 albedo = mix(albedoRaw, vec3(0.92, 0.82, 0.72), 0.16);
+
+          float kDiff = clamp(dot(N, uKeyDir) * 0.52 + 0.48, 0.0, 1.0);
+          float fDiff = clamp(dot(N, uFillDir) * 0.50 + 0.50, 0.0, 1.0);
+          float rDiff = clamp(dot(N, uRimDir) * 0.45 + 0.30, 0.0, 1.0);
+
+          float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.1) * (0.32 + 0.68 * uLayer);
+          float ao = mix(0.84, 1.08, pow(uLayer, 0.55));
+
+          vec3 indirect = uAmbientColor * 0.76;
+          vec3 direct = uKeyColor * kDiff * 0.58 + uFillColor * fDiff * 0.52 + uRimColor * rDiff * 0.40;
+          vec3 lit = albedo * (indirect + direct);
+          lit += mix(albedo, vec3(0.96, 0.90, 0.82), 0.50) * uRimColor * fresnel * 0.46;
+          lit *= ao;
+
+          vec3 mapped = acesFilmic(lit * uExposure);
+          vec3 outSRGB = pow(mapped, vec3(1.0 / 2.2));
+          gl_FragColor = vec4(outSRGB, 1.0);
+        }
+      `;
 
       function initThree() {
         const w = viewerEl.clientWidth || 720;
@@ -1490,11 +1659,12 @@
         modelRoot.position.x -= center.x;
         modelRoot.position.z -= center.z;
         modelRoot.position.y -= box.min.y;
+        furUniformsShared.uModelOffset.value.copy(modelRoot.position);
 
         modelCenterY = size.y * 0.49;
         camDist = Math.max(size.x, size.y, size.z) * 1.48;
 
-        // Enable shadows + build toggleable wireframe overlays
+        // Enable shadows + build toggleable wireframe overlays + Shell Fur layers
         const wireMat = new THREE.MeshBasicMaterial({
           color: 0x2a1d17,
           wireframe: true,
@@ -1507,11 +1677,45 @@
         });
 
         const origMeshes = [];
+        let furTextureMap = null;
         modelRoot.traverse((child) => {
           if (child.isMesh) {
             origMeshes.push(child);
+            if (!furTextureMap && child.material && child.material.name === "MAT_Fur_Calico" && child.material.map) {
+              furTextureMap = child.material.map;
+            }
           }
         });
+
+        // Pre-create shared Shell Fur materials (12 layers)
+        if (furTextureMap) {
+          for (let i = 1; i <= FUR_LAYERS; i++) {
+            const layerNorm = Math.pow(i / FUR_LAYERS, 1.08);
+            const fMat = new THREE.ShaderMaterial({
+              uniforms: {
+                uBaseMap: { value: furTextureMap },
+                uLayer: { value: layerNorm },
+                uFurLength: furUniformsShared.uFurLength,
+                uModelOffset: furUniformsShared.uModelOffset,
+                uKeyDir: furUniformsShared.uKeyDir,
+                uKeyColor: furUniformsShared.uKeyColor,
+                uFillDir: furUniformsShared.uFillDir,
+                uFillColor: furUniformsShared.uFillColor,
+                uRimDir: furUniformsShared.uRimDir,
+                uRimColor: furUniformsShared.uRimColor,
+                uAmbientColor: furUniformsShared.uAmbientColor,
+                uExposure: furUniformsShared.uExposure,
+              },
+              vertexShader: FUR_VERT_SHADER,
+              fragmentShader: FUR_FRAG_SHADER,
+              transparent: false,
+              depthWrite: true,
+              side: THREE.FrontSide,
+            });
+            furMaterials.push(fMat);
+          }
+        }
+
         origMeshes.forEach((child) => {
           child.castShadow = true;
           child.receiveShadow = true;
@@ -1522,9 +1726,19 @@
             child.add(wMesh);
             wireframeOverlays.push(wMesh);
           }
+          if (furMaterials.length > 0 && child.material && child.material.name === "MAT_Fur_Calico") {
+            furMaterials.forEach((fMat) => {
+              const shellMesh = new THREE.Mesh(child.geometry, fMat);
+              shellMesh.castShadow = false;
+              shellMesh.receiveShadow = false;
+              child.add(shellMesh);
+              furShellMeshes.push(shellMesh);
+            });
+          }
         });
 
         scene.add(modelRoot);
+        setFurMode("short");
         setCameraPreset("hero", true);
         loaderOverlay.classList.add("hidden");
         showcaseAPI.loaded = true;
@@ -1586,10 +1800,33 @@
         btnAutoRotate.textContent = autoRotateOn ? "自動旋轉：開啟" : "自動旋轉：關閉";
       });
 
+      function updateFurVisibility() {
+        const showFur = !wireframeOn && furMode !== "off";
+        furShellMeshes.forEach((m) => { m.visible = showFur; });
+      }
+
+      function setFurMode(mode) {
+        furMode = mode;
+        if (mode === "fluffy") {
+          furUniformsShared.uFurLength.value = 0.0118;
+        } else if (mode === "short") {
+          furUniformsShared.uFurLength.value = 0.0068;
+        }
+        updateFurVisibility();
+        document.querySelectorAll("[data-fur]").forEach((btn) => {
+          btn.classList.toggle("accent-active", btn.dataset.fur === mode);
+        });
+      }
+      showcaseAPI.setFurMode = setFurMode;
+      document.querySelectorAll("[data-fur]").forEach((btn) => {
+        btn.addEventListener("click", () => setFurMode(btn.dataset.fur));
+      });
+
       const btnWireframe = document.getElementById("btnWireframe");
       function setWireframe(flag) {
         wireframeOn = !!flag;
         wireframeOverlays.forEach((m) => { m.visible = wireframeOn; });
+        updateFurVisibility();
         btnWireframe.classList.toggle("accent-active", wireframeOn);
         btnWireframe.textContent = wireframeOn ? "線框拓樸：開啟" : "線框拓樸：關閉";
       }
@@ -1608,6 +1845,11 @@
           rimLight.intensity = 0.65;
           hemiLight.intensity = 0.50;
           renderer.toneMappingExposure = 0.92;
+          furUniformsShared.uKeyColor.value.setHex(0xffffff).multiplyScalar(1.15);
+          furUniformsShared.uFillColor.value.setHex(0xf3f6ff).multiplyScalar(0.55);
+          furUniformsShared.uRimColor.value.setHex(0xffffff).multiplyScalar(0.65);
+          furUniformsShared.uAmbientColor.value.setHex(0xf2f4f8).multiplyScalar(0.92);
+          furUniformsShared.uExposure.value = 0.92;
         } else if (mood === "night") {
           viewerCard.classList.add("mood-night");
           keyLight.color.setHex(0xffbe7b);
@@ -1618,6 +1860,11 @@
           rimLight.intensity = 1.15;
           hemiLight.intensity = 0.25;
           renderer.toneMappingExposure = 1.02;
+          furUniformsShared.uKeyColor.value.setHex(0xffbe7b).multiplyScalar(1.10);
+          furUniformsShared.uFillColor.value.setHex(0x6e85c8).multiplyScalar(0.38);
+          furUniformsShared.uRimColor.value.setHex(0x95b8ff).multiplyScalar(1.15);
+          furUniformsShared.uAmbientColor.value.setHex(0x66587e).multiplyScalar(0.65);
+          furUniformsShared.uExposure.value = 1.02;
         } else {
           keyLight.color.setHex(0xfff5e6);
           keyLight.intensity = 1.18;
@@ -1627,6 +1874,11 @@
           rimLight.intensity = 0.68;
           hemiLight.intensity = 0.34;
           renderer.toneMappingExposure = 0.94;
+          furUniformsShared.uKeyColor.value.setHex(0xfff5e6).multiplyScalar(1.18);
+          furUniformsShared.uFillColor.value.setHex(0xffe6cf).multiplyScalar(0.36);
+          furUniformsShared.uRimColor.value.setHex(0xfff8f0).multiplyScalar(0.68);
+          furUniformsShared.uAmbientColor.value.setHex(0xf6e6d3).multiplyScalar(0.86);
+          furUniformsShared.uExposure.value = 0.94;
         }
         document.querySelectorAll("[data-mood]").forEach((btn) => {
           btn.classList.toggle("active", btn.dataset.mood === mood);
