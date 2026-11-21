@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>客廳接魚乾・閃小黃瓜 | 3D 三花貓小遊戲</title>
+  <title>3D 客廳走廊大跑酷 | 3D 三花貓小遊戲</title>
   <link rel="icon" href="data:," />
   <script src="./libs/three.min.js"></script>
   <script src="./libs/GLTFLoader.js"></script>
   <style>
     :root {
       --ink: #271d16;
-      --ink-soft: #6c5b4f;
+      --ink-soft: #68574c;
       --surface: rgba(255, 251, 246, 0.90);
       --accent: #de6b28;
-      --accent-deep: #bf4618;
+      --accent-deep: #be4416;
       --border: rgba(58, 38, 26, 0.12);
       --shadow: 0 10px 28px rgba(48, 30, 16, 0.16);
     }
@@ -30,7 +30,7 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: radial-gradient(circle at 50% 18%, #fffbf3 0%, #f5e2c8 60%, #e7caa3 100%);
+      background: radial-gradient(circle at 50% 18%, #fffaf0 0%, #f4dfc4 62%, #e6c69e 100%);
       color: var(--ink);
       font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Segoe UI", system-ui, sans-serif;
       user-select: none;
@@ -43,7 +43,11 @@
       inset: 0;
       z-index: 1;
       touch-action: none;
-      cursor: ew-resize;
+      cursor: grab;
+    }
+
+    #gameViewport:active {
+      cursor: grabbing;
     }
 
     #gameViewport canvas {
@@ -53,7 +57,7 @@
       touch-action: none;
     }
 
-    /* ---------------- Compact Top HUD (Desktop + Mobile Safe) ---------------- */
+    /* ---------------- Top HUD ---------------- */
     .hud-top {
       position: fixed;
       top: max(10px, env(safe-area-inset-top));
@@ -78,9 +82,9 @@
     .back-btn {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       height: 38px;
-      padding: 0 13px;
+      padding: 0 12px;
       border-radius: 999px;
       background: var(--surface);
       backdrop-filter: blur(10px);
@@ -103,49 +107,36 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
-      flex-wrap: wrap;
+      gap: 6px;
       min-width: 0;
     }
 
     .hud-pill {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       height: 38px;
-      padding: 0 12px;
+      padding: 0 11px;
       border-radius: 999px;
       background: var(--surface);
       backdrop-filter: blur(10px);
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 800;
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
     }
 
     .score-num {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 900;
       color: var(--accent-deep);
     }
 
-    .timer-pill.urgent {
-      background: #fff0ee;
-      border-color: #df4d3b;
-      color: #b72318;
-      animation: pulseUrgent 0.65s infinite alternate;
-    }
-
-    @keyframes pulseUrgent {
-      from { transform: scale(1); }
-      to { transform: scale(1.05); }
-    }
-
     .hearts-pill {
       letter-spacing: 1px;
-      font-size: 14px;
+      font-size: 13.5px;
     }
 
     .icon-btn {
@@ -163,25 +154,28 @@
       box-shadow: var(--shadow);
     }
 
-    /* ---------------- Status Badges & Popups ---------------- */
+    /* ---------------- Status Chips & Floating Feedback ---------------- */
     .status-stack {
       position: fixed;
-      top: calc(max(10px, env(safe-area-inset-top)) + 48px);
+      top: calc(max(10px, env(safe-area-inset-top)) + 46px);
       left: 50%;
       transform: translateX(-50%);
       display: flex;
       gap: 8px;
       z-index: 19;
       pointer-events: none;
+      max-width: calc(100vw - 20px);
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .status-chip {
-      padding: 4px 13px;
+      padding: 4px 12px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 900;
       color: #fff;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
       display: none;
       white-space: nowrap;
     }
@@ -192,11 +186,11 @@
 
     .status-chip.fever {
       background: linear-gradient(135deg, #eab322, #d47c0f);
-      animation: pulseUrgent 0.45s infinite alternate;
+      animation: pulseBadge 0.45s infinite alternate;
     }
 
-    .status-chip.rush {
-      background: linear-gradient(135deg, #d84b70, #a82447);
+    .status-chip.speed {
+      background: linear-gradient(135deg, #3c8be6, #245cb0);
     }
 
     .status-chip.visible {
@@ -205,23 +199,28 @@
       gap: 4px;
     }
 
+    @keyframes pulseBadge {
+      from { transform: scale(1); }
+      to { transform: scale(1.06); }
+    }
+
     #floatPopup {
       position: fixed;
-      top: 25%;
+      top: 23%;
       left: 50%;
       transform: translate(-50%, 0) scale(0.85);
-      padding: 8px 18px;
+      padding: 7px 17px;
       border-radius: 999px;
       background: rgba(36, 26, 20, 0.88);
       color: #fff8ef;
-      font-size: 16px;
+      font-size: 15.5px;
       font-weight: 900;
       white-space: nowrap;
       box-shadow: 0 10px 24px rgba(32, 20, 12, 0.26);
       pointer-events: none;
       opacity: 0;
       z-index: 25;
-      transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: opacity 0.16s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     #floatPopup.good {
@@ -230,6 +229,10 @@
 
     #floatPopup.fever {
       background: linear-gradient(135deg, #f1b627, #dd7d15);
+    }
+
+    #floatPopup.hurdle {
+      background: linear-gradient(135deg, #27a96c, #17784b);
     }
 
     #floatPopup.bad {
@@ -241,38 +244,73 @@
       transform: translate(-50%, -14px) scale(1);
     }
 
-    /* ---------------- Bottom Control Bar ---------------- */
+    /* ---------------- Bottom Touch Controls ---------------- */
     .hud-bottom {
       position: fixed;
       bottom: max(12px, env(safe-area-inset-bottom));
       left: 50%;
       transform: translateX(-50%);
-      width: min(420px, calc(100vw - 24px));
+      width: min(440px, calc(100vw - 20px));
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
-      z-index: 18;
+      gap: 7px;
+      z-index: 22;
       pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
     }
 
-    .touch-rail {
+    .hud-bottom.hidden-bar {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(18px);
+    }
+
+    .action-row {
       width: 100%;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: rgba(255, 251, 246, 0.82);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      text-align: center;
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--ink-soft);
-      white-space: nowrap;
+      display: grid;
+      grid-template-columns: 1fr 1.35fr 1fr;
+      gap: 8px;
+      pointer-events: auto;
     }
 
-    .touch-rail strong {
-      color: var(--accent-deep);
+    .pad-btn {
+      height: 50px;
+      border-radius: 16px;
+      border: 1px solid rgba(58, 38, 26, 0.14);
+      background: rgba(255, 251, 246, 0.88);
+      backdrop-filter: blur(10px);
+      color: var(--ink);
+      font-size: 14.5px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(42, 24, 12, 0.16);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      touch-action: manipulation;
+      transition: transform 0.08s ease, background 0.12s ease;
+    }
+
+    .pad-btn.jump-btn {
+      background: linear-gradient(135deg, rgba(235, 125, 45, 0.94), rgba(198, 68, 34, 0.94));
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .pad-btn:active {
+      transform: scale(0.95);
+    }
+
+    .hint-pill {
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(36, 26, 20, 0.68);
+      color: #fff8ee;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
     }
 
     /* ---------------- Modals ---------------- */
@@ -289,16 +327,24 @@
       transition: opacity 0.22s ease;
     }
 
+    /* Dock start modal lower so the cute front-facing 3D cat shines above! */
+    #startModal.modal-backdrop {
+      background: linear-gradient(180deg, rgba(32, 22, 16, 0.02) 0%, rgba(32, 22, 16, 0.16) 52%, rgba(32, 22, 16, 0.45) 100%);
+      backdrop-filter: none;
+      align-items: flex-end;
+      padding-bottom: max(14px, env(safe-area-inset-bottom));
+    }
+
     .modal-backdrop.hidden {
       opacity: 0;
       pointer-events: none;
     }
 
     .modal-card {
-      width: min(450px, 100%);
-      padding: 22px 20px;
+      width: min(460px, 100%);
+      padding: 18px 18px;
       border-radius: 24px;
-      background: #fffcf7;
+      background: rgba(255, 252, 247, 0.96);
       border: 1px solid var(--border);
       box-shadow: 0 24px 60px rgba(34, 20, 10, 0.28);
       text-align: center;
@@ -314,20 +360,20 @@
       color: var(--accent-deep);
       font-size: 11.5px;
       font-weight: 800;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .modal-card h1 {
-      margin: 0 0 8px;
-      font-size: 24px;
+      margin: 0 0 6px;
+      font-size: 22px;
       font-weight: 900;
       letter-spacing: -0.02em;
     }
 
     .modal-card p {
-      margin: 0 0 14px;
-      font-size: 13.5px;
-      line-height: 1.55;
+      margin: 0 0 11px;
+      font-size: 13px;
+      line-height: 1.5;
       color: var(--ink-soft);
     }
 
@@ -335,16 +381,16 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 13px;
       text-align: left;
     }
 
     .legend-box {
-      padding: 10px;
-      border-radius: 14px;
+      padding: 9px 10px;
+      border-radius: 13px;
       background: #f8eee2;
-      font-size: 12px;
-      line-height: 1.5;
+      font-size: 11.5px;
+      line-height: 1.48;
     }
 
     .legend-box.danger {
@@ -354,7 +400,7 @@
 
     .legend-box strong {
       display: block;
-      font-size: 12.5px;
+      font-size: 12px;
       margin-bottom: 2px;
     }
 
@@ -362,7 +408,7 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin: 14px 0 16px;
+      margin: 12px 0 14px;
     }
 
     .stat-tile {
@@ -373,7 +419,7 @@
 
     .stat-tile strong {
       display: block;
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 900;
       color: var(--accent-deep);
       font-variant-numeric: tabular-nums;
@@ -389,10 +435,10 @@
       width: 100%;
       border: none;
       border-radius: 999px;
-      padding: 13px 20px;
+      padding: 12px 20px;
       background: linear-gradient(135deg, #ea7b2d, #c64422);
       color: #fff;
-      font-size: 16px;
+      font-size: 15.5px;
       font-weight: 900;
       cursor: pointer;
       box-shadow: 0 8px 22px rgba(198, 68, 34, 0.34);
@@ -404,8 +450,8 @@
 
     .btn-secondary-link {
       display: inline-block;
-      margin-top: 11px;
-      font-size: 13px;
+      margin-top: 10px;
+      font-size: 12.5px;
       font-weight: 800;
       color: var(--ink-soft);
       text-decoration: none;
@@ -423,23 +469,23 @@
     @media (max-width: 560px) {
       .back-btn {
         height: 34px;
-        padding: 0 10px;
+        padding: 0 9px;
         font-size: 11.5px;
       }
 
       .hud-pill {
         height: 34px;
-        padding: 0 9px;
-        font-size: 11.5px;
-        gap: 4px;
+        padding: 0 8px;
+        font-size: 11px;
+        gap: 3px;
       }
 
       .score-num {
-        font-size: 15.5px;
+        font-size: 14.5px;
       }
 
       .hearts-pill {
-        font-size: 12px;
+        font-size: 11.5px;
         letter-spacing: 0;
       }
 
@@ -449,21 +495,32 @@
         font-size: 14px;
       }
 
-      .legend-grid {
-        grid-template-columns: 1fr;
+      .pad-btn {
+        height: 46px;
+        font-size: 13.5px;
+        border-radius: 14px;
+      }
+
+      .hint-pill {
+        display: none;
       }
 
       .modal-card {
-        padding: 18px 15px;
+        padding: 15px 14px;
       }
 
       .modal-card h1 {
-        font-size: 21px;
+        font-size: 19.5px;
       }
 
-      .touch-rail {
-        font-size: 11px;
-        padding: 7px 10px;
+      .legend-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        margin-bottom: 11px;
+      }
+
+      .legend-box {
+        padding: 8px 9px;
       }
     }
   </style>
@@ -471,15 +528,15 @@
 <body>
   <div id="gameViewport"></div>
 
-  <!-- Compact Top HUD -->
+  <!-- Top HUD -->
   <header class="hud-top">
     <div class="hud-side">
-      <a class="back-btn" href="./index.html">← 回展廳</a>
+      <a class="back-btn" href="./index.html">← 展廳</a>
     </div>
 
     <div class="hud-center">
       <div class="hud-pill">🏆 <span class="score-num" id="scoreVal">0</span></div>
-      <div class="hud-pill timer-pill" id="timerPill">⏱️ <strong id="timerVal">45</strong>s</div>
+      <div class="hud-pill">📏 <strong id="distVal">0</strong>m</div>
       <div class="hud-pill hearts-pill" id="heartsVal">❤️❤️❤️</div>
     </div>
 
@@ -489,61 +546,65 @@
   </header>
 
   <div class="status-stack">
-    <span class="status-chip combo" id="comboChip">🔥 COMBO ×2</span>
-    <span class="status-chip fever" id="feverChip">🔔 雙倍時間 5s</span>
-    <span class="status-chip rush" id="rushChip">🎉 最後狂歡雨！</span>
+    <span class="status-chip combo" id="comboChip">🔥 3 連擊</span>
+    <span class="status-chip fever" id="feverChip">🔔 雙倍＋吸魚磁鐵 6s</span>
+    <span class="status-chip speed" id="speedChip">⚡ 衝刺加速！</span>
   </div>
 
   <div id="floatPopup">+10</div>
 
-  <div class="hud-bottom">
-    <div class="touch-rail">
-      <strong>👆 左右滑動螢幕</strong>（或鍵盤 <strong>← / → / A / D</strong>）操控三花貓！
+  <!-- Bottom Action Pad (mobile one-hand friendly + swipe anywhere) -->
+  <div class="hud-bottom hidden-bar" id="touchControls">
+    <div class="hint-pill">滑動螢幕（左／右換道 · 上跳 · 下速降）或使用鍵盤 ← / → / ↑ / 空白鍵</div>
+    <div class="action-row">
+      <button class="pad-btn" id="btnLaneLeft" type="button">◀ 左閃</button>
+      <button class="pad-btn jump-btn" id="btnJump" type="button">⬆️ 跳躍</button>
+      <button class="pad-btn" id="btnLaneRight" type="button">右閃 ▶</button>
     </div>
   </div>
 
   <!-- Loader Modal -->
   <div class="modal-backdrop" id="loaderModal">
-    <div class="loader-pill" id="loaderText">正在布置客廳與召喚 3D 三花貓咪...</div>
+    <div class="loader-pill" id="loaderText">正在鋪設 3D 客廳跑道與召喚三花貓咪...</div>
   </div>
 
-  <!-- Start Modal -->
+  <!-- Start Modal (Docked cleanly below front-facing 3D cat) -->
   <div class="modal-backdrop hidden" id="startModal">
     <div class="modal-card">
-      <div class="modal-badge">🍣 45 秒快節奏接物大作戰</div>
-      <h1>客廳接魚乾・閃小黃瓜 🐱</h1>
+      <div class="modal-badge">🏃 3D 三線道客廳走廊大跑酷</div>
+      <h1>三花貓客廳大衝刺！🐱</h1>
       <p>
-        滑動手指或用鍵盤帶三花貓左右快跑！接住美味零食拿高分，千萬小心會把貓嚇飛的小黃瓜！
+        開場正面打招呼後，鏡頭旋即跟拍三花貓側面與尾巴在陽光客廳飛奔！快左右換道＋起跳吧！
       </p>
       <div class="legend-grid">
         <div class="legend-box">
-          <strong>✅ 美味加分（快接住！）</strong>
-          🐟 小魚乾 <b>+10</b> · 🍤 炸蝦 <b>+30</b><br />
-          🔔 金鈴鐺 <b>雙倍分數 5 秒！</b>
+          <strong>✅ 美味點心 &amp; 技能</strong>
+          🐟 魚乾 <b>+10</b> · 🍤 炸蝦 <b>+30</b><br />
+          ✨ 跳過障礙 <b>+15</b> · 🔔 金鈴 <b>雙倍＋吸魚磁鐵</b>
         </div>
         <div class="legend-box danger">
-          <strong>⚠️ 貓咪天敵（快閃開！）</strong>
-          🥒 小黃瓜（碰到嚇得彈飛 -1❤️）<br />
-          💧 小水滴（討厭濕答答 -1❤️）
+          <strong>⚠️ 立體障礙（閃避／起跳！）</strong>
+          🤖 掃地機 · 🥒 小黃瓜（跳過或換道）<br />
+          📦 疊高紙箱（超高！請左右切道躲開）
         </div>
       </div>
-      <button class="btn-primary" id="btnStartGame">開始接魚乾大作戰！</button>
+      <button class="btn-primary" id="btnStartGame">開始 3D 大跑酷！🐾</button>
       <a class="btn-secondary-link" href="./index.html">← 回 3D 三花貓互動展廳</a>
     </div>
   </div>
 
-  <!-- Result / Game Over Modal -->
+  <!-- Result Modal -->
   <div class="modal-backdrop hidden" id="resultModal">
     <div class="modal-card">
-      <div class="modal-badge" id="resultBadge">⏱️ 時間到！肚子吃飽飽</div>
-      <h1 id="resultTitle">三花貓滿載而歸！</h1>
-      <p id="resultSub">最後十秒的點心雨是不是超過癮？</p>
+      <div class="modal-badge" id="resultBadge">🏁 跑酷結束！</div>
+      <h1 id="resultTitle">三花貓衝刺滿載而歸！</h1>
+      <p id="resultSub">剛才轉身跟拍奔跑是不是超有 3D 臨場感？</p>
       <div class="stats-row">
-        <div class="stat-tile"><strong id="finalScore">0</strong><span>本局分數</span></div>
-        <div class="stat-tile"><strong id="finalBest">0</strong><span>最高紀錄</span></div>
-        <div class="stat-tile"><strong id="finalCaught">0</strong><span>接到零食</span></div>
+        <div class="stat-tile"><strong id="finalScore">0</strong><span>本局總分</span></div>
+        <div class="stat-tile"><strong id="finalDist">0m</strong><span>奔跑距離</span></div>
+        <div class="stat-tile"><strong id="finalBest">0</strong><span>歷史最高分</span></div>
       </div>
-      <button class="btn-primary" id="btnRestartGame">再玩一次（45秒）🐾</button>
+      <button class="btn-primary" id="btnRestartGame">再跑一場！🐾</button>
       <a class="btn-secondary-link" href="./index.html">← 返回 3D 三花貓互動展廳</a>
     </div>
   </div>
@@ -552,19 +613,23 @@
     (function () {
       "use strict";
 
-      const BEST_KEY = "calico_catch_best_v1";
-      const LANE_LIMIT = 2.35;
-      const MATCH_DURATION = 45.0;
+      const BEST_KEY = "calico_runner_best_v1";
+      const LANE_XS = [-1.55, 0.0, 1.55];
+      const BASE_SPEED = 11.4;
+      const MAX_SPEED = 21.8;
+      const GRAVITY = 27.0;
+      const JUMP_VEL = 9.55;
+      const INTRO_DURATION = 0.85;
 
       const viewportEl = document.getElementById("gameViewport");
       const scoreValEl = document.getElementById("scoreVal");
-      const timerPillEl = document.getElementById("timerPill");
-      const timerValEl = document.getElementById("timerVal");
+      const distValEl = document.getElementById("distVal");
       const heartsValEl = document.getElementById("heartsVal");
       const comboChipEl = document.getElementById("comboChip");
       const feverChipEl = document.getElementById("feverChip");
-      const rushChipEl = document.getElementById("rushChip");
+      const speedChipEl = document.getElementById("speedChip");
       const floatPopupEl = document.getElementById("floatPopup");
+      const touchControlsEl = document.getElementById("touchControls");
 
       const loaderModal = document.getElementById("loaderModal");
       const loaderText = document.getElementById("loaderText");
@@ -573,7 +638,7 @@
       const btnSound = document.getElementById("btnSound");
 
       // ---------------------------------------------------------------------
-      // 1. Cozy Web Audio SFX
+      // 1. Cozy Arcade Web Audio SFX
       // ---------------------------------------------------------------------
       let audioCtx = null;
       let soundOn = true;
@@ -590,7 +655,7 @@
         return audioCtx;
       }
 
-      function tone(freq, dur, type = "sine", vol = 0.14, delay = 0, endFreq = null) {
+      function tone(freq, dur, type = "sine", vol = 0.13, delay = 0, endFreq = null) {
         if (!soundOn) return;
         const ctx = ensureAudio();
         if (!ctx) return;
@@ -612,25 +677,33 @@
       }
 
       function sfxCatch(isBig) {
-        tone(587.33, 0.12, "sine", 0.14, 0);
-        tone(880.0, 0.16, "triangle", 0.13, 0.05);
-        if (isBig) tone(1174.66, 0.22, "sine", 0.13, 0.10);
+        tone(622.25, 0.10, "sine", 0.13, 0);
+        tone(932.33, 0.14, "triangle", 0.12, 0.045);
+        if (isBig) tone(1244.5, 0.19, "sine", 0.12, 0.09);
+      }
+
+      function sfxJump() {
+        tone(310, 0.14, "sine", 0.10, 0, 620);
+      }
+
+      function sfxHurdle() {
+        tone(740, 0.10, "triangle", 0.10, 0);
+        tone(1108, 0.14, "sine", 0.11, 0.05);
       }
 
       function sfxFever() {
-        [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
-          tone(f, 0.20, "triangle", 0.13, idx * 0.055);
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+          tone(f, 0.19, "triangle", 0.12, i * 0.055);
         });
       }
 
-      function sfxCucumberScare() {
-        // Hilarious startled spring boing!
-        tone(320, 0.22, "sawtooth", 0.09, 0, 960);
-        tone(560, 0.25, "triangle", 0.12, 0.08, 260);
+      function sfxScareCucumber() {
+        tone(320, 0.22, "sawtooth", 0.08, 0, 950);
+        tone(540, 0.24, "triangle", 0.11, 0.08, 250);
       }
 
-      function sfxWater() {
-        tone(440, 0.16, "sine", 0.12, 0, 170);
+      function sfxBump() {
+        tone(220, 0.18, "triangle", 0.13, 0, 95);
       }
 
       btnSound.addEventListener("click", (e) => {
@@ -640,26 +713,27 @@
       });
 
       // ---------------------------------------------------------------------
-      // 2. Three.js Cozy Sunlit Living Room Stage & Responsive Camera
+      // 2. Three.js Renderer, Studio Lighting & Warm Living-Room Stage
       // ---------------------------------------------------------------------
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.outputEncoding = THREE.sRGBEncoding;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.94;
+      renderer.toneMappingExposure = 0.96;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       viewportEl.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
-      scene.fog = new THREE.Fog(0xf4dfc4, 24, 52);
+      scene.background = new THREE.Color(0xf6e6d1);
+      scene.fog = new THREE.Fog(0xf5e2ca, 28, 72);
 
-      // Soft studio PMREM environment for clean warm sheen
+      // Soft warm PMREM environment
       const pmrem = new THREE.PMREMGenerator(renderer);
       pmrem.compileEquirectangularShader();
       const envScene = new THREE.Scene();
-      envScene.background = new THREE.Color(0x7c6756);
+      envScene.background = new THREE.Color(0x7e6856);
       const addSoftbox = (hex, w, h, p, r) => {
         const m = new THREE.Mesh(
           new THREE.PlaneGeometry(w, h),
@@ -675,162 +749,304 @@
       scene.environment = pmrem.fromScene(envScene, 0.04).texture;
       pmrem.dispose();
 
-      const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 80);
+      const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 120);
+      const camPos = new THREE.Vector3(0.85, 1.35, 3.3);
+      const camLook = new THREE.Vector3(0, 0.35, 0);
 
-      function updateResponsiveCamera() {
-        const w = window.innerWidth;
-        const h = Math.max(1, window.innerHeight);
-        const aspect = w / h;
-        camera.aspect = aspect;
-        if (aspect < 0.98) {
-          camera.fov = 48;
-          const halfFovRad = THREE.MathUtils.degToRad(24);
-          const camZ = Math.min(15.5, Math.max(8.2, 2.75 / (Math.max(0.40, aspect) * Math.tan(halfFovRad))));
-          camera.position.set(0, 2.85, camZ);
-          camera.lookAt(0, 2.25, 0);
-        } else {
-          camera.fov = 40;
-          camera.position.set(0, 2.45, 7.9);
-          camera.lookAt(0, 1.80, 0);
-        }
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      }
-      updateResponsiveCamera();
+      scene.add(new THREE.HemisphereLight(0xfff8ed, 0xc79e78, 0.48));
 
-      // Three-point warm sunlit living room lighting
-      scene.add(new THREE.HemisphereLight(0xfff6eb, 0xc9a480, 0.42));
-
-      const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.08);
-      sunLight.position.set(-4.2, 9.2, 6.4);
+      const sunLight = new THREE.DirectionalLight(0xfff4e3, 1.10);
+      sunLight.position.set(-5.0, 10.5, 6.2);
       sunLight.castShadow = true;
       sunLight.shadow.mapSize.set(1024, 1024);
       sunLight.shadow.camera.near = 1;
-      sunLight.shadow.camera.far = 24;
-      sunLight.shadow.camera.left = -5;
-      sunLight.shadow.camera.right = 5;
-      sunLight.shadow.camera.top = 7;
-      sunLight.shadow.camera.bottom = -4;
+      sunLight.shadow.camera.far = 34;
+      sunLight.shadow.camera.left = -7;
+      sunLight.shadow.camera.right = 7;
+      sunLight.shadow.camera.top = 10;
+      sunLight.shadow.camera.bottom = -16;
       sunLight.shadow.bias = -0.0005;
       scene.add(sunLight);
 
-      const rimLight = new THREE.DirectionalLight(0xfff0dc, 0.45);
-      rimLight.position.set(4.5, 4.0, -5.0);
+      const rimLight = new THREE.DirectionalLight(0xfff0dc, 0.44);
+      rimLight.position.set(5.5, 4.5, -8.0);
       scene.add(rimLight);
 
-      // Warm Honey Oak Living Room Floor
-      function makeWoodFloorTexture() {
+      // Scrolling Honey-Oak Floor & 3-Lane Living-Room Runner Rug
+      function makeWoodFloorTex() {
         const c = document.createElement("canvas");
         c.width = 512;
         c.height = 512;
         const ctx = c.getContext("2d");
-        ctx.fillStyle = "#e8c8a0";
+        ctx.fillStyle = "#e7c396";
         ctx.fillRect(0, 0, 512, 512);
-        const plankH = 64;
-        for (let row = 0; row < 8; row++) {
-          ctx.fillStyle = row % 2 === 0 ? "rgba(210, 165, 118, 0.16)" : "rgba(255, 240, 220, 0.12)";
-          ctx.fillRect(0, row * plankH, 512, plankH);
-          ctx.fillStyle = "rgba(138, 92, 52, 0.16)";
-          ctx.fillRect(0, row * plankH, 512, 2);
-          const seam = ((row * 173) % 420) + 40;
-          ctx.fillRect(seam, row * plankH, 2, plankH);
+        const pw = 64;
+        for (let col = 0; col < 8; col++) {
+          ctx.fillStyle = col % 2 === 0 ? "rgba(202, 152, 98, 0.18)" : "rgba(255, 242, 224, 0.12)";
+          ctx.fillRect(col * pw, 0, pw, 512);
+          ctx.fillStyle = "rgba(130, 84, 46, 0.18)";
+          ctx.fillRect(col * pw, 0, 2, 512);
+          const seamY = ((col * 167) % 420) + 42;
+          ctx.fillRect(col * pw, seamY, pw, 2);
         }
         const tex = new THREE.CanvasTexture(c);
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(9, 9);
+        tex.repeat.set(3.2, 18);
         tex.encoding = THREE.sRGBEncoding;
         return tex;
       }
 
-      const floorMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(42, 42),
-        new THREE.MeshStandardMaterial({ map: makeWoodFloorTexture(), roughness: 0.86 })
-      );
-      floorMesh.rotation.x = -Math.PI / 2;
-      floorMesh.receiveShadow = true;
-      scene.add(floorMesh);
+      function makeRunnerRugTex() {
+        const c = document.createElement("canvas");
+        c.width = 512;
+        c.height = 256;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#fbf3e5";
+        ctx.fillRect(0, 0, 512, 256);
 
-      // Cozy Cream Living Room Rug marking the play arena
-      const rugOuter = new THREE.Mesh(
-        new THREE.CylinderGeometry(3.05, 3.08, 0.035, 48),
-        new THREE.MeshStandardMaterial({ color: 0xfbf4e8, roughness: 0.94 })
-      );
-      rugOuter.scale.set(1.0, 1.0, 0.54);
-      rugOuter.position.set(0, 0.017, 0);
-      rugOuter.receiveShadow = true;
-      scene.add(rugOuter);
+        // Soft woven horizontal fibers
+        ctx.fillStyle = "rgba(218, 189, 154, 0.16)";
+        for (let y = 0; y < 256; y += 16) {
+          ctx.fillRect(0, y, 512, 3);
+        }
 
-      const rugBorder = new THREE.Mesh(
-        new THREE.TorusGeometry(2.85, 0.035, 10, 48),
-        new THREE.MeshStandardMaterial({ color: 0xe49257, roughness: 0.82 })
-      );
-      rugBorder.rotation.x = Math.PI / 2;
-      rugBorder.scale.set(1.0, 0.54, 1.0);
-      rugBorder.position.set(0, 0.038, 0);
-      scene.add(rugBorder);
+        // Left & right warm terracotta borders
+        ctx.fillStyle = "#df854a";
+        ctx.fillRect(0, 0, 22, 256);
+        ctx.fillRect(490, 0, 22, 256);
+        ctx.fillStyle = "#f4be6a";
+        ctx.fillRect(28, 0, 7, 256);
+        ctx.fillRect(477, 0, 7, 256);
 
-      // Decorative Cozy Living Room Backdrop Props (Couch Pillows & Warm Back Wall)
-      const backWall = new THREE.Mesh(
-        new THREE.BoxGeometry(26, 9, 0.4),
-        new THREE.MeshStandardMaterial({ color: 0xf9ebd8, roughness: 0.92 })
-      );
-      backWall.position.set(0, 4.5, -3.2);
-      backWall.receiveShadow = true;
-      scene.add(backWall);
+        // Two subtle crisp dashed lane dividers separating the 3 lanes
+        ctx.fillStyle = "rgba(196, 134, 82, 0.45)";
+        const laneDiv1 = Math.round(512 * 0.345);
+        const laneDiv2 = Math.round(512 * 0.655);
+        for (let y = 18; y < 256; y += 64) {
+          ctx.fillRect(laneDiv1 - 3, y, 6, 36);
+          ctx.fillRect(laneDiv2 - 3, y, 6, 36);
+        }
 
-      const baseboard = new THREE.Mesh(
-        new THREE.BoxGeometry(26, 0.32, 0.46),
-        new THREE.MeshStandardMaterial({ color: 0xfff8ef, roughness: 0.72 })
-      );
-      baseboard.position.set(0, 0.16, -3.18);
-      scene.add(baseboard);
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(1, 20);
+        tex.encoding = THREE.sRGBEncoding;
+        return tex;
+      }
 
-      // Subtle Sofa Silhouette in back center
-      const sofaGroup = new THREE.Group();
-      const sofaMat = new THREE.MeshStandardMaterial({ color: 0xdcc4a8, roughness: 0.88 });
-      const sofaSeat = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.55, 1.15), sofaMat);
-      sofaSeat.position.set(0, 0.28, -2.35);
-      const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.15, 0.35), sofaMat);
-      sofaBack.position.set(0, 0.78, -2.78);
+      const FLOOR_LEN = 96;
+      const woodTex = makeWoodFloorTex();
+      const woodFloor = new THREE.Mesh(
+        new THREE.PlaneGeometry(11, FLOOR_LEN),
+        new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.85 })
+      );
+      woodFloor.rotation.x = -Math.PI / 2;
+      woodFloor.position.set(0, 0, -34);
+      woodFloor.receiveShadow = true;
+      scene.add(woodFloor);
+
+      const rugTex = makeRunnerRugTex();
+      const runnerRug = new THREE.Mesh(
+        new THREE.PlaneGeometry(4.85, FLOOR_LEN),
+        new THREE.MeshStandardMaterial({ map: rugTex, roughness: 0.93 })
+      );
+      runnerRug.rotation.x = -Math.PI / 2;
+      runnerRug.position.set(0, 0.012, -34);
+      runnerRug.receiveShadow = true;
+      scene.add(runnerRug);
+
+      // Side Living-Room Corridor Segments (Looping Infinite 3D Tunnel)
+      const SEG_LEN = 14;
+      const SEG_COUNT = 6;
+      const corridorSegments = [];
+
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0xfaebd7, roughness: 0.92 });
+      const baseMat = new THREE.MeshStandardMaterial({ color: 0xfff8ef, roughness: 0.72 });
+      const beamMat = new THREE.MeshStandardMaterial({ color: 0xc99662, roughness: 0.78 });
+      const sofaFabricMat = new THREE.MeshStandardMaterial({ color: 0xd8be9e, roughness: 0.88 });
       const pillowMat = new THREE.MeshStandardMaterial({ color: 0xe6844e, roughness: 0.85 });
-      const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.58, 0.22), pillowMat);
-      p1.position.set(-1.35, 0.76, -2.52);
-      p1.rotation.set(-0.18, 0.12, 0.12);
-      const p2 = p1.clone();
-      p2.position.x = 1.35;
-      p2.rotation.set(-0.18, -0.12, -0.12);
-      sofaGroup.add(sofaSeat, sofaBack, p1, p2);
-      sofaGroup.traverse((c) => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
-      scene.add(sofaGroup);
+      const potMat = new THREE.MeshStandardMaterial({ color: 0xc96a41, roughness: 0.76 });
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x529b50, roughness: 0.70 });
+      const darkWoodMat = new THREE.MeshStandardMaterial({ color: 0x9b6b42, roughness: 0.76 });
+      const sisalMat = new THREE.MeshStandardMaterial({ color: 0xe6cfa4, roughness: 0.92 });
+      const lampShadeMat = new THREE.MeshStandardMaterial({
+        color: 0xfff3d8,
+        emissive: 0xffc97a,
+        emissiveIntensity: 0.55,
+        roughness: 0.55,
+      });
+
+      function createCorridorSegment(variant, zPos) {
+        const seg = new THREE.Group();
+        seg.position.set(0, 0, zPos);
+
+        // Left & right walls + white baseboards
+        const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.8, SEG_LEN + 0.04), wallMat);
+        wallL.position.set(-4.3, 2.9, 0);
+        wallL.receiveShadow = true;
+        const wallR = wallL.clone();
+        wallR.position.x = 4.3;
+
+        const baseL = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.34, SEG_LEN + 0.04), baseMat);
+        baseL.position.set(-4.26, 0.17, 0);
+        const baseR = baseL.clone();
+        baseR.position.x = 4.26;
+
+        // Overhead oak archway beam + pillars for unmistakable 3D depth
+        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(8.6, 0.34, 0.42), beamMat);
+        topBeam.position.set(0, 5.25, 0);
+        const pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 5.2, 0.38), beamMat);
+        pillarL.position.set(-4.02, 2.6, 0);
+        const pillarR = pillarL.clone();
+        pillarR.position.x = 4.02;
+
+        seg.add(wallL, wallR, baseL, baseR, topBeam, pillarL, pillarR);
+
+        if (variant === 0) {
+          // Cozy Sofa on Left + Warm Floor Lamp & Plant on Right
+          const sofa = new THREE.Group();
+          const seat = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.54, 3.6), sofaFabricMat);
+          seat.position.set(-3.45, 0.27, -2.5);
+          const back = new THREE.Mesh(new THREE.BoxGeometry(0.32, 1.12, 3.6), sofaFabricMat);
+          back.position.set(-3.88, 0.68, -2.5);
+          const armF = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.72, 0.26), sofaFabricMat);
+          armF.position.set(-3.45, 0.36, -0.82);
+          const armB = armF.clone();
+          armB.position.z = -4.18;
+          const cush = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.50, 0.56), pillowMat);
+          cush.position.set(-3.55, 0.76, -1.6);
+          cush.rotation.z = -0.2;
+          sofa.add(seat, back, armF, armB, cush);
+          seg.add(sofa);
+
+          // Potted plant on right
+          const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.30, 0.22, 0.48, 12), potMat);
+          pot.position.set(3.45, 0.24, 1.8);
+          const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.75, 8), darkWoodMat);
+          stem.position.set(3.45, 0.72, 1.8);
+          const crown1 = new THREE.Mesh(new THREE.SphereGeometry(0.42, 12, 10), leafMat);
+          crown1.position.set(3.45, 1.18, 1.8);
+          const crown2 = new THREE.Mesh(new THREE.SphereGeometry(0.30, 10, 8), leafMat);
+          crown2.position.set(3.25, 1.42, 1.95);
+          seg.add(pot, stem, crown1, crown2);
+
+          // Warm floor lamp on right further back
+          const lBase = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.06, 12), darkWoodMat);
+          lBase.position.set(3.55, 0.03, -3.6);
+          const lPole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.95, 8), darkWoodMat);
+          lPole.position.set(3.55, 1.0, -3.6);
+          const lShade = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.36, 0.42, 14), lampShadeMat);
+          lShade.position.set(3.55, 2.04, -3.6);
+          seg.add(lBase, lPole, lShade);
+        } else if (variant === 1) {
+          // Sunlit Window on Left + Wooden Bookshelf on Right
+          const winFrame = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.1, 3.0), baseMat);
+          winFrame.position.set(-4.04, 2.65, 0);
+          const winGlass = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.65, 1.75),
+            new THREE.MeshBasicMaterial({ color: 0xfffbe8 })
+          );
+          winGlass.rotation.y = Math.PI / 2;
+          winGlass.position.set(-3.96, 2.65, 0);
+          const sunPatch = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.9, 2.7),
+            new THREE.MeshBasicMaterial({ color: 0xfff5d4, transparent: true, opacity: 0.24 })
+          );
+          sunPatch.rotation.x = -Math.PI / 2;
+          sunPatch.position.set(-2.95, 0.014, 0);
+          seg.add(winFrame, winGlass, sunPatch);
+
+          // Bookshelf on Right
+          const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.68, 2.25, 1.75), darkWoodMat);
+          shelf.position.set(3.65, 1.12, -1.8);
+          seg.add(shelf);
+          const bookColors = [0xe47439, 0x3b86b8, 0xf2ba38, 0x56a36b];
+          bookColors.forEach((col, bi) => {
+            const b = new THREE.Mesh(
+              new THREE.BoxGeometry(0.32, 0.42, 0.24),
+              new THREE.MeshStandardMaterial({ color: col, roughness: 0.72 })
+            );
+            b.position.set(3.38, 0.72 + (bi % 2) * 0.72, -2.2 + bi * 0.32);
+            seg.add(b);
+          });
+        } else {
+          // Cat Scratching Tower on Left + Framed Wall Art & Plant on Right
+          const cBase = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.14, 0.95), sofaFabricMat);
+          cBase.position.set(-3.45, 0.07, 1.2);
+          const cPost = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1.25, 12), sisalMat);
+          cPost.position.set(-3.45, 0.75, 1.2);
+          const cPerch = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.16, 16), sofaFabricMat);
+          cPerch.position.set(-3.45, 1.42, 1.2);
+          seg.add(cBase, cPost, cPerch);
+
+          // Framed Art on Right Wall
+          const artFrame = new THREE.Mesh(new THREE.BoxGeometry(0.10, 1.25, 1.55), darkWoodMat);
+          artFrame.position.set(4.02, 2.55, 0.5);
+          const artCanvas = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.32, 1.02),
+            new THREE.MeshBasicMaterial({ color: 0xffe4c4 })
+          );
+          artCanvas.rotation.y = -Math.PI / 2;
+          artCanvas.position.set(3.96, 2.55, 0.5);
+          seg.add(artFrame, artCanvas);
+
+          // Low Side Table + Cat Toy on Right
+          const tblTop = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.08, 14), darkWoodMat);
+          tblTop.position.set(3.48, 0.62, -3.1);
+          const tblLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.60, 8), darkWoodMat);
+          tblLeg.position.set(3.48, 0.30, -3.1);
+          const yarnBall = new THREE.Mesh(
+            new THREE.SphereGeometry(0.18, 12, 10),
+            new THREE.MeshStandardMaterial({ color: 0xe6657c, roughness: 0.86 })
+          );
+          yarnBall.position.set(3.48, 0.84, -3.1);
+          seg.add(tblTop, tblLeg, yarnBall);
+        }
+
+        seg.traverse((c) => {
+          if (c.isMesh && !c.material.transparent) {
+            c.castShadow = true;
+            c.receiveShadow = true;
+          }
+        });
+        scene.add(seg);
+        corridorSegments.push(seg);
+      }
+
+      for (let i = 0; i < SEG_COUNT; i++) {
+        createCorridorSegment(i % 3, 10 - i * SEG_LEN);
+      }
 
       // ---------------------------------------------------------------------
       // 3. Cute 3D Calico Cat Player Setup
       // ---------------------------------------------------------------------
       const catRoot = new THREE.Group();
-      const catTiltGroup = new THREE.Group();
-      catRoot.add(catTiltGroup);
+      const catHeadingGroup = new THREE.Group(); // rotates 0 (front +Z) <-> Math.PI (run -Z)
+      const catMotionGroup = new THREE.Group();  // bounce, squash/stretch, tilt
+      catRoot.add(catHeadingGroup);
+      catHeadingGroup.add(catMotionGroup);
 
       const catShadow = new THREE.Mesh(
-        new THREE.CircleGeometry(0.42, 28),
-        new THREE.MeshBasicMaterial({ color: 0x26170e, transparent: true, opacity: 0.25 })
+        new THREE.CircleGeometry(0.46, 28),
+        new THREE.MeshBasicMaterial({ color: 0x26170e, transparent: true, opacity: 0.28 })
       );
       catShadow.rotation.x = -Math.PI / 2;
-      catShadow.position.y = 0.04;
+      catShadow.position.y = 0.022;
       scene.add(catShadow);
       scene.add(catRoot);
 
-      // Golden Fever Halo around cat when bell bonus active
+      // Golden Magnet + Fever Halo
       const feverHalo = new THREE.Mesh(
-        new THREE.TorusGeometry(0.55, 0.028, 10, 36),
-        new THREE.MeshBasicMaterial({ color: 0xf8c22e, transparent: true, opacity: 0.0 })
+        new THREE.TorusGeometry(0.60, 0.032, 10, 36),
+        new THREE.MeshBasicMaterial({ color: 0xfac832, transparent: true, opacity: 0.0 })
       );
       feverHalo.rotation.x = Math.PI / 2;
       feverHalo.position.y = 0.06;
       catRoot.add(feverHalo);
 
       let catTailMesh = null;
-      let catReady = false;
 
       function attachCatGLTF(gltf) {
         const raw = gltf.scene;
@@ -848,7 +1064,7 @@
         box.getCenter(center);
         box.getSize(size);
 
-        const targetHeight = 1.15;
+        const targetHeight = 1.10;
         const scale = targetHeight / Math.max(0.001, size.y);
         raw.scale.setScalar(scale);
         raw.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
@@ -860,8 +1076,7 @@
           }
         });
 
-        catTiltGroup.add(raw);
-        catReady = true;
+        catMotionGroup.add(raw);
         loaderModal.classList.add("hidden");
         startModal.classList.remove("hidden");
         gameAPI.loaded = true;
@@ -890,190 +1105,293 @@
       }
 
       // ---------------------------------------------------------------------
-      // 4. Falling 3D Items (Treats & Hazards) + Particles
+      // 4. 3D Runner Items, Obstacles & Burst Particles
       // ---------------------------------------------------------------------
-      const fallingItems = [];
+      const runnerItems = [];
       const particles = [];
 
       function buildItemMesh(type) {
         const g = new THREE.Group();
+        let brush = null;
+
         if (type === "fish") {
-          const mat = new THREE.MeshStandardMaterial({ color: 0xf29336, roughness: 0.36 });
+          const mat = new THREE.MeshStandardMaterial({ color: 0xf29336, roughness: 0.34 });
           const body = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), mat);
-          body.scale.set(1.42, 0.76, 0.50);
+          body.scale.set(1.45, 0.78, 0.52);
           const tail = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.22, 4), mat);
           tail.rotation.z = -Math.PI / 2;
-          tail.scale.set(1, 1, 0.45);
+          tail.scale.set(1, 1, 0.46);
           tail.position.x = -0.32;
           const eye = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), new THREE.MeshBasicMaterial({ color: 0x261a14 }));
-          eye.position.set(0.18, 0.05, 0.085);
+          eye.position.set(0.18, 0.05, 0.088);
           const eye2 = eye.clone();
-          eye2.position.z = -0.085;
+          eye2.position.z = -0.088;
           g.add(body, tail, eye, eye2);
         } else if (type === "shrimp") {
-          const mat = new THREE.MeshStandardMaterial({ color: 0xf4a92d, roughness: 0.42 });
+          const mat = new THREE.MeshStandardMaterial({ color: 0xf4a92d, roughness: 0.38 });
           const tailMat = new THREE.MeshStandardMaterial({ color: 0xd93c28, roughness: 0.38 });
-          const arc = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.085, 10, 18, Math.PI * 1.25), mat);
-          arc.rotation.z = 0.2;
+          const arc = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.088, 10, 18, Math.PI * 1.25), mat);
+          arc.rotation.z = 0.22;
           const fin = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.16, 4), tailMat);
-          fin.position.set(-0.18, -0.05, 0);
+          fin.position.set(-0.19, -0.05, 0);
           fin.rotation.z = 0.7;
           g.add(arc, fin);
         } else if (type === "bell") {
-          const mat = new THREE.MeshStandardMaterial({ color: 0xf5be2c, roughness: 0.20, metalness: 0.85, emissive: 0x623b00, emissiveIntensity: 0.25 });
-          const orb = new THREE.Mesh(new THREE.SphereGeometry(0.21, 18, 14), mat);
-          const ring = new THREE.Mesh(new THREE.TorusGeometry(0.215, 0.03, 8, 20), mat);
+          const mat = new THREE.MeshStandardMaterial({ color: 0xf7c230, roughness: 0.18, metalness: 0.85, emissive: 0x623b00, emissiveIntensity: 0.28 });
+          const orb = new THREE.Mesh(new THREE.SphereGeometry(0.23, 18, 14), mat);
+          const ring = new THREE.Mesh(new THREE.TorusGeometry(0.235, 0.032, 8, 20), mat);
           ring.rotation.x = Math.PI / 2;
-          const top = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.02, 8, 16), mat);
-          top.position.y = 0.24;
-          g.add(orb, ring, top);
+          const top = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.022, 8, 16), mat);
+          top.position.y = 0.26;
+          const aura = new THREE.Mesh(
+            new THREE.TorusGeometry(0.35, 0.022, 8, 24),
+            new THREE.MeshBasicMaterial({ color: 0xffe46b, transparent: true, opacity: 0.75 })
+          );
+          g.add(orb, ring, top, aura);
         } else if (type === "heart") {
-          const mat = new THREE.MeshStandardMaterial({ color: 0xe94c6f, roughness: 0.34, emissive: 0x5c1022, emissiveIntensity: 0.22 });
-          const l1 = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), mat);
-          l1.position.set(-0.095, 0.06, 0);
+          const mat = new THREE.MeshStandardMaterial({ color: 0xe94c6f, roughness: 0.32, emissive: 0x5c1022, emissiveIntensity: 0.25 });
+          const l1 = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 12), mat);
+          l1.position.set(-0.10, 0.06, 0);
           const l2 = l1.clone();
-          l2.position.x = 0.095;
-          const tip = new THREE.Mesh(new THREE.ConeGeometry(0.185, 0.26, 16), mat);
+          l2.position.x = 0.10;
+          const tip = new THREE.Mesh(new THREE.ConeGeometry(0.195, 0.28, 16), mat);
           tip.rotation.z = Math.PI;
-          tip.position.y = -0.09;
+          tip.position.y = -0.10;
           g.add(l1, l2, tip);
-        } else if (type === "cucumber") {
-          // Iconic green striped cucumber with bumpy nubs
-          const mat = new THREE.MeshStandardMaterial({ color: 0x3b8c32, roughness: 0.56 });
-          const stripeMat = new THREE.MeshStandardMaterial({ color: 0x20521b, roughness: 0.55 });
-          const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.125, 0.56, 16), mat);
-          const cap1 = new THREE.Mesh(new THREE.SphereGeometry(0.115, 14, 10), mat);
-          cap1.position.y = 0.28;
-          const cap2 = new THREE.Mesh(new THREE.SphereGeometry(0.125, 14, 10), mat);
-          cap2.position.y = -0.28;
-          g.add(cyl, cap1, cap2);
-          for (let i = 0; i < 4; i++) {
-            const ang = (i * Math.PI) / 2;
-            const rib = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.48, 6), stripeMat);
-            rib.position.set(Math.cos(ang) * 0.115, 0, Math.sin(ang) * 0.115);
-            g.add(rib);
+        } else if (type === "roomba") {
+          // Low Jumpable 3D Robot Vacuum (h ~ 0.36)
+          const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2c2f36, roughness: 0.40, metalness: 0.25 });
+          const topMat = new THREE.MeshStandardMaterial({ color: 0xf4f2ef, roughness: 0.28 });
+          const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.50, 0.52, 0.16, 24), bodyMat);
+          disc.position.y = 0.09;
+          const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.44, 0.06, 22), topMat);
+          cap.position.y = 0.19;
+          const lidar = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.14, 0.10, 16), bodyMat);
+          lidar.position.y = 0.27;
+          const led = new THREE.Mesh(
+            new THREE.TorusGeometry(0.14, 0.022, 8, 20),
+            new THREE.MeshBasicMaterial({ color: 0x2be9da })
+          );
+          led.rotation.x = Math.PI / 2;
+          led.position.y = 0.23;
+
+          // Spinning yellow side bristles
+          brush = new THREE.Group();
+          brush.position.set(0.36, 0.04, 0.30);
+          const bristleMat = new THREE.MeshBasicMaterial({ color: 0xf6c336 });
+          for (let i = 0; i < 3; i++) {
+            const arm = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.015, 0.028), bristleMat);
+            arm.rotation.y = (i * Math.PI) / 3;
+            brush.add(arm);
           }
-          g.rotation.z = 0.35;
+          g.add(disc, cap, lidar, led, brush);
+        } else if (type === "cucumber") {
+          // Low Jumpable Plump Striped Green Cucumber on Warning Strip (h ~ 0.38)
+          const cMat = new THREE.MeshStandardMaterial({ color: 0x3b8c32, roughness: 0.54 });
+          const sMat = new THREE.MeshStandardMaterial({ color: 0x20521b, roughness: 0.55 });
+          const cuk = new THREE.Group();
+          const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.145, 0.155, 0.82, 16), cMat);
+          const cap1 = new THREE.Mesh(new THREE.SphereGeometry(0.145, 14, 10), cMat);
+          cap1.position.y = 0.41;
+          const cap2 = new THREE.Mesh(new THREE.SphereGeometry(0.155, 14, 10), cMat);
+          cap2.position.y = -0.41;
+          cuk.add(cyl, cap1, cap2);
+          for (let i = 0; i < 4; i++) {
+            const a = (i * Math.PI) / 2;
+            const rib = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.72, 6), sMat);
+            rib.position.set(Math.cos(a) * 0.145, 0, Math.sin(a) * 0.145);
+            cuk.add(rib);
+          }
+          cuk.rotation.z = Math.PI / 2;
+          cuk.position.y = 0.20;
+
+          const warnStrip = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.18, 0.42),
+            new THREE.MeshBasicMaterial({ color: 0xd93838, transparent: true, opacity: 0.45 })
+          );
+          warnStrip.rotation.x = -Math.PI / 2;
+          warnStrip.position.y = 0.02;
+          g.add(cuk, warnStrip);
         } else {
-          // Glossy Blue Water Droplet
-          const mat = new THREE.MeshStandardMaterial({ color: 0x399be8, roughness: 0.12, metalness: 0.1, emissive: 0x0c3c66, emissiveIntensity: 0.2 });
-          const dropBase = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 14), mat);
-          dropBase.position.y = -0.05;
-          const dropTip = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.30, 16), mat);
-          dropTip.position.y = 0.14;
-          g.add(dropBase, dropTip);
+          // Tall Non-Jumpable Moving Boxes ("box", h ~ 1.85)
+          const cardMat1 = new THREE.MeshStandardMaterial({ color: 0xc8955d, roughness: 0.88 });
+          const cardMat2 = new THREE.MeshStandardMaterial({ color: 0xd8a872, roughness: 0.86 });
+          const tapeMat = new THREE.MeshStandardMaterial({ color: 0xf4dfba, roughness: 0.65 });
+
+          const b1 = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.94, 0.98), cardMat1);
+          b1.position.y = 0.47;
+          const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.96, 1.00), tapeMat);
+          t1.position.y = 0.47;
+
+          const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.86, 0.86), cardMat2);
+          b2.position.set(0.03, 1.37, 0);
+          b2.rotation.y = 0.14;
+          const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.88, 0.88), tapeMat);
+          t2.position.set(0.03, 1.37, 0);
+          t2.rotation.y = 0.14;
+
+          // Bright orange caution front band so tall obstacle reads clearly from far away
+          const band = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.72, 0.22),
+            new THREE.MeshBasicMaterial({ color: 0xe64d28 })
+          );
+          band.position.set(0, 0.56, 0.50);
+          g.add(b1, t1, b2, t2, band);
         }
-        g.traverse((c) => { if (c.isMesh) c.castShadow = true; });
-        return g;
+
+        g.traverse((c) => {
+          if (c.isMesh && !c.material.transparent) c.castShadow = true;
+        });
+        return { group: g, brush };
       }
 
-      function spawnItem(forcedType = null, forcedX = null, forcedY = null) {
-        let type = forcedType;
-        if (!type) {
-          const r = Math.random();
-          const rush = timeLeft <= 10.0;
-          const dangerChance = rush ? 0.24 : 0.34;
-          if (r < dangerChance) {
-            type = Math.random() < 0.65 ? "cucumber" : "water";
-          } else if (hearts < 3 && Math.random() < 0.09) {
-            type = "heart";
-          } else if (r < dangerChance + 0.09) {
-            type = "bell";
-          } else if (r < dangerChance + 0.26) {
-            type = "shrimp";
-          } else {
-            type = "fish";
-          }
+      function spawnItem(type, laneIdx, zPos, yOffset = null) {
+        const clampedLane = Math.max(0, Math.min(2, laneIdx));
+        const x = LANE_XS[clampedLane];
+        const isHazard = type === "roomba" || type === "cucumber" || type === "box";
+        const jumpable = type === "roomba" || type === "cucumber";
+        const topY = type === "box" ? 1.82 : 0.36;
+        const y = yOffset !== null ? yOffset : (isHazard ? 0.015 : 0.48);
+
+        const built = buildItemMesh(type);
+        built.group.position.set(x, y, zPos);
+        scene.add(built.group);
+
+        let shadowMesh = null;
+        if (!isHazard) {
+          shadowMesh = new THREE.Mesh(
+            new THREE.CircleGeometry(0.25, 16),
+            new THREE.MeshBasicMaterial({ color: 0x3b2312, transparent: true, opacity: 0.24 })
+          );
+          shadowMesh.rotation.x = -Math.PI / 2;
+          shadowMesh.position.set(x, 0.02, zPos);
+          scene.add(shadowMesh);
         }
 
-        const isHazard = type === "cucumber" || type === "water";
-        const x = forcedX !== null ? forcedX : THREE.MathUtils.randFloat(-LANE_LIMIT, LANE_LIMIT);
-        const y = forcedY !== null ? forcedY : (window.innerWidth / window.innerHeight < 1 ? 6.2 : 4.9);
-        const speed = (isHazard ? 2.55 : 2.35) + Math.min(1.3, (MATCH_DURATION - timeLeft) * 0.025) + Math.random() * 0.6;
-
-        const mesh = buildItemMesh(type);
-        mesh.position.set(x, y, 0);
-        scene.add(mesh);
-
-        // Floor shadow / danger target ring directly beneath falling item
-        const ringGeo = isHazard ? new THREE.RingGeometry(0.24, 0.34, 24) : new THREE.CircleGeometry(0.26, 20);
-        const ringMat = new THREE.MeshBasicMaterial({
-          color: isHazard ? 0xd93030 : 0xd8872c,
-          transparent: true,
-          opacity: isHazard ? 0.55 : 0.24,
-          side: THREE.DoubleSide,
-        });
-        const marker = new THREE.Mesh(ringGeo, ringMat);
-        marker.rotation.x = -Math.PI / 2;
-        marker.position.set(x, 0.04, 0);
-        scene.add(marker);
-
-        fallingItems.push({
+        runnerItems.push({
           type,
           isHazard,
-          mesh,
-          marker,
+          jumpable,
+          topY,
+          lane: clampedLane,
           x,
           y,
-          speed,
-          spinY: THREE.MathUtils.randFloat(1.5, 3.4),
-          spinZ: isHazard ? THREE.MathUtils.randFloat(-1.5, 1.5) : 0,
+          z: zPos,
+          prevZ: zPos,
+          mesh: built.group,
+          brush: built.brush,
+          shadowMesh,
+          hitProcessed: false,
+          hurdleAwarded: false,
         });
+      }
+
+      function spawnWave(zBase) {
+        // Always guarantee at least 1 fully open or cleanly jumpable lane!
+        const r = Math.random();
+        const openLane = Math.floor(Math.random() * 3);
+        const otherLanes = [0, 1, 2].filter((l) => l !== openLane);
+
+        if (r < 0.34) {
+          // Pattern 1: One lane has tall box or hazard, open lane has 3-fish trail
+          const obsType = Math.random() < 0.55 ? "box" : (Math.random() < 0.5 ? "roomba" : "cucumber");
+          spawnItem(obsType, otherLanes[0], zBase);
+          if (Math.random() < 0.55) {
+            const obs2 = Math.random() < 0.6 ? "roomba" : "box";
+            spawnItem(obs2, otherLanes[1], zBase - 1.5);
+          }
+          for (let k = 0; k < 3; k++) {
+            const bonus = k === 1 && Math.random() < 0.22 ? "shrimp" : "fish";
+            spawnItem(bonus, openLane, zBase + 1.6 - k * 2.2, 0.48);
+          }
+        } else if (r < 0.68) {
+          // Pattern 2: Hurdle jump opportunity! Low obstacle with aerial fish/shrimp arc above
+          const lowType = Math.random() < 0.52 ? "roomba" : "cucumber";
+          const hurdleLane = otherLanes[0];
+          spawnItem(lowType, hurdleLane, zBase);
+          spawnItem(Math.random() < 0.35 ? "shrimp" : "fish", hurdleLane, zBase, 1.38);
+          spawnItem("fish", hurdleLane, zBase - 2.0, 0.95);
+          if (Math.random() < 0.55) {
+            spawnItem("box", otherLanes[1], zBase - 0.5);
+          }
+        } else if (r < 0.86) {
+          // Pattern 3: Two tall boxes framing a single thrilling sprint gap + treat
+          spawnItem("box", otherLanes[0], zBase);
+          spawnItem("box", otherLanes[1], zBase);
+          spawnItem("fish", openLane, zBase + 2.0, 0.48);
+          if (hearts < 3 && Math.random() < 0.28) {
+            spawnItem("heart", openLane, zBase, 0.52);
+          } else if (Math.random() < 0.25) {
+            spawnItem("bell", openLane, zBase, 0.54);
+          } else {
+            spawnItem("shrimp", openLane, zBase, 0.50);
+          }
+        } else {
+          // Pattern 4: Treat Slalom + optional Golden Bell
+          spawnItem("fish", openLane, zBase + 1.5, 0.48);
+          spawnItem(Math.random() < 0.32 ? "bell" : "fish", openLane, zBase - 0.8, 0.52);
+          spawnItem("cucumber", otherLanes[0], zBase - 1.8);
+        }
       }
 
       function spawnBurst(x, y, z, colorHex, count = 14) {
-        const geo = new THREE.SphereGeometry(0.055, 8, 6);
+        const geo = new THREE.SphereGeometry(0.06, 8, 6);
         for (let i = 0; i < count; i++) {
           const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95 });
           const p = new THREE.Mesh(geo, mat);
           p.position.set(x, y, z);
           const ang = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-          const spd = 1.6 + Math.random() * 2.2;
+          const spd = 1.8 + Math.random() * 2.4;
           scene.add(p);
           particles.push({
             mesh: p,
             vx: Math.cos(ang) * spd,
-            vy: 2.0 + Math.random() * 2.4,
+            vy: 2.2 + Math.random() * 2.6,
             vz: Math.sin(ang) * spd,
             age: 0,
-            dur: 0.48 + Math.random() * 0.22,
+            dur: 0.46 + Math.random() * 0.20,
           });
         }
       }
 
       function clearItems() {
-        while (fallingItems.length > 0) {
-          const it = fallingItems.pop();
+        while (runnerItems.length > 0) {
+          const it = runnerItems.pop();
           scene.remove(it.mesh);
-          scene.remove(it.marker);
+          if (it.shadowMesh) scene.remove(it.shadowMesh);
         }
       }
 
       // ---------------------------------------------------------------------
-      // 5. Game State Machine (45s Arcade + Startled Cucumber Bounce!)
+      // 5. Runner State Machine & Choreography
       // ---------------------------------------------------------------------
       let bestScore = parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0;
       let gameState = "start"; // "start" | "playing" | "ended"
+      let introT = 0;          // 0 = front close-up -> 1 = rear 3D chase camera
       let score = 0;
-      let timeLeft = MATCH_DURATION;
+      let distance = 0;
       let hearts = 3;
       let combo = 0;
       let caughtCount = 0;
       let feverTimer = 0;
-      let rushAnnounced = false;
-      let spawnCooldown = 0.35;
+      let runSpeed = BASE_SPEED;
+      let nextSpeedAnnounce = 120;
+      let speedBannerTimer = 0;
+      let nextWaveDist = 14;
 
-      // Player motion & startled hop physics
+      // Player physics
+      let lane = 1;
       let catX = 0;
-      let targetCatX = 0;
       let catVelX = 0;
-      let runPhase = 0;
-      let scareY = 0;
-      let scareVelY = 0;
-      let scareSpin = 0;
+      let catY = 0;
+      let catVelY = 0;
+      let isJumping = false;
+      let jumpBufferTimer = 0;
+      let gallopPhase = 0;
+      let laneYaw = 0;
+      let laneRoll = 0;
       let invulnTimer = 0;
-
-      const keys = { left: false, right: false };
+      let shakeTimer = 0;
       let popupTimer = null;
 
       function showPopup(text, variant) {
@@ -1082,10 +1400,10 @@
         void floatPopupEl.offsetWidth;
         floatPopupEl.classList.add("show");
         clearTimeout(popupTimer);
-        popupTimer = setTimeout(() => floatPopupEl.classList.remove("show"), 880);
+        popupTimer = setTimeout(() => floatPopupEl.classList.remove("show"), 850);
       }
 
-      function getComboMult() {
+      function getMult() {
         let m = 1;
         if (combo >= 12) m = 3;
         else if (combo >= 5) m = 2;
@@ -1095,10 +1413,7 @@
 
       function updateHUD() {
         scoreValEl.textContent = String(score);
-        const tInt = Math.max(0, Math.ceil(timeLeft));
-        timerValEl.textContent = String(tInt);
-        timerPillEl.classList.toggle("urgent", gameState === "playing" && timeLeft <= 10.0);
-
+        distValEl.textContent = String(Math.floor(distance));
         heartsValEl.textContent = "❤️".repeat(hearts) + "🤍".repeat(Math.max(0, 3 - hearts));
 
         const cm = combo >= 12 ? 3 : combo >= 5 ? 2 : 1;
@@ -1110,56 +1425,103 @@
         }
 
         if (feverTimer > 0) {
-          feverChipEl.textContent = `🔔 雙倍得分 ${Math.ceil(feverTimer)}s`;
+          feverChipEl.textContent = `🔔 雙倍＋磁鐵 ${Math.ceil(feverTimer)}s`;
           feverChipEl.classList.add("visible");
         } else {
           feverChipEl.classList.remove("visible");
         }
 
-        rushChipEl.classList.toggle("visible", gameState === "playing" && timeLeft <= 10.0 && timeLeft > 0);
+        speedChipEl.classList.toggle("visible", speedBannerTimer > 0);
 
         gameAPI.state = gameState;
         gameAPI.score = score;
         gameAPI.bestScore = bestScore;
-        gameAPI.timeLeft = Number(timeLeft.toFixed(1));
+        gameAPI.distance = Number(distance.toFixed(1));
         gameAPI.hearts = hearts;
         gameAPI.combo = combo;
         gameAPI.caughtCount = caughtCount;
+        gameAPI.lane = lane;
+        gameAPI.isJumping = isJumping;
+        gameAPI.cameraMode = introT >= 0.85 ? "chase" : "front";
+      }
+
+      function shiftLane(delta) {
+        if (gameState !== "playing") return;
+        const next = Math.max(0, Math.min(2, lane + delta));
+        if (next !== lane) {
+          lane = next;
+          laneYaw = delta > 0 ? -0.34 : 0.34;
+          laneRoll = delta > 0 ? -0.22 : 0.22;
+        }
+      }
+
+      function triggerJump() {
+        if (gameState !== "playing") return;
+        if (!isJumping && catY <= 0.04) {
+          isJumping = true;
+          catVelY = JUMP_VEL;
+          sfxJump();
+        } else {
+          jumpBufferTimer = 0.15;
+        }
+      }
+
+      function triggerFastFall() {
+        if (gameState !== "playing") return;
+        if (isJumping && catY > 0.05) {
+          catVelY = Math.min(catVelY, -14.5);
+        }
       }
 
       function startGame() {
         ensureAudio();
         clearItems();
         score = 0;
-        timeLeft = MATCH_DURATION;
+        distance = 0;
         hearts = 3;
         combo = 0;
         caughtCount = 0;
         feverTimer = 0;
-        rushAnnounced = false;
-        spawnCooldown = 0.25;
+        runSpeed = BASE_SPEED;
+        nextSpeedAnnounce = 120;
+        speedBannerTimer = 0;
+        nextWaveDist = 11;
+
+        lane = 1;
         catX = 0;
-        targetCatX = 0;
         catVelX = 0;
-        scareY = 0;
-        scareVelY = 0;
-        scareSpin = 0;
+        catY = 0;
+        catVelY = 0;
+        isJumping = false;
+        jumpBufferTimer = 0;
+        laneYaw = 0;
+        laneRoll = 0;
         invulnTimer = 0;
+        shakeTimer = 0;
+        introT = 0;
+
         catRoot.visible = true;
-        catTiltGroup.rotation.set(0, 0, 0);
-        catTiltGroup.scale.set(1, 1, 1);
+        catMotionGroup.scale.set(1, 1, 1);
+        catMotionGroup.rotation.set(0, 0, 0);
 
         gameState = "playing";
         startModal.classList.add("hidden");
         resultModal.classList.add("hidden");
-        spawnItem("fish", 0.0, 3.6);
+        touchControlsEl.classList.remove("hidden-bar");
+
+        // Opening welcoming fish line ahead in center lane!
+        spawnItem("fish", 1, -13.0, 0.48);
+        spawnItem("fish", 1, -15.5, 0.48);
+        spawnItem("fish", 1, -18.0, 0.48);
         updateHUD();
       }
 
-      function endGame(reason) {
+      function endGame(lastHitType) {
         gameState = "ended";
         clearItems();
         catRoot.visible = true;
+        catY = 0;
+        touchControlsEl.classList.add("hidden-bar");
 
         if (score > bestScore) {
           bestScore = score;
@@ -1169,77 +1531,173 @@
         const badge = document.getElementById("resultBadge");
         const title = document.getElementById("resultTitle");
         const sub = document.getElementById("resultSub");
-        if (reason === "hearts") {
-          badge.textContent = "🥒 愛心用完啦！";
-          title.textContent = "三花貓嚇得逃回紙箱啦！";
-          sub.textContent = "小黃瓜跟水滴可以從紅圈預測位置閃開喔～";
+        if (lastHitType === "cucumber") {
+          badge.textContent = "🥒 被小黃瓜嚇停啦！";
+          title.textContent = "三花貓彈跳落地！";
+          sub.textContent = "遇到小黃瓜或掃地機，直接「⬆️ 跳躍」還可以多拿 +15 跨欄分數喔！";
         } else if (score >= bestScore && score > 0) {
           badge.textContent = "🎉 刷新個人最高紀錄！";
-          title.textContent = "肚皮圓滾滾大豐收！";
-          sub.textContent = "太厲害了，快分享給朋友挑戰看看誰接得多！";
+          title.textContent = "走廊衝刺大豐收！";
+          sub.textContent = `狂奔 ${Math.floor(distance)} 公尺，吃到肚皮圓滾滾啦！`;
         } else {
-          badge.textContent = "⏱️ 45 秒時間到！";
-          title.textContent = "美味零食滿載而歸！";
-          sub.textContent = "多搶金鈴鐺觸發雙倍時間，輕鬆衝破紀錄！";
+          badge.textContent = "🏁 奔跑結束！";
+          title.textContent = "三花貓開心地舔舔嘴！";
+          sub.textContent = "吃金鈴鐺會開啟「吸魚磁鐵」＋雙倍積分，輕鬆破紀錄！";
         }
+
         document.getElementById("finalScore").textContent = String(score);
+        document.getElementById("finalDist").textContent = `${Math.floor(distance)}m`;
         document.getElementById("finalBest").textContent = String(bestScore);
-        document.getElementById("finalCaught").textContent = String(caughtCount);
         resultModal.classList.remove("hidden");
         updateHUD();
       }
 
       // ---------------------------------------------------------------------
-      // 6. Direct Touch / Pointer Raycast & Keyboard Controls
+      // 6. Swipe, Bottom Touch Buttons & Keyboard Controls
       // ---------------------------------------------------------------------
-      const raycaster = new THREE.Raycaster();
-      const pointerNDC = new THREE.Vector2();
-      const hitPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // z = 0 vertical catching plane
-      const planeHitPt = new THREE.Vector3();
-      let pointerActive = false;
-
-      function steerFromClientXY(clientX, clientY) {
-        pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
-        pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(pointerNDC, camera);
-        if (raycaster.ray.intersectPlane(hitPlane, planeHitPt)) {
-          targetCatX = THREE.MathUtils.clamp(planeHitPt.x, -LANE_LIMIT, LANE_LIMIT);
-        }
-      }
+      let swipeId = null;
+      let swipeStartX = 0;
+      let swipeStartY = 0;
+      let swipeHandled = false;
 
       viewportEl.addEventListener("pointerdown", (e) => {
         if (gameState !== "playing") return;
         e.preventDefault();
         ensureAudio();
-        pointerActive = true;
-        steerFromClientXY(e.clientX, e.clientY);
+        swipeId = e.pointerId;
+        swipeStartX = e.clientX;
+        swipeStartY = e.clientY;
+        swipeHandled = false;
       }, { passive: false });
 
       window.addEventListener("pointermove", (e) => {
-        if (!pointerActive || gameState !== "playing") return;
-        steerFromClientXY(e.clientX, e.clientY);
+        if (swipeId !== e.pointerId || swipeHandled || gameState !== "playing") return;
+        const dx = e.clientX - swipeStartX;
+        const dy = e.clientY - swipeStartY;
+        const dist = Math.hypot(dx, dy);
+        if (dist >= 26) {
+          swipeHandled = true;
+          if (Math.abs(dx) > Math.abs(dy)) {
+            shiftLane(dx > 0 ? 1 : -1);
+          } else if (dy < 0) {
+            triggerJump();
+          } else {
+            triggerFastFall();
+          }
+        }
       });
 
-      window.addEventListener("pointerup", () => { pointerActive = false; });
-      window.addEventListener("pointercancel", () => { pointerActive = false; });
+      const endSwipe = (e) => {
+        if (swipeId === e.pointerId) swipeId = null;
+      };
+      window.addEventListener("pointerup", endSwipe);
+      window.addEventListener("pointercancel", endSwipe);
       window.addEventListener("contextmenu", (e) => e.preventDefault());
 
+      // Bottom ergonomic touch/click buttons
+      const bindPadBtn = (id, fn) => {
+        const btn = document.getElementById(id);
+        btn.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          ensureAudio();
+          fn();
+        }, { passive: false });
+      };
+      bindPadBtn("btnLaneLeft", () => shiftLane(-1));
+      bindPadBtn("btnJump", () => triggerJump());
+      bindPadBtn("btnLaneRight", () => shiftLane(1));
+
       window.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
-        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
-      });
-      window.addEventListener("keyup", (e) => {
-        if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = false;
-        if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = false;
+        if (gameState !== "playing") return;
+        if (e.repeat) return;
+        if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+          e.preventDefault();
+          shiftLane(-1);
+        } else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+          e.preventDefault();
+          shiftLane(1);
+        } else if (e.key === "ArrowUp" || e.key === "w" || e.key === "W" || e.key === " ") {
+          e.preventDefault();
+          triggerJump();
+        } else if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") {
+          e.preventDefault();
+          triggerFastFall();
+        }
       });
 
       document.getElementById("btnStartGame").addEventListener("click", startGame);
       document.getElementById("btnRestartGame").addEventListener("click", startGame);
-      window.addEventListener("resize", updateResponsiveCamera);
+
+      function handleResize() {
+        camera.aspect = window.innerWidth / Math.max(1, window.innerHeight);
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+      window.addEventListener("resize", handleResize);
 
       // ---------------------------------------------------------------------
-      // 7. Main Game Loop
+      // 7. Camera Framing + Main Loop
       // ---------------------------------------------------------------------
+      function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      function updateCameraTransform(dt, isPortrait) {
+        const feverBoost = feverTimer > 0 && gameState === "playing" ? 4.0 : 0;
+        const targetFov = gameState === "playing"
+          ? (isPortrait ? 56 : 47) + feverBoost
+          : (isPortrait ? 45 : 40);
+        if (Math.abs(camera.fov - targetFov) > 0.05) {
+          camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, Math.min(1, dt * 8));
+          camera.updateProjectionMatrix();
+        }
+
+        // Front 3/4 Hero framing (look slightly low so cat stands cleanly in upper viewport above bottom start card!)
+        const frontPos = isPortrait
+          ? new THREE.Vector3(0.95, 1.42, 3.85)
+          : new THREE.Vector3(0.92, 1.32, 3.15);
+        const frontLook = isPortrait
+          ? new THREE.Vector3(0, -0.05, 0)
+          : new THREE.Vector3(0, 0.14, 0);
+
+        // Elevated 3D Chase framing looking forward down the corridor
+        const chasePos = isPortrait
+          ? new THREE.Vector3(catX * 0.28, 3.35 + catY * 0.25, 6.25)
+          : new THREE.Vector3(catX * 0.36, 2.95 + catY * 0.22, 5.10);
+        const chaseLook = isPortrait
+          ? new THREE.Vector3(catX * 0.16, 0.92, -9.5)
+          : new THREE.Vector3(catX * 0.20, 0.85, -8.5);
+
+        let desiredPos, desiredLook;
+        if (gameState === "playing") {
+          const blend = easeInOutCubic(introT);
+          // Swing camera sideways around the cat's profile during intro!
+          const sideArcX = Math.sin(blend * Math.PI) * 2.2;
+          desiredPos = new THREE.Vector3().lerpVectors(frontPos, chasePos, blend);
+          desiredPos.x += sideArcX;
+          desiredLook = new THREE.Vector3().lerpVectors(frontLook, chaseLook, blend);
+        } else {
+          desiredPos = gameState === "ended"
+            ? new THREE.Vector3(frontPos.x + catX * 0.25, frontPos.y, frontPos.z)
+            : frontPos;
+          desiredLook = gameState === "ended"
+            ? new THREE.Vector3(catX * 0.4, 0.56, 0)
+            : frontLook;
+        }
+
+        if (shakeTimer > 0) {
+          shakeTimer = Math.max(0, shakeTimer - dt);
+          desiredPos.x += (Math.random() - 0.5) * 0.22;
+          desiredPos.y += (Math.random() - 0.5) * 0.18;
+        }
+
+        camPos.lerp(desiredPos, Math.min(1, dt * 11));
+        camLook.lerp(desiredLook, Math.min(1, dt * 11));
+        camera.position.copy(camPos);
+        camera.lookAt(camLook);
+      }
+
       let prevTime = performance.now();
 
       function tick(now) {
@@ -1247,22 +1705,44 @@
         const dt = Math.min(0.05, Math.max(0.001, (now - prevTime) / 1000));
         prevTime = now;
         const tSec = now * 0.001;
+        const isPortrait = window.innerWidth / Math.max(1, window.innerHeight) < 0.98;
 
         if (gameState === "playing") {
-          timeLeft -= dt;
-          if (timeLeft <= 10.0 && !rushAnnounced) {
-            rushAnnounced = true;
-            showPopup("🎉 最後 10 秒！魚乾狂歡雨！", "fever");
-            sfxFever();
+          introT = Math.min(1, introT + dt / INTRO_DURATION);
+          const worldStep = runSpeed * dt;
+          distance += worldStep;
+
+          // Smooth speed progression
+          const targetSpeed = Math.min(MAX_SPEED, BASE_SPEED + distance * 0.015 + (feverTimer > 0 ? 1.6 : 0));
+          runSpeed = THREE.MathUtils.lerp(runSpeed, targetSpeed, Math.min(1, dt * 3));
+
+          if (distance >= nextSpeedAnnounce) {
+            nextSpeedAnnounce += 140;
+            speedBannerTimer = 2.0;
           }
-          if (timeLeft <= 0) {
-            timeLeft = 0;
-            endGame("time");
+          if (speedBannerTimer > 0) speedBannerTimer = Math.max(0, speedBannerTimer - dt);
+
+          // Spawn waves ahead as corridor moves
+          nextWaveDist -= worldStep;
+          if (nextWaveDist <= 0) {
+            spawnWave(-62);
+            nextWaveDist = Math.max(10.8, runSpeed * 0.78);
           }
 
-          if (feverTimer > 0) {
-            feverTimer = Math.max(0, feverTimer - dt);
+          // Scroll floor & runner rug UVs in sync with worldStep
+          woodTex.offset.y += (worldStep * 18) / FLOOR_LEN;
+          rugTex.offset.y += (worldStep * 20) / FLOOR_LEN;
+
+          // Loop modular 3D corridor walls & living-room furniture
+          for (let i = 0; i < corridorSegments.length; i++) {
+            const seg = corridorSegments[i];
+            seg.position.z += worldStep;
+            if (seg.position.z > 16) {
+              seg.position.z -= SEG_LEN * SEG_COUNT;
+            }
           }
+
+          if (feverTimer > 0) feverTimer = Math.max(0, feverTimer - dt);
           if (invulnTimer > 0) {
             invulnTimer = Math.max(0, invulnTimer - dt);
             catRoot.visible = Math.floor(invulnTimer * 16) % 2 === 0;
@@ -1270,168 +1750,201 @@
             catRoot.visible = true;
           }
 
-          // Keyboard steering
-          const keyDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-          if (keyDir !== 0) {
-            targetCatX = THREE.MathUtils.clamp(targetCatX + keyDir * 5.2 * dt, -LANE_LIMIT, LANE_LIMIT);
-          }
-
-          // Smooth brisk cat sprint along X
-          const diff = targetCatX - catX;
+          // Smooth lane switch + gallop bounce + jump physics
+          const targetX = LANE_XS[lane];
           const prevX = catX;
-          catX += diff * Math.min(1, dt * 15);
+          catX = THREE.MathUtils.lerp(catX, targetX, Math.min(1, dt * 16));
           catVelX = (catX - prevX) / dt;
 
-          // Cute trotting hop & lean when running
-          const speedAbs = Math.abs(catVelX);
-          if (speedAbs > 0.15) {
-            runPhase += dt * (8.5 + Math.min(8, speedAbs * 1.1));
-          }
-          const trotHop = speedAbs > 0.2 && scareY <= 0.01 ? Math.abs(Math.sin(runPhase)) * 0.11 : 0;
-
-          // Startled jump physics
-          if (scareY > 0 || scareVelY !== 0) {
-            scareVelY -= 20.0 * dt;
-            scareY += scareVelY * dt;
-            scareSpin += dt * 14.0;
-            if (scareY <= 0) {
-              scareY = 0;
-              scareVelY = 0;
-              scareSpin = 0;
+          if (jumpBufferTimer > 0) jumpBufferTimer = Math.max(0, jumpBufferTimer - dt);
+          if (isJumping || catY > 0) {
+            catVelY -= GRAVITY * dt;
+            catY += catVelY * dt;
+            if (catY <= 0) {
+              catY = 0;
+              catVelY = 0;
+              isJumping = false;
+              catMotionGroup.scale.set(1.12, 0.88, 1.12); // cute soft paw landing squash
+              if (jumpBufferTimer > 0) {
+                jumpBufferTimer = 0;
+                triggerJump();
+              }
             }
           }
 
-          catRoot.position.set(catX, 0.035 + trotHop + scareY, 0);
-          catTiltGroup.rotation.z = THREE.MathUtils.lerp(
-            catTiltGroup.rotation.z,
-            THREE.MathUtils.clamp(-catVelX * 0.032, -0.24, 0.24),
-            Math.min(1, dt * 14)
-          );
-          catTiltGroup.rotation.y = THREE.MathUtils.lerp(
-            catTiltGroup.rotation.y,
-            scareSpin > 0 ? scareSpin : THREE.MathUtils.clamp(catVelX * 0.055, -0.45, 0.45),
-            Math.min(1, dt * 14)
-          );
+          // Relax squash/stretch back to 1
+          catMotionGroup.scale.lerp(new THREE.Vector3(1, 1, 1), Math.min(1, dt * 14));
+          laneYaw = THREE.MathUtils.lerp(laneYaw, 0, Math.min(1, dt * 12));
+          laneRoll = THREE.MathUtils.lerp(laneRoll, 0, Math.min(1, dt * 12));
 
-          // Spawn cadence
-          spawnCooldown -= dt;
-          if (spawnCooldown <= 0) {
-            spawnItem();
-            const rush = timeLeft <= 10.0;
-            spawnCooldown = rush ? THREE.MathUtils.randFloat(0.24, 0.40) : THREE.MathUtils.randFloat(0.46, 0.72);
-          }
+          // Turn cat smoothly from +Z (0) to -Z (Math.PI) during intro
+          catHeadingGroup.rotation.y = Math.PI * easeInOutCubic(introT) + laneYaw;
 
-          // Update falling items & check catch collision
-          for (let i = fallingItems.length - 1; i >= 0; i--) {
-            const it = fallingItems[i];
-            it.y -= it.speed * dt;
-            it.mesh.position.y = it.y;
-            it.mesh.rotation.y += it.spinY * dt;
-            it.mesh.rotation.z += it.spinZ * dt;
+          gallopPhase += dt * (11.5 + runSpeed * 0.45);
+          const strideHop = isJumping ? 0 : Math.abs(Math.sin(gallopPhase)) * 0.085;
+          const pitchFwd = isJumping
+            ? THREE.MathUtils.clamp(catVelY * 0.025, -0.25, 0.28)
+            : Math.sin(gallopPhase * 2) * 0.055;
 
-            // Scale floor shadow as item approaches rug
-            const hNorm = Math.max(0.2, Math.min(1.0, 1.0 - it.y * 0.09));
-            it.marker.scale.setScalar(hNorm);
+          catRoot.position.set(catX, catY + strideHop, 0);
+          catMotionGroup.rotation.set(-pitchFwd, 0, laneRoll);
 
-            // Catch box around cat head & paws
-            const hitX = Math.abs(it.x - catX) < 0.56;
-            const hitY = it.y >= 0.06 && it.y <= 1.24 + scareY;
+          // Advance obstacles & treats toward +Z (the cat at z = 0)
+          for (let i = runnerItems.length - 1; i >= 0; i--) {
+            const it = runnerItems[i];
+            it.prevZ = it.z;
+            it.z += worldStep;
+            it.mesh.position.z = it.z;
 
-            if (hitX && hitY) {
+            if (!it.isHazard) {
+              it.mesh.rotation.y += dt * 3.0;
+              it.mesh.position.y = it.y + Math.sin(tSec * 5.0 + it.x) * 0.06;
+
+              // Fever Fish & Shrimp Magnet!
+              if (feverTimer > 0 && (it.type === "fish" || it.type === "shrimp") && it.z > -7.2 && it.z < 1.2) {
+                it.x = THREE.MathUtils.lerp(it.x, catX, Math.min(1, dt * 11));
+                it.y = THREE.MathUtils.lerp(it.y, catY + 0.50, Math.min(1, dt * 11));
+                it.z = THREE.MathUtils.lerp(it.z, 0, Math.min(1, dt * 7));
+                it.mesh.position.set(it.x, it.y, it.z);
+              }
+              if (it.shadowMesh) {
+                it.shadowMesh.position.set(it.x, 0.02, it.z);
+              }
+            } else if (it.brush) {
+              it.brush.rotation.y += dt * 14.0;
+            }
+
+            // Continuous swept-Z collision band at z = 0
+            const crossedZ = (it.prevZ <= 0.60 && it.z >= -0.60) || Math.abs(it.z) < 0.62;
+            const lateralThreshold = it.isHazard ? 0.64 : 0.88;
+            const hitX = Math.abs(catX - it.x) < lateralThreshold;
+
+            if (!it.hitProcessed && crossedZ && hitX) {
               if (it.isHazard) {
-                if (invulnTimer <= 0) {
-                  hearts -= 1;
-                  combo = 0;
-                  invulnTimer = 1.3;
-                  scareVelY = 6.8;
-                  scareSpin = 0.4;
-                  if (it.type === "cucumber") {
-                    showPopup("😱 小黃瓜好可怕！！", "bad");
-                    sfxCucumberScare();
-                    spawnBurst(catX, 0.75, 0.1, 0x5dc44f, 16);
-                  } else {
-                    showPopup("💦 討厭碰水！！", "bad");
-                    sfxWater();
-                    spawnBurst(catX, 0.75, 0.1, 0x45a8f0, 16);
-                  }
-                  if (hearts <= 0) {
-                    scene.remove(it.mesh);
-                    scene.remove(it.marker);
-                    fallingItems.splice(i, 1);
-                    endGame("hearts");
-                    break;
+                const clearedByJump = it.jumpable ? (catY >= 0.34) : (catY >= 1.72);
+                if (!clearedByJump) {
+                  it.hitProcessed = true;
+                  if (invulnTimer <= 0) {
+                    hearts -= 1;
+                    combo = 0;
+                    invulnTimer = 1.35;
+                    shakeTimer = 0.28;
+                    catVelY = 5.4;
+                    isJumping = true;
+                    if (it.type === "cucumber") {
+                      showPopup("😱 小黃瓜好可怕！！", "bad");
+                      sfxScareCucumber();
+                      spawnBurst(catX, 0.65, 0, 0x52bd48, 16);
+                    } else if (it.type === "roomba") {
+                      showPopup("🤖 撞到掃地機了！", "bad");
+                      sfxBump();
+                      spawnBurst(catX, 0.55, 0, 0x3ce0d3, 14);
+                    } else {
+                      showPopup("📦 撞到疊高紙箱！", "bad");
+                      sfxBump();
+                      spawnBurst(catX, 0.8, 0, 0xd99b56, 14);
+                    }
+                    if (hearts <= 0) {
+                      endGame(it.type);
+                      break;
+                    }
                   }
                 }
               } else {
-                caughtCount += 1;
-                combo += 1;
-                const mult = getComboMult();
-                if (it.type === "bell") {
-                  feverTimer = 5.0;
-                  const pts = 20 * mult;
-                  score += pts;
-                  showPopup(`🔔 雙倍時間！ +${pts}`, "fever");
-                  sfxFever();
-                  spawnBurst(catX, 0.9, 0.1, 0xffcf36, 20);
-                } else if (it.type === "heart") {
-                  hearts = Math.min(3, hearts + 1);
-                  score += 15 * mult;
-                  showPopup("❤️ 愛心補滿 +1！", "good");
-                  sfxCatch(true);
-                  spawnBurst(catX, 0.9, 0.1, 0xf25b7e, 18);
-                } else if (it.type === "shrimp") {
-                  const pts = 30 * mult;
-                  score += pts;
-                  showPopup(`🍤 黃金炸蝦 +${pts}`, "good");
-                  sfxCatch(true);
-                  spawnBurst(catX, 0.9, 0.1, 0xf6b132, 16);
-                } else {
-                  const pts = 10 * mult;
-                  score += pts;
-                  showPopup(mult > 1 ? `🐟 +${pts} (×${mult})` : "🐟 +10", "good");
-                  sfxCatch(false);
-                  spawnBurst(catX, 0.85, 0.1, 0xf5953c, 12);
+                // Collect treat if vertical heights overlap
+                const dy = Math.abs((catY + 0.55) - it.y);
+                if (dy < 0.92) {
+                  it.hitProcessed = true;
+                  caughtCount += 1;
+                  combo += 1;
+                  const mult = getMult();
+                  if (it.type === "bell") {
+                    feverTimer = 6.0;
+                    const pts = 25 * mult;
+                    score += pts;
+                    showPopup(`🔔 吸魚磁鐵＋雙倍！+${pts}`, "fever");
+                    sfxFever();
+                    spawnBurst(catX, catY + 0.7, 0, 0xffcf36, 20);
+                  } else if (it.type === "heart") {
+                    hearts = Math.min(3, hearts + 1);
+                    const pts = 20 * mult;
+                    score += pts;
+                    showPopup("❤️ 愛心補滿 +1！", "good");
+                    sfxCatch(true);
+                    spawnBurst(catX, catY + 0.7, 0, 0xf25b7e, 18);
+                  } else if (it.type === "shrimp") {
+                    const pts = 30 * mult;
+                    score += pts;
+                    showPopup(`🍤 黃金炸蝦 +${pts}`, "good");
+                    sfxCatch(true);
+                    spawnBurst(catX, catY + 0.7, 0, 0xf6b132, 16);
+                  } else {
+                    const pts = 10 * mult;
+                    score += pts;
+                    showPopup(mult > 1 ? `🐟 +${pts} (×${mult})` : "🐟 +10", "good");
+                    sfxCatch(false);
+                    spawnBurst(catX, catY + 0.65, 0, 0xf5953c, 12);
+                  }
+                  scene.remove(it.mesh);
+                  if (it.shadowMesh) scene.remove(it.shadowMesh);
+                  runnerItems.splice(i, 1);
+                  continue;
                 }
               }
-              scene.remove(it.mesh);
-              scene.remove(it.marker);
-              fallingItems.splice(i, 1);
-              continue;
             }
 
-            if (it.y <= 0.04) {
-              if (!it.isHazard) {
-                combo = 0; // Dropped treat resets combo streak gently
-              }
+            // Stylish Hurdle Bonus! Cleared jumpable obstacle directly beneath cat
+            if (
+              it.isHazard &&
+              it.jumpable &&
+              !it.hitProcessed &&
+              !it.hurdleAwarded &&
+              it.z > 0.55 &&
+              Math.abs(catX - it.x) < 0.85 &&
+              catY >= 0.34
+            ) {
+              it.hurdleAwarded = true;
+              const hPts = 15 * getMult();
+              score += hPts;
+              showPopup(`✨ 帥氣跨欄 +${hPts}`, "hurdle");
+              sfxHurdle();
+            }
+
+            if (it.z > 8.5) {
               scene.remove(it.mesh);
-              scene.remove(it.marker);
-              fallingItems.splice(i, 1);
+              if (it.shadowMesh) scene.remove(it.shadowMesh);
+              runnerItems.splice(i, 1);
             }
           }
 
           updateHUD();
         } else {
-          // Gentle idle tail sway & hover on start/result screen
-          catRoot.position.set(0, 0.035, 0);
+          // Cute idle front-facing pose on start & result screens!
+          introT = THREE.MathUtils.lerp(introT, 0, Math.min(1, dt * 6));
+          catHeadingGroup.rotation.y = Math.PI * easeInOutCubic(introT);
+          catMotionGroup.rotation.set(0, 0, 0);
+          catMotionGroup.scale.set(1, 1, 1);
+          catRoot.position.set(0, 0.02 + Math.sin(tSec * 2.2) * 0.01, 0);
+          catX = THREE.MathUtils.lerp(catX, 0, Math.min(1, dt * 6));
         }
 
-        // Gentle tail wag on cat
+        // Gentle tail wag at all times
         if (catTailMesh) {
-          catTailMesh.rotation.z = Math.sin(tSec * 5.0) * 0.045;
+          catTailMesh.rotation.z = Math.sin(tSec * (gameState === "playing" ? 11.0 : 4.6)) * 0.06;
         }
 
-        // Update Fever halo & contact shadow
+        // Contact shadow & Fever Halo
+        catShadow.position.x = catRoot.position.x;
+        catShadow.scale.setScalar(Math.max(0.38, 1.0 - catY * 0.38));
+
         if (feverTimer > 0 && gameState === "playing") {
-          feverHalo.material.opacity = 0.65 + Math.sin(tSec * 10) * 0.25;
-          feverHalo.scale.setScalar(1.0 + Math.sin(tSec * 8) * 0.06);
+          feverHalo.material.opacity = 0.65 + Math.sin(tSec * 12) * 0.25;
+          feverHalo.scale.setScalar(1.0 + Math.sin(tSec * 9) * 0.06);
         } else {
           feverHalo.material.opacity = 0;
         }
-        catShadow.position.x = catRoot.position.x;
-        const sh = Math.max(0.4, 1.0 - scareY * 0.35);
-        catShadow.scale.setScalar(sh);
 
-        // Burst particles
+        // Particle burst simulation
         for (let i = particles.length - 1; i >= 0; i--) {
           const p = particles[i];
           p.age += dt;
@@ -1440,7 +1953,7 @@
             p.mesh.material.dispose();
             particles.splice(i, 1);
           } else {
-            p.vy -= 10.0 * dt;
+            p.vy -= 11.0 * dt;
             p.mesh.position.x += p.vx * dt;
             p.mesh.position.y += p.vy * dt;
             p.mesh.position.z += p.vz * dt;
@@ -1448,6 +1961,7 @@
           }
         }
 
+        updateCameraTransform(dt, isPortrait);
         renderer.render(scene, camera);
       }
 
@@ -1456,17 +1970,25 @@
         state: gameState,
         score: 0,
         bestScore,
-        timeLeft: MATCH_DURATION,
+        distance: 0,
         hearts: 3,
         combo: 0,
         caughtCount: 0,
+        lane: 1,
+        isJumping: false,
+        cameraMode: "front",
         startGame,
-        moveCatTo: (x) => {
-          targetCatX = THREE.MathUtils.clamp(x, -LANE_LIMIT, LANE_LIMIT);
-          catX = targetCatX;
+        setLane: (idx) => {
+          lane = Math.max(0, Math.min(2, idx));
+          catX = LANE_XS[lane];
         },
-        spawnTestItem: (type, x, y) => spawnItem(type, x, y),
-        getItems: () => fallingItems.map((i) => ({ type: i.type, x: i.x, y: i.y })),
+        jump: triggerJump,
+        skipIntro: () => {
+          introT = 1.0;
+          gameAPI.cameraMode = "chase";
+        },
+        spawnTestItem: (type, laneIdx, z, y) => spawnItem(type, laneIdx, z, y !== undefined ? y : null),
+        getItems: () => runnerItems.map((i) => ({ type: i.type, lane: i.lane, x: i.x, y: i.y, z: i.z })),
       };
       window.__CAT_GAME__ = gameAPI;
 
