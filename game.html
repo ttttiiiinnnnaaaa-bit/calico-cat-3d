@@ -284,6 +284,43 @@
       transform: translate(-50%, -14px) scale(1);
     }
 
+    /* ---------------- Floating Virtual Joystick ---------------- */
+    .joy-base {
+      position: fixed;
+      width: 88px;
+      height: 88px;
+      margin-left: -44px;
+      margin-top: -44px;
+      border-radius: 50%;
+      background: rgba(255, 250, 242, 0.34);
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      box-shadow: 0 8px 22px rgba(48, 28, 12, 0.18);
+      backdrop-filter: blur(4px);
+      pointer-events: none;
+      z-index: 21;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+
+    .joy-base.visible {
+      opacity: 1;
+    }
+
+    .joy-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 40px;
+      height: 40px;
+      margin-left: -20px;
+      margin-top: -20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f18c38, #cb4c24);
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 12px rgba(198, 68, 34, 0.36);
+      transform: translate(0, 0);
+    }
+
     /* ---------------- Bottom Action Bar ---------------- */
     .hud-bottom {
       position: fixed;
@@ -596,9 +633,13 @@
 
   <div id="floatPopup">+10</div>
 
+  <div class="joy-base" id="joyBase">
+    <div class="joy-knob" id="joyKnob"></div>
+  </div>
+
   <!-- Bottom Action Bar -->
   <div class="hud-bottom hidden-bar" id="touchControls">
-    <div class="hint-pill">按住拖曳跑動推物品 · 主人回頭時「放手」立刻裝無辜！</div>
+    <div class="hint-pill">螢幕下方滑動操控移動 · 放手立刻裝無辜！</div>
     <div class="bottom-action-row">
       <button class="swat-btn" id="btnSwat" type="button">🐾 大力揮掌擊飛！</button>
     </div>
@@ -656,8 +697,8 @@
 
       const BEST_KEY = "calico_table_best_v1";
       const MATCH_DURATION = 60.0;
-      const TABLE_W = 6.2;
-      const TABLE_D = 4.2;
+      const TABLE_W = 5.2;
+      const TABLE_D = 4.0;
       const TABLE_HALF_W = TABLE_W * 0.5;
       const TABLE_HALF_D = TABLE_D * 0.5;
       const TABLE_TOP_Y = 1.45;
@@ -665,6 +706,8 @@
       const CAT_LIM_Z = TABLE_HALF_D - 0.34;
 
       const viewportEl = document.getElementById("gameViewport");
+      const joyBaseEl = document.getElementById("joyBase");
+      const joyKnobEl = document.getElementById("joyKnob");
       const scoreValEl = document.getElementById("scoreVal");
       const timerPillEl = document.getElementById("timerPill");
       const timerValEl = document.getElementById("timerVal");
@@ -877,7 +920,7 @@
       rugTrim.position.y = 0.045;
       scene.add(rugTrim);
 
-      // Subtle cozy back wall & sofa silhouette behind the coffee table
+      // Cozy sunlit back wall, window frame, sofa, floor lamp & potted plant behind coffee table
       const backWall = new THREE.Mesh(
         new THREE.BoxGeometry(30, 10, 0.4),
         new THREE.MeshStandardMaterial({ color: 0xfaebd8, roughness: 0.92 })
@@ -886,24 +929,74 @@
       backWall.receiveShadow = true;
       scene.add(backWall);
 
+      const winFrameMat = new THREE.MeshStandardMaterial({ color: 0xfff8ef, roughness: 0.72 });
+      const winFrame = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.7, 0.14), winFrameMat);
+      winFrame.position.set(-1.6, 3.8, -5.56);
+      const winGlass = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.8, 2.3),
+        new THREE.MeshBasicMaterial({ color: 0xfffbe8 })
+      );
+      winGlass.position.set(-1.6, 3.8, -5.48);
+      const winMullionV = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.3, 0.16), winFrameMat);
+      winMullionV.position.set(-1.6, 3.8, -5.52);
+      const winMullionH = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.08, 0.16), winFrameMat);
+      winMullionH.position.set(-1.6, 3.8, -5.52);
+      scene.add(winFrame, winGlass, winMullionV, winMullionH);
+
       const sofaMat = new THREE.MeshStandardMaterial({ color: 0xd8be9e, roughness: 0.88 });
+      const pillowMat = new THREE.MeshStandardMaterial({ color: 0xe6844e, roughness: 0.85 });
       const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.72, 1.35), sofaMat);
       sofaBase.position.set(0, 0.36, -4.5);
       const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(5.8, 1.45, 0.38), sofaMat);
       sofaBack.position.set(0, 0.96, -5.05);
-      sofaBase.castShadow = true;
-      sofaBase.receiveShadow = true;
-      sofaBack.castShadow = true;
-      sofaBack.receiveShadow = true;
-      scene.add(sofaBase, sofaBack);
+      const pLeft = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.62, 0.24), pillowMat);
+      pLeft.position.set(-1.85, 0.96, -4.72);
+      pLeft.rotation.set(-0.18, 0.14, 0.14);
+      const pRight = pLeft.clone();
+      pRight.position.x = 1.85;
+      pRight.rotation.set(-0.18, -0.14, -0.14);
+      [sofaBase, sofaBack, pLeft, pRight].forEach((m) => { m.castShadow = true; m.receiveShadow = true; });
+      scene.add(sofaBase, sofaBack, pLeft, pRight);
 
-      // Main 3D Sunlit Oak Coffee Table
+      // Floor Lamp + Potted Plant beside sofa for warm depth
+      const darkWood = new THREE.MeshStandardMaterial({ color: 0x93623c, roughness: 0.74 });
+      const lampShadeMat = new THREE.MeshStandardMaterial({
+        color: 0xfff3d8,
+        emissive: 0xffc97a,
+        emissiveIntensity: 0.58,
+        roughness: 0.52,
+      });
+      const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 0.07, 14), darkWood);
+      lampBase.position.set(3.55, 0.035, -4.3);
+      const lampPole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 2.75, 10), darkWood);
+      lampPole.position.set(3.55, 1.40, -4.3);
+      const lampShade = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.44, 0.54, 16), lampShadeMat);
+      lampShade.position.set(3.55, 2.86, -4.3);
+      scene.add(lampBase, lampPole, lampShade);
+
+      const bgPot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.36, 0.26, 0.58, 14),
+        new THREE.MeshStandardMaterial({ color: 0xc96942, roughness: 0.74 })
+      );
+      bgPot.position.set(-3.55, 0.29, -4.2);
+      const bgLeaf1 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.55, 14, 12),
+        new THREE.MeshStandardMaterial({ color: 0x4b9d49, roughness: 0.68 })
+      );
+      bgLeaf1.position.set(-3.55, 1.05, -4.2);
+      const bgLeaf2 = bgLeaf1.clone();
+      bgLeaf2.scale.setScalar(0.68);
+      bgLeaf2.position.set(-3.30, 1.42, -4.0);
+      scene.add(bgPot, bgLeaf1, bgLeaf2);
+
+      // Main 3D Sunlit Oak Coffee Table + Crisp Drop-Off Edge Trim
       const tableGroup = new THREE.Group();
       const oakTopMat = new THREE.MeshStandardMaterial({
         map: makeWoodTexture("#d99c5e", "rgba(170, 106, 52, 0.16)", 2, 2),
         roughness: 0.56,
       });
       const oakApronMat = new THREE.MeshStandardMaterial({ color: 0xb3743f, roughness: 0.68 });
+      const oakTrimMat = new THREE.MeshStandardMaterial({ color: 0x8f5629, roughness: 0.52 });
 
       const tableTop = new THREE.Mesh(new THREE.BoxGeometry(TABLE_W, 0.22, TABLE_D), oakTopMat);
       tableTop.position.y = TABLE_TOP_Y - 0.11;
@@ -911,9 +1004,22 @@
       tableTop.receiveShadow = true;
       tableGroup.add(tableTop);
 
-      // Cozy cream woven runner strip on tabletop center for visual polish
+      // Subtle bevel edge trim around tabletop perimeter so drop edges pop clearly in close-up
+      const trimFB = new THREE.BoxGeometry(TABLE_W + 0.04, 0.06, 0.07);
+      const trimLR = new THREE.BoxGeometry(0.07, 0.06, TABLE_D + 0.04);
+      const trimF = new THREE.Mesh(trimFB, oakTrimMat);
+      trimF.position.set(0, TABLE_TOP_Y - 0.02, TABLE_HALF_D - 0.01);
+      const trimB = new THREE.Mesh(trimFB, oakTrimMat);
+      trimB.position.set(0, TABLE_TOP_Y - 0.02, -TABLE_HALF_D + 0.01);
+      const trimL = new THREE.Mesh(trimLR, oakTrimMat);
+      trimL.position.set(-TABLE_HALF_W + 0.01, TABLE_TOP_Y - 0.02, 0);
+      const trimR = new THREE.Mesh(trimLR, oakTrimMat);
+      trimR.position.set(TABLE_HALF_W - 0.01, TABLE_TOP_Y - 0.02, 0);
+      tableGroup.add(trimF, trimB, trimL, trimR);
+
+      // Cozy cream woven runner strip on tabletop center
       const tableRunner = new THREE.Mesh(
-        new THREE.BoxGeometry(TABLE_W - 0.45, 0.015, 1.42),
+        new THREE.BoxGeometry(TABLE_W - 0.45, 0.015, 1.38),
         new THREE.MeshStandardMaterial({ color: 0xfbf2e3, roughness: 0.92 })
       );
       tableRunner.position.y = TABLE_TOP_Y + 0.008;
@@ -943,15 +1049,7 @@
       });
       scene.add(tableGroup);
 
-      // Glowing Pointer Destination Ring & Paw Swat Shockwave Ring on Tabletop
-      const targetRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.18, 0.28, 24),
-        new THREE.MeshBasicMaterial({ color: 0xe8732a, transparent: true, opacity: 0.0, side: THREE.DoubleSide })
-      );
-      targetRing.rotation.x = -Math.PI / 2;
-      targetRing.position.y = TABLE_TOP_Y + 0.02;
-      scene.add(targetRing);
-
+      // Paw Swat Shockwave Ring on Tabletop
       const swatWaveRing = new THREE.Mesh(
         new THREE.RingGeometry(0.45, 0.58, 32),
         new THREE.MeshBasicMaterial({ color: 0xf7b932, transparent: true, opacity: 0.0, side: THREE.DoubleSide })
@@ -981,11 +1079,11 @@
 
       // Floating Golden Halo when Owner Watches & Cat Poses Innocently!
       const innocentHalo = new THREE.Mesh(
-        new THREE.TorusGeometry(0.24, 0.028, 10, 28),
-        new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.0 })
+        new THREE.TorusGeometry(0.24, 0.030, 10, 28),
+        new THREE.MeshBasicMaterial({ color: 0xffd633, transparent: true, opacity: 0.0 })
       );
       innocentHalo.rotation.x = Math.PI / 2;
-      innocentHalo.position.set(0, 1.24, 0);
+      innocentHalo.position.set(0, 1.18, 0);
       catRoot.add(innocentHalo);
 
       // Fever Floor Ring around paws
@@ -1274,12 +1372,16 @@
       let caughtThisWatch = false;
       let isInnocent = false;
 
-      // Cat Physics & Motion
+      // Cat Physics & Floating Virtual Joystick Motion
+      const JOY_MAX = 44;
+      let joyActive = false;
+      let joyPointerId = null;
+      let joyOriginX = 0;
+      let joyOriginY = 0;
+      let joyVecX = 0;
+      let joyVecZ = 0;
       let catX = 0;
       let catZ = 0;
-      let targetCatX = 0;
-      let targetCatZ = 0;
-      let pointerActive = false;
       let catVelX = 0;
       let catVelZ = 0;
       let trotPhase = 0;
@@ -1446,12 +1548,15 @@
         comboTimer = 0;
         knockedCount = 0;
         feverTimer = 0;
-        pointerActive = false;
+
+        joyActive = false;
+        joyPointerId = null;
+        joyVecX = 0;
+        joyVecZ = 0;
+        joyBaseEl.classList.remove("visible");
 
         catX = 0;
         catZ = 0;
-        targetCatX = 0;
-        targetCatZ = 0;
         catVelX = 0;
         catVelZ = 0;
         swatAnim = 0;
@@ -1472,14 +1577,14 @@
         resultModal.classList.add("hidden");
         touchControlsEl.classList.remove("hidden-bar");
 
-        // Initial rich coffee-table clutter!
-        spawnProp("vase", -1.9, 0.7);
-        spawnProp("mug", 2.1, 0.8);
-        spawnProp("phone", 1.7, -0.9);
-        spawnProp("clock", -1.6, -0.9);
-        spawnProp("plant", 0.1, -1.2);
-        spawnProp("mug", -0.6, 1.2);
-        spawnProp("fish", 0.9, 1.1);
+        // Initial rich coffee-table clutter inside compact 5.2 x 4.0 table!
+        spawnProp("vase", -1.75, 0.55);
+        spawnProp("mug", 1.95, 0.65);
+        spawnProp("phone", 1.55, -0.85);
+        spawnProp("clock", -1.45, -0.85);
+        spawnProp("plant", 0.08, -1.15);
+        spawnProp("mug", -0.55, 1.15);
+        spawnProp("fish", 0.85, 0.95);
 
         updateHUD();
       }
@@ -1489,6 +1594,11 @@
         clearProps();
         catRoot.visible = true;
         scareY = 0;
+        joyActive = false;
+        joyPointerId = null;
+        joyVecX = 0;
+        joyVecZ = 0;
+        joyBaseEl.classList.remove("visible");
         touchControlsEl.classList.add("hidden-bar");
         ownerBannerEl.classList.add("hidden-banner");
 
@@ -1522,45 +1632,55 @@
       }
 
       // ---------------------------------------------------------------------
-      // 6. Direct Tabletop Raycast Drag + Brake on Release + Keyboard
+      // 6. Floating Virtual Joystick Controls + Instant Brake on Release
       // ---------------------------------------------------------------------
-      const raycaster = new THREE.Raycaster();
-      const pointerNDC = new THREE.Vector2();
-      const tablePlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -TABLE_TOP_Y);
-      const planeHit = new THREE.Vector3();
-
-      function steerFromClientXY(clientX, clientY) {
-        pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
-        pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(pointerNDC, camera);
-        if (raycaster.ray.intersectPlane(tablePlane, planeHit)) {
-          targetCatX = THREE.MathUtils.clamp(planeHit.x, -CAT_LIM_X, CAT_LIM_X);
-          targetCatZ = THREE.MathUtils.clamp(planeHit.z, -CAT_LIM_Z, CAT_LIM_Z);
-        }
-      }
-
       viewportEl.addEventListener("pointerdown", (e) => {
         if (gameState !== "playing") return;
         e.preventDefault();
         ensureAudio();
-        pointerActive = true;
-        steerFromClientXY(e.clientX, e.clientY);
+        joyActive = true;
+        joyPointerId = e.pointerId;
+        joyOriginX = e.clientX;
+        joyOriginY = e.clientY;
+        joyVecX = 0;
+        joyVecZ = 0;
+        joyBaseEl.style.left = `${joyOriginX}px`;
+        joyBaseEl.style.top = `${joyOriginY}px`;
+        joyKnobEl.style.transform = "translate(0px, 0px)";
+        joyBaseEl.classList.add("visible");
       }, { passive: false });
 
       window.addEventListener("pointermove", (e) => {
-        if (!pointerActive || gameState !== "playing") return;
-        steerFromClientXY(e.clientX, e.clientY);
+        if (!joyActive || e.pointerId !== joyPointerId || gameState !== "playing") return;
+        const dx = e.clientX - joyOriginX;
+        const dy = e.clientY - joyOriginY;
+        const dist = Math.hypot(dx, dy);
+        const clamped = Math.min(JOY_MAX, dist);
+        const ang = Math.atan2(dy, dx);
+        const kxPx = Math.cos(ang) * clamped;
+        const kyPx = Math.sin(ang) * clamped;
+        joyKnobEl.style.transform = `translate(${kxPx.toFixed(1)}px, ${kyPx.toFixed(1)}px)`;
+        if (dist > 6) {
+          const mag = (clamped - 6) / (JOY_MAX - 6);
+          joyVecX = Math.cos(ang) * mag;
+          joyVecZ = Math.sin(ang) * mag;
+        } else {
+          joyVecX = 0;
+          joyVecZ = 0;
+        }
       });
 
-      const stopPointer = () => {
-        if (!pointerActive) return;
-        pointerActive = false;
-        // Release = instant brake so cat freezes cleanly for Owner Watching!
-        targetCatX = catX;
-        targetCatZ = catZ;
+      const stopJoy = (e) => {
+        if (!joyActive || (e && e.pointerId !== undefined && e.pointerId !== joyPointerId)) return;
+        joyActive = false;
+        joyPointerId = null;
+        joyVecX = 0;
+        joyVecZ = 0;
+        joyBaseEl.classList.remove("visible");
+        joyKnobEl.style.transform = "translate(0px, 0px)";
       };
-      window.addEventListener("pointerup", stopPointer);
-      window.addEventListener("pointercancel", stopPointer);
+      window.addEventListener("pointerup", stopJoy);
+      window.addEventListener("pointercancel", stopJoy);
       window.addEventListener("contextmenu", (e) => e.preventDefault());
 
       const swatBtn = document.getElementById("btnSwat");
@@ -1600,12 +1720,12 @@
       window.addEventListener("resize", handleResize);
 
       // ---------------------------------------------------------------------
-      // 7. Main Game Loop + Responsive Coffee Table Camera
+      // 7. Close-Up 3D Follow Camera & Main Loop
       // ---------------------------------------------------------------------
       function updateCamera(dt, isPortrait) {
         let targetFov;
         if (gameState === "playing") {
-          targetFov = isPortrait ? 56 : 44;
+          targetFov = isPortrait ? 50 : 45;
         } else {
           targetFov = isPortrait ? 45 : 40;
         }
@@ -1616,24 +1736,22 @@
 
         let desiredPos, desiredLook;
         if (gameState === "playing") {
-          const aspect = window.innerWidth / Math.max(1, window.innerHeight);
-          if (isPortrait) {
-            const tanV = Math.tan(THREE.MathUtils.degToRad(28));
-            const tanH = Math.max(0.38, aspect) * tanV;
-            const dScale = Math.max(1.0, (3.65 / tanH) / 14.6);
-            desiredPos = new THREE.Vector3(catX * 0.14, 9.6 * dScale, 12.2 * dScale);
-            desiredLook = new THREE.Vector3(catX * 0.08, 0.72, 0.35);
-          } else {
-            desiredPos = new THREE.Vector3(catX * 0.18, 5.9, 7.3);
-            desiredLook = new THREE.Vector3(catX * 0.12, 0.85, 0.25);
-          }
-
-          // Subtle dramatic push-in when posing innocently as Owner watches!
           if (ownerPhase === "watching" && isInnocent) {
-            const closePos = new THREE.Vector3(catX * 0.5 + 0.5, TABLE_TOP_Y + 2.2, catZ + 4.0);
-            const closeLook = new THREE.Vector3(catX, TABLE_TOP_Y + 0.45, catZ);
-            desiredPos.lerp(closePos, 0.34);
-            desiredLook.lerp(closeLook, 0.34);
+            // Comedic close-up spotlight on v4 cat's innocent ω smile + halo!
+            desiredPos = isPortrait
+              ? new THREE.Vector3(catX + 0.40, TABLE_TOP_Y + 1.65, catZ + 3.10)
+              : new THREE.Vector3(catX + 0.45, TABLE_TOP_Y + 1.45, catZ + 2.55);
+            desiredLook = isPortrait
+              ? new THREE.Vector3(catX, TABLE_TOP_Y + 0.48, catZ)
+              : new THREE.Vector3(catX, TABLE_TOP_Y + 0.50, catZ);
+          } else {
+            // Intimate ~2x closer 3D follow camera!
+            desiredPos = isPortrait
+              ? new THREE.Vector3(catX * 0.72, TABLE_TOP_Y + 3.25, catZ + 4.85)
+              : new THREE.Vector3(catX * 0.68, TABLE_TOP_Y + 2.55, catZ + 3.95);
+            desiredLook = isPortrait
+              ? new THREE.Vector3(catX * 0.80, TABLE_TOP_Y + 0.32, catZ - 0.25)
+              : new THREE.Vector3(catX * 0.78, TABLE_TOP_Y + 0.36, catZ - 0.35);
           }
         } else {
           desiredPos = isPortrait
@@ -1705,41 +1823,31 @@
             }
           }
 
-          // Keyboard 360 movement
+          // Floating Virtual Joystick + Keyboard 360 movement
           const kx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
           const kz = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
-          const keyMoving = kx !== 0 || kz !== 0;
-          if (keyMoving) {
-            const kLen = Math.hypot(kx, kz);
-            const kSpd = 5.4;
-            targetCatX = THREE.MathUtils.clamp(catX + (kx / kLen) * kSpd * dt * 2.2, -CAT_LIM_X, CAT_LIM_X);
-            targetCatZ = THREE.MathUtils.clamp(catZ + (kz / kLen) * kSpd * dt * 2.2, -CAT_LIM_Z, CAT_LIM_Z);
-          } else if (!pointerActive) {
-            targetCatX = catX;
-            targetCatZ = catZ;
+          let inX = joyVecX + kx;
+          let inZ = joyVecZ + kz;
+          let moveMag = Math.hypot(inX, inZ);
+          if (moveMag > 1.0) {
+            inX /= moveMag;
+            inZ /= moveMag;
+            moveMag = 1.0;
           }
 
-          // Move smoothly toward target on table
-          const dxTarget = targetCatX - catX;
-          const dzTarget = targetCatZ - catZ;
-          const distTarget = Math.hypot(dxTarget, dzTarget);
+          const speed = feverTimer > 0 ? 6.6 : 5.4;
           const prevX = catX;
           const prevZ = catZ;
 
-          if (distTarget > 0.04) {
-            const maxStep = (feverTimer > 0 ? 6.6 : 5.4) * dt;
-            const moveStep = Math.min(distTarget, maxStep);
-            catX += (dxTarget / distTarget) * moveStep;
-            catZ += (dzTarget / distTarget) * moveStep;
-          } else {
-            catX = targetCatX;
-            catZ = targetCatZ;
+          if (moveMag > 0.02) {
+            catX = THREE.MathUtils.clamp(catX + inX * speed * dt, -CAT_LIM_X, CAT_LIM_X);
+            catZ = THREE.MathUtils.clamp(catZ + inZ * speed * dt, -CAT_LIM_Z, CAT_LIM_Z);
           }
 
           catVelX = (catX - prevX) / dt;
           catVelZ = (catZ - prevZ) / dt;
           const speedAbs = Math.hypot(catVelX, catVelZ);
-          const isMoving = speedAbs > 0.35 || pointerActive || keyMoving;
+          const isMoving = speedAbs > 0.25 || moveMag > 0.08;
 
           // Owner Watching stealth check!
           if (ownerPhase === "watching") {
@@ -1766,8 +1874,8 @@
           let desiredYaw = catHeadingGroup.rotation.y;
           if (ownerPhase === "watching" && !isMoving) {
             desiredYaw = 0; // Face camera directly with round eyes & ω smile!
-          } else if (speedAbs > 0.35) {
-            desiredYaw = Math.atan2(catVelX, catVelZ);
+          } else if (moveMag > 0.05) {
+            desiredYaw = Math.atan2(inX, inZ);
           }
           // Shortest angular delta
           let dYaw = desiredYaw - catHeadingGroup.rotation.y;
@@ -1776,8 +1884,8 @@
           catHeadingGroup.rotation.y += dYaw * Math.min(1, dt * 15);
 
           // Trot hop & paw swat spin
-          if (speedAbs > 0.35) trotPhase += dt * 14.0;
-          const trotHop = speedAbs > 0.35 && scareY <= 0.01 ? Math.abs(Math.sin(trotPhase)) * 0.08 : 0;
+          if (moveMag > 0.05) trotPhase += dt * 14.0;
+          const trotHop = moveMag > 0.05 && scareY <= 0.01 ? Math.abs(Math.sin(trotPhase)) * 0.08 : 0;
 
           if (swatAnim > 0) {
             swatAnim = Math.max(0, swatAnim - dt * 3.8);
@@ -1790,19 +1898,10 @@
 
           catRoot.position.set(catX, TABLE_TOP_Y + trotHop + scareY, catZ);
           catMotionGroup.rotation.set(
-            speedAbs > 0.35 ? 0.10 : 0,
+            moveMag > 0.05 ? 0.10 : 0,
             swatAnim > 0 ? Math.sin(swatAnim * Math.PI) * 0.85 : 0,
             ownerPhase === "watching" && isInnocent ? Math.sin(tSec * 2.4) * 0.09 : 0
           );
-
-          // Target ring visibility while pointer dragging
-          if (pointerActive && distTarget > 0.12) {
-            targetRing.position.set(targetCatX, TABLE_TOP_Y + 0.02, targetCatZ);
-            targetRing.material.opacity = 0.65;
-            targetRing.scale.setScalar(1.0 + Math.sin(tSec * 12) * 0.12);
-          } else {
-            targetRing.material.opacity = 0;
-          }
 
           // Update Props Physics & Knock-Off Collisions
           let tablePropCount = 0;
@@ -1946,7 +2045,6 @@
           catHeadingGroup.rotation.y = Math.sin(tSec * 0.9) * 0.12;
           catMotionGroup.rotation.set(0, 0, 0);
           catRoot.position.set(0, TABLE_TOP_Y + Math.sin(tSec * 2.2) * 0.01, 0);
-          targetRing.material.opacity = 0;
           swatWaveRing.material.opacity = 0;
           isInnocent = false;
         }
@@ -1959,8 +2057,8 @@
         catShadow.scale.setScalar(Math.max(0.4, 1.0 - scareY * 0.35));
 
         if (gameState === "playing" && ownerPhase === "watching" && isInnocent) {
-          innocentHalo.material.opacity = 0.85;
-          innocentHalo.position.y = 1.24 + Math.sin(tSec * 6) * 0.03;
+          innocentHalo.material.opacity = 0.88;
+          innocentHalo.position.y = 1.18 + Math.sin(tSec * 6) * 0.03;
         } else {
           innocentHalo.material.opacity = 0;
         }
@@ -2008,9 +2106,11 @@
         moveCatTo: (x, z) => {
           catX = THREE.MathUtils.clamp(x, -CAT_LIM_X, CAT_LIM_X);
           catZ = THREE.MathUtils.clamp(z, -CAT_LIM_Z, CAT_LIM_Z);
-          targetCatX = catX;
-          targetCatZ = catZ;
-          pointerActive = false;
+          joyActive = false;
+          joyPointerId = null;
+          joyVecX = 0;
+          joyVecZ = 0;
+          joyBaseEl.classList.remove("visible");
         },
         swat: performSwat,
         setOwnerPhase: (phase) => {
